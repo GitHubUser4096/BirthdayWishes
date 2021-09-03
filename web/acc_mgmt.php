@@ -16,9 +16,9 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		$verifyPass = $_POST['verify_password'];
 		
 		if($password==""){
-			$info = "<br>Prosím zadejte heslo!";
+			$error = "Prosím zadejte heslo!";
 		} else if($password!=$verifyPass){
-			$info = "<br>Hesla se neshodují!";
+			$error = "Hesla se neshodují!";
 		} else {
 			
 			$hashedPass = password_hash($_POST['password'], PASSWORD_DEFAULT);
@@ -28,7 +28,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			$stmt->execute();
 			$stmt->close();
 			
-			$info = "<br>Heslo úspěšně změněno!";
+			$info = "Heslo úspěšně změněno!";
 			
 		}
 		
@@ -53,44 +53,170 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		
 		<title>Spravovat účet</title>
 		
+		<link rel="icon" href="res/cake.png">
+		<link rel="stylesheet" href="css/page.css">
+		<link rel="stylesheet" href="css/controls.css">
+		<link rel="stylesheet" href="css/titlebar.css">
+		<script src="js/titlebar.js"></script>
+		
+		<link rel="stylesheet" href="css/form_page.css">
+		<link rel="stylesheet" href="css/form.css">
+		
+		<style>
+			
+			.info {
+				padding: 10px;
+				background: #2edc15;
+				font-weight: bold;
+				font-size: 18px;
+				color: white;
+			}
+			
+			.deletebtn {
+				background: red;
+			}
+			
+			.deletebtn:hover {
+				background: #F55;
+			}
+			
+			.blackout {
+				position: fixed;
+				left: 0px;
+				top: 0px;
+				width: 100%;
+				height: 100%;
+				background: #00000055;
+			}
+			
+			.confirmdialog {
+				background: gray;
+				position: fixed;
+				width: 500px;
+				height: 300px;
+				left: calc(50% - 250px);
+				top: calc(50% - 150px);
+				padding: 10px;
+			}
+			
+			.dialogtitle {
+				color: white;
+				font-size: 28px;
+			}
+			
+			.dialoginfo {
+				color: white;
+				font-weight: bold;
+				font-size: 32px;
+			}
+			
+			.btnwrapper {
+				padding: 10px;
+			}
+			
+			.confirmbtn {
+				text-align: center;
+				width: 200px;
+				background: red;
+				color: white;
+				border: none;
+				padding: 10px;
+				font-size: 18px;
+			}
+			
+			.cancelbtn {
+				text-align: center;
+				width: 200px;
+				background: lightgray;
+				color: black;
+				border: none;
+				padding: 10px;
+				font-size: 18px;
+			}
+			
+		</style>
+		
 	</head>
 
     <body>
 		
-		<form method="post">
+		<?php include('php/titlebar.php'); ?>
+		
+		<div class="content">
 			
-			Spravovat účet
+			<div class="subtitlebar">
+				<div class="backbtn"><a href="index.php"><</a></div><div class="subtitle">Spravovat účet</div>
+			</div>
 			
-			<?php
+			<div class="form">
 				
-				if(isSet($info)) echo $info;
-				
-			?>
-			
-			<br><a href="index.php">Zpět</a>
-			<br>Uživatelské jméno: <?php echo $_SESSION['user']['username'] ?>
-			
-			<br>Změnit heslo:
-			<br>Heslo: <input name="password" type="password"></input>
-			<br>Potvrdit heslo: <input name="verify_password" type="password"></input>
-			<br><input type="submit" name="change_pass" value="Změnit heslo">
-			<br><input type="submit" name="delete" value="Smazat účet">
-			
-			<?php
-				
-				if(isSet($_POST['delete'])){
-					?>
-					
-					<br>Potvrdit odstranění
-					<input type="submit" name="confirmDelete" value="Potvrdit"></input>
-					<input type="submit" name="cancelDelete" value="Zrušit"></input>
+				<form method="post">
 					
 					<?php
-				}
+						if(isSet($error)) {
+							?><div class="error"><?php
+								echo $error;
+							?></div><?php
+						}
+					?>
+					
+					<?php
+						if(isSet($info)) {
+							?><div class="info"><?php
+								echo $info;
+							?></div><?php
+						}
+					?>
+					
+					<div class="midcol">
+						
+						<div class="formrow">
+							<span class="formlbl">Uživatelské jméno: <?php echo $_SESSION['user']['username'] ?></span>
+						</div>
+						
+						<div class="formrow">
+							<span class="formlbl"><b>Změnit heslo:</b></span>
+						</div>
+						<div class="formrow">
+							<span class="formlbl">Heslo:</span>
+							<input class="formin" name="password" type="password"></input>
+						</div>
+						<div class="formrow">
+							<span class="formlbl">Potvrdit heslo:</span>
+							<input class="formin" name="verify_password" type="password"></input>
+						</div>
+						<div class="formrow">
+							<input class="bigbutton" type="submit" name="change_pass" value="Změnit heslo">
+						</div>
+						<div class="formrow">
+							<input class="bigbutton deletebtn" type="submit" name="delete" value="Smazat účet">
+						</div>
+						
+					</div>
+					
+					<?php
+						
+						if(isSet($_POST['delete'])){
+							?>
+							
+							<div class="blackout"></div>
+							<div class="confirmdialog">
+								<div class="dialogtitle">Odstranit účet</div>
+								<div class="dialoginfo">Opravdu chcete odstranit účet?</div>
+								<div class="btnwrapper"><input class="confirmbtn" type="submit" name="confirmDelete" value="Potvrdit"></input></div>
+								<div class="btnwrapper"><input class="cancelbtn" type="submit" name="cancelDelete" value="Zrušit"></input></div>
+							</div>
+							
+							<?php
+						}
+						
+					?>
+					
+				</form>
 				
-			?>
+			</div>
 			
-		</form>
+		</div>
 		
     </body>
 	

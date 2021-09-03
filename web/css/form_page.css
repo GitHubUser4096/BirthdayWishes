@@ -1,0 +1,29 @@
+
+.content {
+	position: absolute;
+	width: 100%;
+	height: calc(100% - 80px);
+	overflow: hidden;
+	background: #e6e2d7;
+}
+
+.subtitlebar {
+	height: 40px;
+	background: #e6e2d7;
+}
+
+.backbtn {
+	position: absolute;
+	font-size: 24px;
+	top: 4px;
+	right: 90%;
+	width: 24px;
+}
+
+.subtitle {
+	position: absolute;
+	top: 4px;
+	left: 10%;
+	font-size: 24px;
+	padding-left: 10px;
+}

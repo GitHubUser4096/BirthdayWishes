@@ -1,0 +1,18 @@
+
+.link {
+	text-decoration: underline;
+}
+
+.bigbutton {
+	color: white;
+	font-weight: bold;
+	border: none;
+	background: #2edc15;
+	padding: 15px;
+	font-size: 18px;
+	cursor: pointer;
+}
+
+.bigbutton:hover {
+	background: #7be96c;
+}

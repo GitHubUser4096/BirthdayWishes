@@ -10,9 +10,9 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 	$password = $_POST['password'];
 	
 	if($username==""){
-		$error = "<br>Prosím zadejte uživatelské jméno!";
+		$error = "Prosím zadejte uživatelské jméno!";
 	} else if($password==""){
-		$error = "<br>Prosím zadejte heslo!";
+		$error = "Prosím zadejte heslo!";
 	} else {
 		
 		$stmt = $db->prepare("select * from User where username=?");
@@ -26,7 +26,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			$user = $res->fetch_assoc();
 			
 			if(!password_verify($password, $user["password"])){
-				$error = "<br>Neplatné heslo!";
+				$error = "Neplatné heslo!";
 			} else {
 				
 				$_SESSION['user'] = $user;
@@ -37,7 +37,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			
 		} else {
 			
-			$error = "<br>Neplatné uživatelské jméno!";
+			$error = "Neplatné uživatelské jméno!";
 			
 		}
 		
@@ -53,22 +53,68 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		
 		<title>Přihlásit se</title>
 		
+		<link rel="icon" href="res/cake.png">
+		<link rel="stylesheet" href="css/page.css">
+		<link rel="stylesheet" href="css/controls.css">
+		<link rel="stylesheet" href="css/titlebar.css">
+		<script src="js/titlebar.js"></script>
+		
+		<link rel="stylesheet" href="css/form_page.css">
+		<link rel="stylesheet" href="css/form.css">
+		
+		<style>
+			
+			.loginbtn {
+				margin-left: 25%;
+				width: 50%;
+			}
+			
+		</style>
+		
 	</head>
 
     <body>
 		
-		<form method="post">
+		<?php include('php/titlebar.php'); ?>
+		
+		<div class="content">
 			
-			Přihlásit se
-			<br><a href="index.php">Zpět</a>
-			<?php
-				if(isSet($error)) echo $error;
-			?>
-			<br>Uživatelské jméno: <input name="username" type="text" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['username'] ?>"></input>
-			<br>Heslo: <input name="password" type="password"></input>
-			<br><input value="Přihlásit se" type="submit"></input>
+			<div class="subtitlebar">
+				<div class="backbtn"><a href="index.php"><</a></div><div class="subtitle">Přihlásit se</div>
+			</div>
 			
-		</form>
+			<div class="form">
+				
+				<form method="post">
+					
+					<?php
+						if(isSet($error)) {
+							?><div class="error"><?php
+								echo $error;
+							?></div><?php
+						}
+					?>
+					
+					<div class="midcol">
+						
+						<div class="formrow formlbl link"><a href="new_account.php">Vytvořit nový účet</a></div>
+						<div class="formrow">
+							<span class="formlbl">Uživatelské jméno:</span>
+							<input class="formin" name="username" type="text" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['username'] ?>"></input>
+						</div>
+						<div class="formrow">
+							<span class="formlbl">Heslo:</span>
+							<input class="formin" name="password" type="password"></input>
+						</div>
+						<br><input class="bigbutton loginbtn" value="Přihlásit se" type="submit"></input>
+						
+					</div>
+					
+				</form>
+				
+			</div>
+			
+		</div>
 		
     </body>
 	
