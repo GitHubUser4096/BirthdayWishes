@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once('db.php');
+require_once('php/db.php');
 require_once('dompdf/autoload.inc.php');
 use Dompdf\Dompdf;
 
-$db = DB_CONNECT('wishes');
+$db = DB_CONNECT();
 
 if(!isSet($_SESSION['wish'])){
 	die('400 - Bad request');
@@ -26,7 +26,7 @@ $html .= '<div style="padding-left:20px;background: #f3eee3; height: 100%;page-b
 	
 $num = $wish['bdayNumber'];
 
-$stmt = $db->prepare('select id, content, link, imgSrc from numberinfo where number=? and approved=true');
+$stmt = $db->prepare('select id, content, link, imgSrc from NumberInfo where number=? and approved=true');
 $stmt->bind_param("i", $num);
 $stmt->execute();
 $res = $stmt->get_result();

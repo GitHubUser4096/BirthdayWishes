@@ -1,8 +1,8 @@
 <?php
 session_start();
-require_once('db.php');
+require_once('php/db.php');
 
-$db = DB_CONNECT('wishes');
+$db = DB_CONNECT();
 
 if(isSet($_SESSION['wish'])) {
 	$wish = $_SESSION['wish'];
@@ -31,6 +31,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		if(isSet($_POST['choose_random'])) $wish['choose'] = 'random';
 		else if(isSet($_POST['choose_from_list'])) $wish['choose'] = 'list';
 		$_SESSION['wish'] = $wish;
+		
 		header("Location: choose_info.php");
 		
 	}
@@ -150,16 +151,18 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 								
 								<?php
 									
-									$stmt = $db->prepare('select distinct name from infocat inner join numberinfo on numberinfo.id=infoid inner join category on category.id=catid where approved=1');
-									$stmt->execute();
-									$res = $stmt->get_result();
-									$stmt->close();
-									
-									while($row = $res->fetch_assoc()){
-										$name = $row['name'];
-										?><div><label><input class="check catCheck" onclick="checkCheck();" type="checkbox" name="cat[]"
-											<?php if($_SERVER['REQUEST_METHOD']==='POST' && isSet($_POST['cat']) && in_array($name, $_POST['cat']) || isSet($wish) && isSet($wish['cat']) && in_array($name, $wish['cat'])) echo 'checked' ?> value="<?php echo $name ?>">
-											</input><?php echo $name ?></label></div><?php
+									$stmt = $db->prepare('select distinct name from InfoCat inner join NumberInfo on NumberInfo.id=infoid inner join Category on Category.id=catid where approved=1');
+									if($stmt) {
+										$stmt->execute();
+										$res = $stmt->get_result();
+										$stmt->close();
+										
+										while($row = $res->fetch_assoc()){
+											$name = $row['name'];
+											?><div><label><input class="check catCheck" onclick="checkCheck();" type="checkbox" name="cat[]"
+												<?php if($_SERVER['REQUEST_METHOD']==='POST' && isSet($_POST['cat']) && in_array($name, $_POST['cat']) || isSet($wish) && isSet($wish['cat']) && in_array($name, $wish['cat'])) echo 'checked' ?> value="<?php echo $name ?>">
+												</input><?php echo $name ?></label></div><?php
+										}
 									}
 									
 								?>

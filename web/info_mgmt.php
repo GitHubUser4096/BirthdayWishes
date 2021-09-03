@@ -1,8 +1,8 @@
 <?php
 session_start();
-require_once('db.php');
+require_once('php/db.php');
 
-$db = DB_CONNECT('wishes');
+$db = DB_CONNECT();
 
 if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
 	die('401 - Unauthorized');
@@ -149,7 +149,7 @@ if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
 						<tbody>
 							<?php
 								
-								$stmt = $db->prepare('select id, number, content, imgSrc, createdBy, createdTime, approved from numberinfo order by number');
+								$stmt = $db->prepare('select id, number, content, imgSrc, createdBy, createdTime, approved from NumberInfo order by number');
 								$stmt->execute();
 								$res = $stmt->get_result();
 								$stmt->close();
@@ -162,7 +162,7 @@ if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
 										<td class="col3"><img src="<?php echo $row['imgSrc']; ?>"></img></td>
 										<td class="col4"><?php
 											
-											$stmt = $db->prepare('select name from infocat inner join category on category.id=catid where infoid=?');
+											$stmt = $db->prepare('select name from InfoCat inner join Category on Category.id=catid where infoid=?');
 											$stmt->bind_param('i', $row['id']);
 											$stmt->execute();
 											$res2 = $stmt->get_result();
@@ -175,7 +175,7 @@ if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
 										?></td>
 										<td class="col5"><?php
 											
-											$stmt = $db->prepare('select username from user where id=?');
+											$stmt = $db->prepare('select username from User where id=?');
 											$stmt->bind_param('i', $row['createdBy']);
 											$stmt->execute();
 											$res2 = $stmt->get_result();

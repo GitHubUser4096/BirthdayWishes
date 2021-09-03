@@ -1,8 +1,8 @@
 <?php
 session_start();
-require_once('db.php');
+require_once('php/db.php');
 
-$db = DB_CONNECT('wishes');
+$db = DB_CONNECT();
 
 if(!isSet($_SESSION['user'])){
 	die("401 - Unauthorized");
@@ -23,7 +23,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			
 			$hashedPass = password_hash($_POST['password'], PASSWORD_DEFAULT);
 			
-			$stmt = $db->prepare('update user set password=? where id=?');
+			$stmt = $db->prepare('update User set password=? where id=?');
 			$stmt->bind_param("si", $hashedPass, $_SESSION['user']['id']);
 			$stmt->execute();
 			$stmt->close();
@@ -34,7 +34,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		
 	} else if(isSet($_POST['confirmDelete'])){
 		
-		$stmt = $db->prepare('delete from user where id=?');
+		$stmt = $db->prepare('delete from User where id=?');
 		$stmt->bind_param("i", $_SESSION['user']['id']);
 		$stmt->execute();
 		$stmt->close();

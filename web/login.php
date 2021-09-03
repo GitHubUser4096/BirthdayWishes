@@ -1,8 +1,8 @@
 <?php
 session_start();
-require_once('db.php');
+require_once('php/db.php');
 
-$db = DB_CONNECT('wishes');
+$db = DB_CONNECT();
 
 if($_SERVER['REQUEST_METHOD']==='POST'){
 	

@@ -1,8 +1,8 @@
 <?php
 session_start();
-require_once('db.php');
+require_once('php/db.php');
 
-$db = DB_CONNECT('wishes');
+$db = DB_CONNECT();
 
 if(!isSet($_SESSION['wish'])){
 	die('400 - Bad request');
@@ -135,24 +135,26 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 									}
 									$catnames = '('.implode(",", $quoted).')';
 									
-									$stmt = $db->prepare('select distinct numberinfo.id, content, imgSrc from infocat '.
-											'inner join numberinfo on numberinfo.id=infoid inner join category on category.id=catid '.
-											'where numberinfo.number=? and category.name in '.$catnames.' and numberinfo.approved=true');
-									$stmt->bind_param("i", $num);
-									$stmt->execute();
-									$res = $stmt->get_result();
-									$stmt->close();
-									
-									while($row = $res->fetch_assoc()){
+									$stmt = $db->prepare('select distinct NumberInfo.id, content, imgSrc from InfoCat '.
+											'inner join NumberInfo on NumberInfo.id=infoid inner join Category on Category.id=catid '.
+											'where NumberInfo.number=? and Category.name in '.$catnames.' and NumberInfo.approved=true');
+									if($stmt) {
+										$stmt->bind_param("i", $num);
+										$stmt->execute();
+										$res = $stmt->get_result();
+										$stmt->close();
 										
-										?>
-										<tr>
-												<td><input id="row<?php echo $row['id'] ?>" class="check" type="checkbox" name="choice[]" value="<?php echo $row['id'] ?>"></input></td>
-												<td><label for="row<?php echo $row['id'] ?>"><?php echo $row['content'] ?></label></td>
-												<td><label for="row<?php echo $row['id'] ?>"><img src="<?php echo $row['imgSrc'] ?>"></img></label></td>
-										</tr>
-										<?php
-										
+										while($row = $res->fetch_assoc()){
+											
+											?>
+											<tr>
+													<td><input id="row<?php echo $row['id'] ?>" class="check" type="checkbox" name="choice[]" value="<?php echo $row['id'] ?>"></input></td>
+													<td><label for="row<?php echo $row['id'] ?>"><?php echo $row['content'] ?></label></td>
+													<td><label for="row<?php echo $row['id'] ?>"><img src="<?php echo $row['imgSrc'] ?>"></img></label></td>
+											</tr>
+											<?php
+											
+										}
 									}
 									
 								?>

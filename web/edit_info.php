@@ -1,8 +1,8 @@
 <?php
 session_start();
-require_once('db.php');
+require_once('php/db.php');
 
-$db = DB_CONNECT('wishes');
+$db = DB_CONNECT();
 
 if(!isset($_GET['id'])) {
 	die('400 - Bad request');
@@ -16,17 +16,17 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 	
 	if(isset($_POST['confirmDelete'])) {
 		
-		$stmt = $db->prepare('delete from infocat where infoid=?');
+		$stmt = $db->prepare('delete from InfoCat where infoid=?');
 		$stmt->bind_param("i", $_GET['id']);
 		$stmt->execute();
 		$stmt->close();
 		
-		$stmt = $db->prepare('delete from numberinfo where id=?');
+		$stmt = $db->prepare('delete from NumberInfo where id=?');
 		$stmt->bind_param("i", $_GET['id']);
 		$stmt->execute();
 		$stmt->close();
 		
-		header('Location: /info_mgmt.php');
+		header('Location: info_mgmt.php');
 		
 	} else if(isSet($_POST['save'])) {
 		
@@ -39,7 +39,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 					
 					$image = "images/".$image_name;
 					
-					$stmt = $db->prepare('update numberinfo set imgSrc=? where id=?');
+					$stmt = $db->prepare('update NumberInfo set imgSrc=? where id=?');
 					$stmt->bind_param("si", $image, $_GET['id']);
 					$stmt->execute();
 					$stmt->close();
@@ -63,12 +63,12 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			$error = "Prosím vyberte aspoň jednu kategorii!";
 		} else {
 			
-			$stmt = $db->prepare('update numberinfo set number=?, content=?, link=?, approved=? where id=?');
+			$stmt = $db->prepare('update NumberInfo set number=?, content=?, link=?, approved=? where id=?');
 			$stmt->bind_param("issii", $number, $content, $link, $approved, $_GET['id']);
 			$stmt->execute();
 			$stmt->close();
 			
-			$stmt = $db->prepare('delete from infocat where infoid=?');
+			$stmt = $db->prepare('delete from InfoCat where infoid=?');
 			$stmt->bind_param("i", $_GET['id']);
 			$stmt->execute();
 			$stmt->close();
@@ -77,7 +77,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				
 				$cat = htmlspecialchars($cat);
 				
-				$stmt = $db->prepare('select * from category where name=?');
+				$stmt = $db->prepare('select * from Category where name=?');
 				$stmt->bind_param("s", $cat);
 				$stmt->execute();
 				$res = $stmt->get_result();
@@ -85,21 +85,21 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				
 				if(!$res->fetch_assoc()){
 					
-					$stmt = $db->prepare('insert into category(name) values (?)');
+					$stmt = $db->prepare('insert into Category(name) values (?)');
 					$stmt->bind_param("s", $cat);
 					$stmt->execute();
 					$stmt->close();
 					
 				}
 				
-				$stmt = $db->prepare('insert into infocat(infoid, catid) values (?, (select id from category where name=?))');
+				$stmt = $db->prepare('insert into InfoCat(infoid, catid) values (?, (select id from Category where name=?))');
 				$stmt->bind_param("is", $_GET['id'], $cat);
 				$stmt->execute();
 				$stmt->close();
 				
 			}
 			
-			header('Location: /info_mgmt.php');
+			header('Location: info_mgmt.php');
 			
 		}
 		
@@ -251,7 +251,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 					
 					<?php
 						
-						$stmt = $db->prepare('select number, content, link, imgSrc, approved from numberinfo where id=?');
+						$stmt = $db->prepare('select number, content, link, imgSrc, approved from NumberInfo where id=?');
 						$stmt->bind_param("i", $_GET['id']);
 						$stmt->execute();
 						$res = $stmt->get_result();
@@ -336,7 +336,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 							<br><div class="catfield" id="catField">
 								<?php
 									
-									$stmt = $db->prepare('select name from category');
+									$stmt = $db->prepare('select name from Category');
 									$stmt->execute();
 									$res = $stmt->get_result();
 									$stmt->close();
@@ -345,7 +345,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 										$name = $row['name'];
 										?><div><label><input type="checkbox" name="cat[]" <?php
 											
-											$stmt = $db->prepare('select * from infocat inner join category on category.id=catid where infoid=? and name=?');
+											$stmt = $db->prepare('select * from InfoCat inner join Category on Category.id=catid where infoid=? and name=?');
 											$stmt->bind_param('is', $_GET['id'], $row['name']);
 											$stmt->execute();
 											$res2 = $stmt->get_result();

@@ -1,5 +1,5 @@
 <div class="titlebar">
-	<a href="/index.php">
+	<a href="index.php">
 		<div class="icon"><img class="iconimg" src="res/cake.png"></img></div>
 		<div class="title">Narozeninová Přání</div>
 	</a>

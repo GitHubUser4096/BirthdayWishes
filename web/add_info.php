@@ -1,8 +1,8 @@
 <?php
 session_start();
-require_once('db.php');
+require_once('php/db.php');
 
-$db = DB_CONNECT('wishes');
+$db = DB_CONNECT();
 
 if(!isSet($_SESSION['user'])){
 	die("401 - Unauthorized");
@@ -40,15 +40,17 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			
 			$cat = htmlspecialchars($cat);
 			
-			$stmt = $db->prepare('select * from category where name=?');
-			$stmt->bind_param("s", $cat);
-			$stmt->execute();
-			$res = $stmt->get_result();
-			$stmt->close();
+			$stmt = $db->prepare('select * from Category where name=?');
+			if($stmt) {
+				$stmt->bind_param("s", $cat);
+				$stmt->execute();
+				$res = $stmt->get_result();
+				$stmt->close();
+			}
 			
-			if(!$res->fetch_assoc()){
+			if(!isSet($res)||!$res->fetch_assoc()){
 				
-				$stmt = $db->prepare('insert into category(name) values (?)');
+				$stmt = $db->prepare('insert into Category(name) values (?)');
 				$stmt->bind_param("s", $cat);
 				$stmt->execute();
 				$stmt->close();
@@ -66,14 +68,14 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		
 		foreach($categories as $cat){
 			
-			$stmt = $db->prepare('insert into infocat(infoId, catId) values (?, (select id from category where name=?))');
+			$stmt = $db->prepare('insert into InfoCat(infoId, catId) values (?, (select id from Category where name=?))');
 			$stmt->bind_param("ss", $id, $cat);
 			$stmt->execute();
 			$stmt->close();
 			
 		}
 		
-		header('Location: /index.php');
+		header('Location: index.php');
 		
 	}
 	
@@ -224,15 +226,17 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 							<br><div class="catfield" id="catField">
 								<?php
 									
-									$stmt = $db->prepare('select name from category');
-									$stmt->execute();
-									$res = $stmt->get_result();
-									$stmt->close();
-									
-									while($row = $res->fetch_assoc()){
-										$name = $row['name'];
-										?><div><label><input type="checkbox" name="cat[]" value="<?php echo $name ?>"
-											<?php if($_SERVER['REQUEST_METHOD']==='POST'&&isSet($_POST['cat'])) if(in_array($name, $_POST['cat'])) echo 'checked' ?>></input><?php echo $name ?></label></div><?php
+									$stmt = $db->prepare('select name from Category');
+									if($stmt) {
+										$stmt->execute();
+										$res = $stmt->get_result();
+										$stmt->close();
+										
+										while($row = $res->fetch_assoc()){
+											$name = $row['name'];
+											?><div><label><input type="checkbox" name="cat[]" value="<?php echo $name ?>"
+												<?php if($_SERVER['REQUEST_METHOD']==='POST'&&isSet($_POST['cat'])) if(in_array($name, $_POST['cat'])) echo 'checked' ?>></input><?php echo $name ?></label></div><?php
+										}
 									}
 									
 								?>
