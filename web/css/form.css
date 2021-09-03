@@ -89,3 +89,22 @@ textarea {
 textarea:focus {
 	outline: none;
 }
+
+@media only screen and (max-width: 600px) {
+	
+	.form {
+		position: absolute;
+		left: 0;
+		width: 100%;
+		height: calc(100% - 40px);
+		background: #f3eee3;
+	}
+	
+	.midcol {
+		width: 80%;
+		margin-left: 10%;
+		max-height: 100%;
+		overflow-y: auto;
+	}
+	
+}
