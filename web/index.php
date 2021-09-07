@@ -43,6 +43,10 @@ if(!isSet($_SERVER['HTTPS'])){
 				margin: 30px;
 			}
 			
+			.sidebarmenu {
+				margin: 30px;
+			}
+			
 			p {
 				font-size: 18px;
 			}
@@ -72,6 +76,46 @@ if(!isSet($_SERVER['HTTPS'])){
 				object-fit: contain;
 				width: 100%;
 				height: 100%;
+			}
+			
+			@media only screen and (max-width: 600px) {
+				
+				.content {
+					position: absolute;
+					width: 100%;
+					height: calc(100% - 60px);
+					overflow: hidden;
+				}
+				
+				.sidebar {
+					width: 100%;
+					height: 100%;
+					overflow: hidden;
+					background: #e6e2d7;
+					float: left;
+				}
+				
+				.slideshow {
+					position: absolute;
+					top: 20%;
+					right: 0px;
+					width: 100%;
+					height: 60%;
+					overflow: hidden;
+				}
+				
+				.sidebarmenu {
+					position: absolute;
+					bottom: 0px;
+					width: 100%;
+					height: 10%;
+				}
+				
+				.wishbtn {
+					width: calc(100% - 60px);
+					height: 100%;
+				}
+				
 			}
 			
 		</style>
@@ -104,7 +148,9 @@ if(!isSet($_SERVER['HTTPS'])){
 			<div class="sidebar">
 				<div class="sidebarcontent">
 					<p>Web narozeninová přání ...</p>
-					<a href="create_wish.php"><button class="bigbutton">VYTVOŘIT PŘÁNÍ ></button></a>
+				</div>
+				<div class="sidebarmenu">
+					<a href="create_wish.php"><button class="bigbutton wishbtn">VYTVOŘIT PŘÁNÍ ></button></a>
 				</div>
 			</div>
 			<div id="slideshow" class="slideshow">

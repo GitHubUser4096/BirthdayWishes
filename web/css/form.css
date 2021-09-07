@@ -89,7 +89,6 @@ textarea {
 textarea:focus {
 	outline: none;
 }
-<<<<<<< HEAD
 
 @media only screen and (max-width: 600px) {
 	
@@ -140,5 +139,3 @@ textarea:focus {
 	}
 	
 }
-=======
->>>>>>> parent of d36e1ed... Mobile, generated fixed

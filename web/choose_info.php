@@ -32,6 +32,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 	
 	if(!isSet($error)){
 		$_SESSION['wish'] = $wish;
+		$_SESSION['docname'] = null;
 		header('Location: wish.php');
 	}
 	
@@ -44,6 +45,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 	<head>
 		
 		<title>Vytvořit přání</title>
+		
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		
 		<link rel="icon" href="res/cake.png">
 		<link rel="stylesheet" href="css/page.css">
