@@ -15,6 +15,8 @@
 				<?php
 				if($_SESSION['user']['admin']) { ?>
 					<hr><a href="info_mgmt.php">Spravovat zajímavosti</a>
+					<hr><a href="user_mgmt.php">Spravovat uživatele</a>
+					<hr><a href="edit_config.php">Konfigurace</a>
 					<?php
 				} ?>
 				
