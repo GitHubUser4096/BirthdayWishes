@@ -16,8 +16,6 @@ if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
 		
 		<title>Spravovat zajímavosti</title>
 		
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		
 		<link rel="icon" href="res/cake.png">
 		<link rel="stylesheet" href="css/page.css">
 		<link rel="stylesheet" href="css/titlebar.css">

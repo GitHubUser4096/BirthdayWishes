@@ -1,12 +1,4 @@
 
-function toggleMobileMenu(){
-	if(mobilemenu.style.display=='block') {
-		mobilemenu.style.display = 'none';
-	} else {
-		mobilemenu.style.display = 'block';
-	}
-}
-
 document.addEventListener('mouseup', function(e){
 	if(typeof usermenu === 'undefined') return;
 	let mx = e.clientX;

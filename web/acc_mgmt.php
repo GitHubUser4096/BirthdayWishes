@@ -53,8 +53,6 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		
 		<title>Spravovat účet</title>
 		
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		
 		<link rel="icon" href="res/cake.png">
 		<link rel="stylesheet" href="css/page.css">
 		<link rel="stylesheet" href="css/controls.css">
@@ -99,15 +97,6 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				left: calc(50% - 250px);
 				top: calc(50% - 150px);
 				padding: 10px;
-			}
-			
-			@media only screen and (max-width: 600px) {
-				.confirmdialog {
-					width: 100%;
-					height: 50%;
-					left: 0;
-					top: 25%;
-				}
 			}
 			
 			.dialogtitle {
