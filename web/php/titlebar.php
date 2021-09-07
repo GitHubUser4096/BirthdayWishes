@@ -42,6 +42,8 @@
 				<?php
 				if($_SESSION['user']['admin']) { ?>
 					| <a href="info_mgmt.php">Spravovat zajímavosti</a>
+					| <a href="user_mgmt.php">Spravovat uživatele</a>
+					| <a href="edit_config.php">Konfigurace</a>
 					<?php
 				} ?>
 				

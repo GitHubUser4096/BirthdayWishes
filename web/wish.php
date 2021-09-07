@@ -1,18 +1,62 @@
 <?php
 session_start();
-require_once('php/db.php');
-require_once('dompdf/autoload.inc.php');
+
 use Dompdf\Dompdf;
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+use PHPMailer\PHPMailer\SMTP;
+
+require_once('php/db.php');
+require_once('php/mail.php');
+
+require_once('lib/dompdf/autoload.inc.php');
+
+require_once('lib/phpMailer/src/Exception.php');
+require_once('lib/phpMailer/src/PHPMailer.php');
+require_once('lib/phpMailer/src/SMTP.php');
+
+if(!isSet($_SESSION['wish'])){
+	die('400 - Bad request');
+}
+
+$wish = $_SESSION['wish'];
 
 $db = DB_CONNECT();
 
+if($_SERVER['REQUEST_METHOD']==='POST') {
+	
+	$address = $_POST['mail'];
+	
+	$mail = new PHPMailer(true);
+	
+	$mail->CharSet = "UTF-8";
+	//$mail->SMTPDebug = SMTP::DEBUG_SERVER;
+	$mail->isSmtp();
+	$mail->Host = MAIL_HOST;
+	$mail->SMTPAuth = true;
+	$mail->Username = MAIL_USERNAME;
+	$mail->Password = MAIL_PASSWORD;
+	$mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+	$mail->Port = 12345;
+	
+	$mail->setFrom(MAIL_FROM, 'Narozeninová přání');
+	$mail->addAddress($address);
+	
+	$mail->addAttachment('generated/'.$_SESSION['docname'].'.pdf');
+	
+	$mail->isHtml(true);
+	$mail->Subject = "Všechno nejlepší k narozeninám!";
+	$mail->Body = htmlspecialchars($wish['from']).' ti přeje všechno nejlepší k '.htmlspecialchars($wish['bdayNumber']).' narozeninám!';
+	//$mail->Body = $_SESSION['dochtml'];
+	
+	$mail->send();
+	
+	$info = "Zpráva odeslána!";
+	
+}
+
 if(!isSet($_SESSION['docname'])||$_SESSION['docname']==null) {
-
-	if(!isSet($_SESSION['wish'])){
-		die('400 - Bad request');
-	}
-
-	$wish = $_SESSION['wish'];
 
 	function imgb64($src){
 		return 'data:image/png;base64,'.base64_encode(file_get_contents($src));
@@ -109,12 +153,14 @@ if(!isSet($_SESSION['docname'])||$_SESSION['docname']==null) {
 			</div>';
 			
 	}
+	
+	$_SESSION['dochtml'] = $html;
 
 	$pdf = new Dompdf();
 	$pdf->loadHtml($html);
 	$pdf->render();
 
-	$docname = (isSet($_SESSION['user']) ? $_SESSION['user']['username'] : 'unnamed') . '_' . date('Ymd_His');
+	$docname = (isSet($_SESSION['user']) ? $_SESSION['user']['username'] : session_id()) . '_' . date('Ymd_His');
 
 	file_put_contents('generated/'.$docname.'.pdf', $pdf->output());
 
@@ -144,12 +190,14 @@ if(!isSet($_SESSION['docname'])||$_SESSION['docname']==null) {
 				position: absolute;
 				width: 100%;
 				height: calc(100% - 120px);
+				overflow-y: auto;
 			}
 			
 			.bottombar {
 				position: absolute;
 				height: 40px;
 				bottom: 0;
+				overflow: hidden
 			}
 			
 			embed {
@@ -166,10 +214,15 @@ if(!isSet($_SESSION['docname'])||$_SESSION['docname']==null) {
 		<?php include('php/titlebar.php'); ?>
 		
 		<div class="document">
-			<embed id="document" src="generated/<?php echo $_SESSION['docname'] ?>.pdf"></embed>
+			<!--embed id="document" src="generated/<?php echo $_SESSION['docname'] ?>.pdf"></embed-->
+			<?php echo $_SESSION['dochtml']; ?>
 		</div>
 		
 		<div class="bottombar">
+			<form method="post">
+				E-Mail<input type="text" name="mail"></input><input type="submit" value="Odeslat"></input>
+				<?php if(isSet($info)) echo $info; ?>
+			</form>
 			<button>
 				<a href="generated/<?php echo $_SESSION['docname'] ?>.pdf" download>Uložit PDF</a>
 			</button>

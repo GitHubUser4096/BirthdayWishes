@@ -31,51 +31,76 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		$error = "Prosím vyberte aspoň jednu kategorii!";
 	} else {
 		
+		$stmt = $db->prepare("select value from Config where name='infoLimit'");
+		$stmt->execute();
+		$res = $stmt->get_result();
+		$stmt->close();
+		$infoLimit = $res->fetch_assoc()['value'];
+		
+		$stmt = $db->prepare("select value from Config where name='infoLimitReset'");
+		$stmt->execute();
+		$res = $stmt->get_result();
+		$stmt->close();
+		$infoLimitReset = $res->fetch_assoc()['value'];
+		
 		$number = $_POST['number'];
 		$content = htmlspecialchars($_POST['content']);
 		$link = htmlspecialchars($_POST['link']);
 		$categories = $_POST['cat'];
 		
-		foreach($categories as $cat){
-			
-			$cat = htmlspecialchars($cat);
-			
-			$stmt = $db->prepare('select * from Category where name=?');
-			if($stmt) {
-				$stmt->bind_param("s", $cat);
-				$stmt->execute();
-				$res = $stmt->get_result();
-				$stmt->close();
-			}
-			
-			if(!isSet($res)||!$res->fetch_assoc()){
-				
-				$stmt = $db->prepare('insert into Category(name) values (?)');
-				$stmt->bind_param("s", $cat);
-				$stmt->execute();
-				$stmt->close();
-				
-			}
-			
-		}
-		
-		$stmt = $db->prepare('insert into NumberInfo(number, content, link, imgSrc, createdBy, createdTime, approved) values (?, ?, ?, ?, ?, now(), false)');
-		$stmt->bind_param("isssi", $number, $content, $link, $image, $_SESSION['user']['id']);
+		$stmt = $db->prepare('select * from NumberInfo where createdBy=? and createdTime>DATE_SUB(NOW(), INTERVAL ? MINUTE)');
+		$stmt->bind_param("si", $_SESSION['user']['id'], $infoLimitReset);
 		$stmt->execute();
+		$res = $stmt->get_result();
+		$count = mysqli_num_rows($res);
 		$stmt->close();
 		
-		$id = $db->insert_id;
-		
-		foreach($categories as $cat){
+		if($count>=$infoLimit) {
+			$error = "Limit prekročen!";
+		} else {
 			
-			$stmt = $db->prepare('insert into InfoCat(infoId, catId) values (?, (select id from Category where name=?))');
-			$stmt->bind_param("ss", $id, $cat);
+			foreach($categories as $cat){
+				
+				$cat = htmlspecialchars($cat);
+				
+				$stmt = $db->prepare('select * from Category where name=?');
+				if($stmt) {
+					$stmt->bind_param("s", $cat);
+					$stmt->execute();
+					$res = $stmt->get_result();
+					$stmt->close();
+				}
+				
+				if(!isSet($res)||!$res->fetch_assoc()){
+					
+					$stmt = $db->prepare('insert into Category(name) values (?)');
+					$stmt->bind_param("s", $cat);
+					$stmt->execute();
+					$stmt->close();
+					
+				}
+				
+			}
+			
+			$stmt = $db->prepare('insert into NumberInfo(number, content, link, imgSrc, createdBy, createdTime, approved) values (?, ?, ?, ?, ?, now(), false)');
+			$stmt->bind_param("isssi", $number, $content, $link, $image, $_SESSION['user']['id']);
 			$stmt->execute();
 			$stmt->close();
 			
+			$id = $db->insert_id;
+			
+			foreach($categories as $cat){
+				
+				$stmt = $db->prepare('insert into InfoCat(infoId, catId) values (?, (select id from Category where name=?))');
+				$stmt->bind_param("ss", $id, $cat);
+				$stmt->execute();
+				$stmt->close();
+				
+			}
+			
+			header('Location: index.php');
+			
 		}
-		
-		header('Location: index.php');
 		
 	}
 	

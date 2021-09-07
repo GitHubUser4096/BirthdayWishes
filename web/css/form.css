@@ -92,12 +92,43 @@ textarea:focus {
 
 @media only screen and (max-width: 600px) {
 	
+	.formlbl {
+		font-size: 20px;
+		width: 100%;
+	}
+
+	.formin {
+		float: right;
+		width: calc(100% - 10px);
+		font-size: 20px;
+		border-radius: 0px;
+		border: none;
+		background: #e6e2d7;
+		color: black;
+		padding: 5px;
+	}
+	
+	.leftcol {
+		width: 100%;
+		float: left;
+		max-height: 100%;
+		overflow-y: auto;
+	}
+	
+	.rightcol {
+		width: 100%;
+		float: right;
+		max-height: 100%;
+		overflow-y: auto;
+	}
+	
 	.form {
 		position: absolute;
 		left: 0;
 		width: 100%;
 		height: calc(100% - 40px);
 		background: #f3eee3;
+		overflow-y: auto;
 	}
 	
 	.midcol {
