@@ -1,4 +1,9 @@
 <?php
+/*
+ * Úvodní stránka webu Narozeninová přání
+ * Projekt: Narozeninová přání
+ * Vytvořil: Michal
+ */
 session_start();
 
 if(!isSet($_SERVER['HTTPS'])){

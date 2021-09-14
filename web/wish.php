@@ -1,6 +1,10 @@
 <?php
 session_start();
 
+if(!isSet($_SERVER['HTTPS'])){
+	header("Location: https://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
+}
+
 use Dompdf\Dompdf;
 
 use PHPMailer\PHPMailer\PHPMailer;
@@ -24,7 +28,7 @@ $wish = $_SESSION['wish'];
 
 $db = DB_CONNECT();
 
-if($_SERVER['REQUEST_METHOD']==='POST') {
+/*if($_SERVER['REQUEST_METHOD']==='POST') {
 	
 	$address = $_POST['mail'];
 	
@@ -54,6 +58,14 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 	
 	$info = "Zpráva odeslána!";
 	
+}*/
+
+if($_SERVER['REQUEST_METHOD']==='POST') {
+	
+	if(isSet($_POST['regen'])) {
+		$_SESSION['docname'] = null;
+	}
+	
 }
 
 if(!isSet($_SESSION['docname'])||$_SESSION['docname']==null) {
@@ -62,9 +74,9 @@ if(!isSet($_SESSION['docname'])||$_SESSION['docname']==null) {
 		return 'data:image/png;base64,'.base64_encode(file_get_contents($src));
 	}
 
-	$html = '<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><style>@page {margin: 0px;} body { margin: 0px; font-family: DejaVu Sans, sans-serif; }</style></head>';
+	$dochead = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><style>@page {margin: 0px;} body { margin: 0px; font-family: DejaVu Sans, sans-serif; }</style>';
 
-	$html .= '<div style="padding-left:20px;background: #f3eee3; height: 100%;page-break-after: always;">
+	$docbody = '<div style="padding-left:20px;background: #f3eee3; height: 100%;page-break-after: always;">
 		<div style="width:150px;"><img src="'.imgb64('res/cake.png').'"></img></div>
 		<div style="font-size:36px;font-weight:bold;">'.htmlspecialchars($wish['for']).',</div>
 		<div style="font-size:28px;">'.htmlspecialchars($wish['from']).' ti přeje všechno nejlepší k <b>'.htmlspecialchars($wish['bdayNumber']).'</b>. narozeninám!</div>
@@ -103,58 +115,71 @@ if(!isSet($_SESSION['docname'])||$_SESSION['docname']==null) {
 		
 		$img_src = $row['imgSrc'];
 		
-		if(strpos(strtolower($img_src), ".png")) {
-			$img = imagecreatefrompng($img_src);
-		} else if(strpos(strtolower($img_src), ".jpg") || str_contains(strtolower($img_src), ".jpeg")) {
-			$img = imagecreatefromjpeg($img_src);
-		} if(strpos(strtolower($img_src), ".gif")) {
-			$img = imagecreatefromgif($img_src);
-		}
-		
-		$iw = imagesx($img);
-		$ih = imagesy($img);
-		
-		$n = $iw*$ih;
-		
-		$avr = 0;
-		$avg = 0;
-		$avb = 0;
-		
-		for($y=0; $y<$ih; $y++){
-			for($x=0; $x<$iw; $x++){
-				
-				$rgb = imagecolorat($img, $x, $y);
-				
-				$r = ($rgb >> 16) & 0xFF;
-				$g = ($rgb >> 8) & 0xFF;
-				$b = ($rgb >> 0) & 0xFF;
-				
-				$avr += $r;
-				$avg += $g;
-				$avb += $b;
-				
+		if($img_src&&strlen(trim($img_src))>0) {
+			
+			if(strpos(strtolower($img_src), ".png")) {
+				$img = imagecreatefrompng($img_src);
+			} else if(strpos(strtolower($img_src), ".jpg") || strpos(strtolower($img_src), ".jpeg")) {
+				$img = imagecreatefromjpeg($img_src);
+			} if(strpos(strtolower($img_src), ".gif")) {
+				$img = imagecreatefromgif($img_src);
 			}
+			
+			$iw = imagesx($img);
+			$ih = imagesy($img);
+			
+			$n = $iw*$ih;
+			
+			$avr = 0;
+			$avg = 0;
+			$avb = 0;
+			
+			for($y=0; $y<$ih; $y++){
+				for($x=0; $x<$iw; $x++){
+					
+					$rgb = imagecolorat($img, $x, $y);
+					
+					$r = ($rgb >> 16) & 0xFF;
+					$g = ($rgb >> 8) & 0xFF;
+					$b = ($rgb >> 0) & 0xFF;
+					
+					$avr += $r;
+					$avg += $g;
+					$avb += $b;
+					
+				}
+			}
+			
+			$avr /= $n;
+			$avg /= $n;
+			$avb /= $n;
+			
+			$hr = dechex($avr); if(strlen($hr)==1) $hr = '0'.$hr;
+			$hg = dechex($avg); if(strlen($hg)==1) $hg = '0'.$hg;
+			$hb = dechex($avb); if(strlen($hb)==1) $hb = '0'.$hb;
+			$av = ($avr+$avg+$avb)/3;
+			$color = '#'.$hr.$hg.$hb;
+			$color2 = $av>128?'black':'white';
+			
+		} else {
+			
+			$color = "white";
+			$color2 = "black";
+			
 		}
 		
-		$avr /= $n;
-		$avg /= $n;
-		$avb /= $n;
-		
-		$hr = dechex($avr); if(strlen($hr)==1) $hr = '0'.$hr;
-		$hg = dechex($avg); if(strlen($hg)==1) $hg = '0'.$hg;
-		$hb = dechex($avb); if(strlen($hb)==1) $hb = '0'.$hb;
-		$color = '#'.$hr.$hg.$hb;
-		
-		$html .= '<div style="background: '.$color.'; padding: 10px;height:100%;page-break-after: always;">
-				<p style="color: white;">'.$row['content'].'</p>
-				<a style="color: white;" href="'.$row['link'].'">'.$row['link'].'</a>
-				<br>
-				<img src="'.imgb64($img_src).'" style="width: 100%;"></img>
-			</div>';
+		$docbody .= '<div style="background: '.$color.'; padding: 10px;height:100%;page-break-after: always;overflow:hidden;">
+				<p style="color: '.$color2.';">'.$row['content'].'</p>
+				<a style="color: '.$color2.';" href="'.$row['link'].'">'.$row['link'].'</a>
+				<br>'.
+				(($img_src&&strlen(trim($img_src))>0) ? '<img src="'.imgb64($img_src).'" style="width: 100%;"></img>' : '').
+			'</div>';
 			
 	}
 	
-	$_SESSION['dochtml'] = $html;
+	$html = "<!doctype html><html><head>".$dochead."</head><body>".$docbody."</body></html>";
+	
+	$_SESSION['docbody'] = $docbody;
 
 	$pdf = new Dompdf();
 	$pdf->loadHtml($html);
@@ -188,16 +213,30 @@ if(!isSet($_SESSION['docname'])||$_SESSION['docname']==null) {
 			
 			.document {
 				position: absolute;
+				width: calc(2480px * .3);
+				height: calc(3508px * .3);
+				margin-left: calc((100% - 2480px * .3) * .5);
+			}
+			
+			.docwrapper {
+				position: absolute;
 				width: 100%;
-				height: calc(100% - 120px);
+				height: calc(100% - 150px);
 				overflow-y: auto;
+				background: gray;
 			}
 			
 			.bottombar {
 				position: absolute;
-				height: 40px;
+				width: 100%;
+				height: 70px;
 				bottom: 0;
+				background: #f3eee3;
 				overflow: hidden
+			}
+			
+			.btncont {
+				margin: 10px;
 			}
 			
 			embed {
@@ -213,19 +252,31 @@ if(!isSet($_SESSION['docname'])||$_SESSION['docname']==null) {
 		
 		<?php include('php/titlebar.php'); ?>
 		
-		<div class="document">
+		<div class="docwrapper">
+			<div class="document">
+				<?php echo $_SESSION['docbody']; ?>
+			</div>
 			<!--embed id="document" src="generated/<?php echo $_SESSION['docname'] ?>.pdf"></embed-->
-			<?php echo $_SESSION['dochtml']; ?>
 		</div>
 		
 		<div class="bottombar">
-			<form method="post">
-				E-Mail<input type="text" name="mail"></input><input type="submit" value="Odeslat"></input>
-				<?php if(isSet($info)) echo $info; ?>
-			</form>
-			<button>
-				<a href="generated/<?php echo $_SESSION['docname'] ?>.pdf" download>Uložit PDF</a>
-			</button>
+			<div class="btncont">
+				<!--form method="post">
+					E-Mail<input type="text" name="mail"></input><input type="submit" value="Odeslat"></input-->
+					<!--?php if(isSet($info)) echo $info; ?-->
+				<!--/form-->
+				<?php if($wish['choose']=='random') { ?>
+					<form style="display: inline;" method="post">
+						<input type="submit" class="bigbutton" name="regen" value="Generovat znovu"></input>
+					</form>
+				<?php } ?>
+				<a href="schedule_send.php"><button class="bigbutton">
+					Odeslat na E-Mail
+				</button></a>
+				<a href="generated/<?php echo $_SESSION['docname'] ?>.pdf" download="Narozeninové přání.pdf"><button class="bigbutton">
+					Uložit PDF
+				</button></a>
+			</div>
 		</div>
 		
 	</body>

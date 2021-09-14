@@ -1,5 +1,10 @@
 <?php
 session_start();
+
+if(!isSet($_SERVER['HTTPS'])){
+	header("Location: https://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
+}
+
 require_once('php/db.php');
 
 $db = DB_CONNECT();
@@ -33,6 +38,30 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		$stmt->close();
 		
 		header('Location: user_mgmt.php');
+		
+	} else if(isSet($_POST['reset_token'])) {
+		
+		$token = uniqid();
+		
+		$page = $_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
+		$page = substr($page, 0, strrpos($page, '/'));
+		
+		$valid_until = date_format(date_add(date_create(), date_interval_create_from_date_string("10 minutes")), 'Y-m-d H:i:s');
+		
+		$stmt = $db->prepare("select username from User where id=?");
+		$stmt->bind_param("i", $_GET['id']);
+		$stmt->execute();
+		$res = $stmt->get_result();
+		$stmt->close();
+		
+		$username = $res->fetch_assoc()['username'];
+		
+		$stmt = $db->prepare("insert into PassRequests(token, username, valid_until) values (?, ?, ?)");
+		$stmt->bind_param("sss", $token, $username, $valid_until);
+		$stmt->execute();
+		$stmt->close();
+		
+		$resetLink = 'https://'.$page.'/reset_pass.php?token='.$token;
 		
 	}
 	
@@ -155,7 +184,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 					
 					<?php
 						
-						$stmt = $db->prepare('select id, username, admin from User where id=?');
+						$stmt = $db->prepare('select id, username, email, admin from User where id=?');
 						$stmt->bind_param("i", $_GET['id']);
 						$stmt->execute();
 						$res = $stmt->get_result();
@@ -177,7 +206,12 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 						
 						<div class="formrow">
 							<span class="formlbl">Uživatelské jméno:</span>
-							<span class="formlbl"><?php echo $row['username'] ?></span>
+							<input class="formin" type="text" name="number" value="<?php echo $row['username'] ?>" disabled></input>
+						</div>
+						
+						<div class="formrow">
+							<span class="formlbl">E-Mail:</span>
+							<input class="formin" type="text" name="number" value="<?php echo $row['email'] ?>" disabled></input>
 						</div>
 						
 						<!--div class="formrow">
@@ -188,6 +222,17 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 						<div class="formrow">
 							<label><span class="formlbl">Admin:</span>
 							<input class="check" type="checkbox" name="admin" <?php if($row['admin']) echo 'checked'; ?>></input></label>
+						</div>
+						
+						<div class="formrow">
+							<input class="bigbutton" type="submit" name="reset_token" value="Resetovat heslo"></input>
+						</div>
+						<div class="formrow">
+							<?php if(isSet($resetLink)) {
+								?>
+								Odkaz na resetování hesla: <a class="link" href="<?php echo $resetLink; ?>"><?php echo $resetLink; ?></a>
+								<?php
+							} ?>
 						</div>
 						
 						<div class="formrow">

@@ -2,7 +2,11 @@
 	width: 100%;
 	height: 80px;
 	background: #f3eee3;
-	overflow: hidden;
+	overflow: auto;
+}
+
+.titlea {
+	position: absolute;
 }
 
 .icon {
@@ -36,6 +40,7 @@
 	color: black;
 	margin-top: 28px;
 	margin-right: 10px;
+	overflow-x: auto;
 }
 
 .usermenu {
@@ -66,10 +71,18 @@ a {
 
 .hamburger {
 	display: none;
+	margin: 10px;
+	float: right;
+	cursor: pointer;
 }
 
 .mobilemenu {
+	background: #f3eee3;
+	top: 60px;
+	width: 100%;
 	display: none;
+	position: absolute;
+	z-index: 99;
 }
 
 @media only screen and (max-width: 600px) {
@@ -114,8 +127,6 @@ a {
 	
 	.hamburger {
 		display: block;
-		margin: 10px;
-		float: right;
 	}
 	
 }

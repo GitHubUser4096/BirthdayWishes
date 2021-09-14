@@ -1,5 +1,10 @@
 <?php
 session_start();
+
+if(!isSet($_SERVER['HTTPS'])){
+	header("Location: https://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
+}
+
 require_once('php/db.php');
 
 $db = DB_CONNECT();

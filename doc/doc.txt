@@ -1,0 +1,45 @@
+##### WEB #####
+=== všichni uživatelé ===
+- index.php - úvodní stránka
+	- create_wish.php - vytvořit přání 1/2
+		- choose_info.php - vytvořit přání 2/2 (výběr zajímavostí)
+			- wish.php - zobrazení vytvořeného přání
+				- schedule_send.php - odeslání přání na e-mail
+=== nepřihlášený uživatel ===
+	- login.php - přihlášení
+	- new_account.php - vytvoření účtu
+=== přihlášený uživatel ===
+	- add_info.php - přidat novou zajímavost
+	- user_info_mgmt.php - spravovat moje zajímavosti
+		- edit_user_info - upravit mojí zajímavost
+	- acc_mgmt.php - spravovat účet
+	- logout.php - odhlásit se (přesměruje na index)
+=== admin ===
+	- info_mgmt.php - spravovat všechny zajímavosti
+	- edit_info.php - upravit zajímavost
+	- user_mgmt.php - spravovat uživatele
+		- edit_user.php - upravit uživatele
+	- edit_config.php - změnit konfiguraci webu
+
+##### SDÍLENÉ SOUBORY #####
+=== php ===
+- php/db.conf - konfigurace připojení k databázi
+- php/db.php - připojení k databázi
+- php/mail.php - konfigurace připojení k e-mailovému serveru
+- php/titlebar.php - záhlaví všech stránek (ikona, název, menu)
+=== externí knihovny ===
+- lib/dompdf/* - knihovna pro generování .PDF souborů
+- lib/phpMailer/* - knihovna pro odesílání e-mailů
+=== skripty ===
+- js/titlebar.js - skript pro záhlaví
+=== styly ===
+- css/titlebar.css - styl pro záhlaví
+- css/controls.css - styl pro obecné ovládací prvky
+- css/form.css - styl pro formulář
+- css/form_page.css - styl pro stránku s formulářem
+- css/page.css - styl pro obecné vlastnosti všech stránek
+
+##### OSTATNÍ #####
+- db_manager.php - dočasná stránka pro úpravu databáze
+- reset_pass.php - stránka pro obnovení hesla, dostupná přes odkaz z e-mailu
+- send_flush.php - stránka pro odeslání všech e-mailů k odeslání, spouštěná automaticky

@@ -139,3 +139,15 @@ textarea:focus {
 	}
 	
 }
+
+@media only screen and (max-width: 1440px) {
+	
+	.formlbl {
+		width: 100%;
+	}
+
+	.formin {
+		width: calc(100% - 10px);
+	}
+	
+}

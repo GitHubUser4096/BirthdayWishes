@@ -1,5 +1,16 @@
 <?php
+/*
+ * Stránka Vytvořit přání
+ * Popis: Formulář pro vytvoření přání, 1. část - vyplnění základních informací
+ * Projekt: Narozeninová přání
+ * Vytvořil: Michal
+ */
 session_start();
+
+if(!isSet($_SERVER['HTTPS'])){
+	header("Location: https://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
+}
+
 require_once('php/db.php');
 
 $db = DB_CONNECT();

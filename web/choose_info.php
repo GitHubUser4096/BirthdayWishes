@@ -1,5 +1,16 @@
 <?php
+/*
+ * Stránka Vytvořit přání - výběr zajímavostí
+ * Popis: Formulář pro vytvoření přání, 2. část - výběr zajímavostí
+ * Projekt: Narozeninová přání
+ * Vytvořil: Michal
+ */
 session_start();
+
+if(!isSet($_SERVER['HTTPS'])){
+	header("Location: https://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
+}
+
 require_once('php/db.php');
 
 $db = DB_CONNECT();
@@ -10,12 +21,34 @@ if(!isSet($_SESSION['wish'])){
 
 $wish = $_SESSION['wish'];
 
+$num = $wish['bdayNumber'];
+$quoted = [];
+foreach($wish['cat'] as $catname) {
+	$quoted[count($quoted)] = "'".$catname."'";
+}
+$catnames = '('.implode(",", $quoted).')';
+
+$stmt = $db->prepare('select distinct NumberInfo.id, content, imgSrc from InfoCat '.
+		'inner join NumberInfo on NumberInfo.id=infoid inner join Category on Category.id=catid '.
+		'where NumberInfo.number=? and Category.name in '.$catnames.' and NumberInfo.approved=true');
+$stmt->bind_param("i", $num);
+$stmt->execute();
+$res = $stmt->get_result();
+$stmt->close();
+
+$rows = mysqli_num_rows($res);
+
+if(!$rows){
+	$warn = 'Nebyly nalezeny žádné zajímavosti pro vybrané číslo a zájmy! <a class="link" href="add_info.php">Navrhnout novou zajímavost</a>';
+	$noForm = true;
+}
+
 if($_SERVER['REQUEST_METHOD']==='POST'){
 	
 	if($wish['choose']=='random'){
 		
-		if($_POST['random_count']<=0){
-			$error = "Prosím zadejte číslo větší než 0!";
+		if($_POST['random_count']<=0||$_POST['random_count']>$rows){
+			$error = "Prosím zadejte číslo mezi 1 a ".$rows."!";
 		} else {
 			$wish['random_count'] = $_POST['random_count'];
 		}
@@ -85,6 +118,18 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				background: #e6e2d7;
 			}
 			
+			.warn {
+				padding: 10px;
+				background: #EECC00;
+				font-weight: bold;
+				font-size: 18px;
+				color: white;
+			}
+			
+			.link {
+				color: white;
+			}
+			
 		</style>
 		
 	</head>
@@ -109,16 +154,26 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 					}
 				?>
 				
+				<?php
+					if(isSet($warn)) {
+						?><div class="warn"><?php
+							echo $warn;
+						?></div><?php
+					}
+				?>
+				
 				<form method="POST">
 					
 					<?php
+					
+					if(!isSet($noForm)||!$noForm) {
 						
 						if($wish['choose']=='random') {
 							
 							?><div class="leftcol">
 								<div class="formrow">
 									<span class="formlbl">Počet zajímavostí:</span>
-									<input class="formin" type="number" name="random_count" value=1></input>
+									<input class="formin" type="number" name="random_count" min=1 max=<?php echo $rows; ?> value=1></input>
 								</div>
 								<div class="formrow"><input class="bigbutton" value="Vytvořit >" type="submit"></input></div>
 							</div><?php
@@ -168,6 +223,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 							
 						}
 						
+					}
+					
 					?>
 					
 				</form>

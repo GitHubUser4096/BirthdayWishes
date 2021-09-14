@@ -1,5 +1,10 @@
 <?php
 session_start();
+
+if(!isSet($_SERVER['HTTPS'])){
+	header("Location: https://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
+}
+
 require_once('php/db.php');
 
 $db = DB_CONNECT();
@@ -29,6 +34,27 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			$stmt->close();
 			
 			$info = "Heslo úspěšně změněno!";
+			
+		}
+		
+	} else if(isSet($_POST['change_mail'])){
+		
+		$mail = htmlspecialchars($_POST['mail']);
+		
+		if($mail==""){
+			$error = "Prosím zadejte e-mail!";
+		} else if(strlen($mail)>63) {
+			$error = "E-Mail nesmí být delší než 63 znaků!";
+		} else {
+			
+			$stmt = $db->prepare('update User set email=? where id=?');
+			$stmt->bind_param("si", $mail, $_SESSION['user']['id']);
+			$stmt->execute();
+			$stmt->close();
+			
+			$_SESSION['user']['email'] = $mail;
+			
+			$info = "E-Mail úspěšně změněn!";
 			
 		}
 		
@@ -182,7 +208,27 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 					<div class="midcol">
 						
 						<div class="formrow">
-							<span class="formlbl">Uživatelské jméno: <?php echo $_SESSION['user']['username'] ?></span>
+							<span class="formlbl">Uživatelské jméno:</span>
+							<input class="formin" value="<?php echo $_SESSION['user']['username']; ?>" type="text" disabled></input>
+						</div>
+						
+						<div class="formrow">
+							<span class="formlbl"><b>Změnit e-mail:</b></span>
+						</div>
+						<div class="formrow">
+							<span class="formlbl">E-Mail:</span>
+							<input class="formin" name="mail" type="email" value="<?php
+								$stmt = $db->prepare('select email from User where username=?');
+								$stmt->bind_param("s", $_SESSION['user']['username']);
+								$stmt->execute();
+								$res = $stmt->get_result();
+								$stmt->close();
+								$row = $res->fetch_assoc();
+								echo $row['email'];
+							?>"></input>
+						</div>
+						<div class="formrow">
+							<input class="bigbutton" type="submit" name="change_mail" value="Změnit e-mail">
 						</div>
 						
 						<div class="formrow">

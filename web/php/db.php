@@ -1,4 +1,9 @@
 <?php
+/*
+ * Připojení k databázi
+ * Popis: funkce pro připojení k databázi, konfigurace načtená ze souboru
+ * Vytvořil: Michal
+ */
 
 $conf = file_get_contents('db.conf', true);
 $rows = explode("\n", $conf);

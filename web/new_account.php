@@ -1,5 +1,10 @@
 <?php
 session_start();
+
+if(!isSet($_SERVER['HTTPS'])){
+	header("Location: https://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
+}
+
 require_once('php/db.php');
 
 $db = DB_CONNECT();
@@ -7,11 +12,18 @@ $db = DB_CONNECT();
 if($_SERVER['REQUEST_METHOD']==='POST'){
 	
 	$username = htmlspecialchars($_POST['username']);
+	$mail = htmlspecialchars($_POST['mail']);
 	$password = $_POST['password'];
 	$verifyPass = $_POST['verify_password'];
 	
 	if($username==""){
 		$error = "Prosím zadejte uživatelské jméno!";
+	} else if($mail==""){
+		$error = "Prosím zadejte e-mail!";
+	} else if(strlen($username)>30) {
+		$error = "Uživatelské jméno nesmí být delší než 30 znaků!";
+	} else if(strlen($mail)>63) {
+		$error = "E-Mail nesmí být delší než 63 znaků!";
 	} else if($password==""){
 		$error = "Prosím zadejte heslo!";
 	} else if($password!=$verifyPass){
@@ -30,8 +42,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			
 			$hashedPass = password_hash($_POST['password'], PASSWORD_DEFAULT);
 			
-			$stmt = $db->prepare('insert into User(username, password) values (?, ?)');
-			$stmt->bind_param("ss", $username, $hashedPass);
+			$stmt = $db->prepare('insert into User(username, password, email) values (?, ?, ?)');
+			$stmt->bind_param("sss", $username, $hashedPass, $mail);
 			$stmt->execute();
 			$res = $stmt->get_result();
 			$stmt->close();
@@ -41,11 +53,14 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			$user = [];
 			$user['id'] = $id;
 			$user['username'] = $username;
+			$user['email'] = $mail;
 			$user['admin'] = false;
 			
 			$_SESSION['user'] = $user;
 			
-			header("Location: index.php");
+			$page = isSet($_GET['page']) ? $_GET['page'] : 'index.php';
+			
+			header("Location: ".$page);
 			
 		}
 		
@@ -110,6 +125,10 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 						<div class="formrow">
 							<span class="formlbl">Uživatelské jméno:</span>
 							<input class="formin" name="username" type="text" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['username'] ?>"></input>
+						</div>
+						<div class="formrow">
+							<span class="formlbl">E-Mail:</span>
+							<input class="formin" name="mail" type="email" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['mail'] ?>"></input>
 						</div>
 						<div class="formrow">
 							<span class="formlbl">Heslo:</span>

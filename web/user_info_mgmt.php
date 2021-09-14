@@ -9,24 +9,8 @@ require_once('php/db.php');
 
 $db = DB_CONNECT();
 
-if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
+if(!isSet($_SESSION['user'])) {
 	die('401 - Unauthorized');
-}
-
-if($_SERVER['REQUEST_METHOD']==='POST') {
-	
-	if(isSet($_POST['approve'])||isSet($_POST['unapprove'])) {
-		
-		$id = $_POST['id'];
-		$approved = isSet($_POST['approve'])?1:0;
-		
-		$stmt = $db->prepare('update NumberInfo set approved=? where id=?');
-		$stmt->bind_param("ii", $approved, $id);
-		$stmt->execute();
-		$stmt->close();
-		
-	}
-	
 }
 
 ?>
@@ -172,7 +156,8 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 						<tbody>
 							<?php
 								
-								$stmt = $db->prepare('select id, number, content, imgSrc, createdBy, createdTime, approved from NumberInfo order by number');
+								$stmt = $db->prepare('select id, number, content, imgSrc, createdBy, createdTime, approved from NumberInfo where createdBy=? order by number');
+								$stmt->bind_param("i", $_SESSION['user']['id']);
 								$stmt->execute();
 								$res = $stmt->get_result();
 								$stmt->close();
@@ -215,11 +200,9 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 											<input type="checkbox" <?php if($row['approved']) echo 'checked'; ?> disabled></input>
 											<form method="post">
 												<input name="id" value="<?php echo $row['id']; ?>" type="hidden"></input>
-												<input type="submit" name="approve" value="Potvrdit"></input>
-												<input type="submit" name="unapprove" value="Zrušit"></input>
 											</form>
 										</td>
-										<td class="col7"><a class="editbtn" href="edit_info.php?id=<?php echo $row['id'] ?>">Upravit</a></td>
+										<td class="col7"><a class="editbtn" href="edit_user_info.php?id=<?php echo $row['id'] ?>">Upravit</a></td>
 									</tr>
 									<?php
 								}

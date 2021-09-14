@@ -13,7 +13,7 @@ if(!isset($_GET['id'])) {
 	die('400 - Bad request');
 }
 
-if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
+if(!isSet($_SESSION['user'])) {
 	die('401 - Unauthorized');
 }
 
@@ -26,6 +26,10 @@ $row = $res->fetch_assoc();
 
 if(!$row) {
 	die('400 - Bad request');
+}
+
+if($row['createdBy']!=$_SESSION['user']['id']) {
+	die('401 - Unauthorized');
 }
 
 if($_SERVER['REQUEST_METHOD']==='POST'){
@@ -42,13 +46,11 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		$stmt->execute();
 		$stmt->close();
 		
-		header('Location: info_mgmt.php');
+		header('Location: user_info_mgmt.php');
 		
 	} else if(isSet($_POST['save'])) {
 		
 		$image_name = $_FILES['image']['name'];
-		
-		$approved = (isSet($_POST['approved']) && $_POST['approved'])?1:0;
 		
 		$number = $_POST['number'];
 		$content = htmlspecialchars($_POST['content']);
@@ -87,8 +89,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				
 			}
 			
-			$stmt = $db->prepare('update NumberInfo set number=?, content=?, link=?, approved=? where id=?');
-			$stmt->bind_param("issii", $number, $content, $link, $approved, $_GET['id']);
+			$stmt = $db->prepare('update NumberInfo set number=?, content=?, link=? where id=?');
+			$stmt->bind_param("issi", $number, $content, $link, $_GET['id']);
 			$stmt->execute();
 			$stmt->close();
 			
@@ -123,7 +125,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				
 			}
 			
-			header('Location: info_mgmt.php');
+			header('Location: user_info_mgmt.php');
 			
 		}
 		
@@ -277,7 +279,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		<div class="content">
 			
 			<div class="subtitlebar">
-				<div class="backbtn"><a href="info_mgmt.php"><</a></div><div class="subtitle">Upravit zajímavost</div>
+				<div class="backbtn"><a href="user_info_mgmt.php"><</a></div><div class="subtitle">Upravit zajímavost</div>
 			</div>
 			
 			<div class="form">
@@ -334,11 +336,6 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 							<label><input id="filein" onchange="chooseFile();" class="filein" type="file" name="image" accept=".png,.jpg,.jpeg,.gif"></input><div class="filebtn">Vybrat soubor</div></label>
 							<div id="filename"><?php if($_SERVER['REQUEST_METHOD']==='POST') echo 'Vybráno: '.$_FILES['image']['name'] ?></div>
 							<input type="hidden" name="altImage" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_FILES['image']['name'] ?>"></input>
-						</div>
-						
-						<div class="formrow">
-							<label><span class="formlbl">Potvrzeno:</span>
-							<input class="check" type="checkbox" name="approved" <?php if($row['approved']) echo 'checked'; ?>></input></label>
 						</div>
 						
 						<div class="formrow">

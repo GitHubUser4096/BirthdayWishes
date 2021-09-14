@@ -1,11 +1,5 @@
 
-function toggleMobileMenu(){
-	if(mobilemenu.style.display=='block') {
-		mobilemenu.style.display = 'none';
-	} else {
-		mobilemenu.style.display = 'block';
-	}
-}
+let menuWidth;
 
 document.addEventListener('mouseup', function(e){
 	if(typeof usermenu === 'undefined') return;
@@ -20,11 +14,40 @@ document.addEventListener('mouseup', function(e){
 	}
 });
 
+window.addEventListener('load', function(e){
+	menuWidth = menu.clientWidth;
+	if(window.innerWidth-titlea.clientWidth<menuWidth){
+		menu.style.display = "none";
+		hamburger.style.display = "block";
+	} else {
+		menu.style.display = "block";
+		hamburger.style.display = "none";
+	}
+});
+
+window.addEventListener('resize', function(e){
+	if(window.innerWidth-titlea.clientWidth<menuWidth){
+		menu.style.display = "none";
+		hamburger.style.display = "block";
+	} else {
+		menu.style.display = "block";
+		hamburger.style.display = "none";
+	}
+});
+
 function toggleUsermenu(){
 	if(usermenu.style.display=='block') {
 		usermenu.style.display = 'none';
 	} else {
 		usermenu.style.display = 'block';
 		usermenu.style.right = (document.body.offsetWidth-userBtn.offsetLeft-userBtn.offsetWidth)+"px";
+	}
+}
+
+function toggleMobileMenu(){
+	if(mobilemenu.style.display=='block') {
+		mobilemenu.style.display = 'none';
+	} else {
+		mobilemenu.style.display = 'block';
 	}
 }
