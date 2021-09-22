@@ -25,7 +25,7 @@
 						<?php
 					} else {
 						?>
-						<hr><a href="user_nfo_mgmt.php">Moje zajímavosti</a>
+						<hr><a href="user_info_mgmt.php">Moje zajímavosti</a>
 						<?php
 					}
 					
