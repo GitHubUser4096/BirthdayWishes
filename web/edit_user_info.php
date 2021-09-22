@@ -13,7 +13,7 @@ if(!isset($_GET['id'])) {
 	die('400 - Bad request');
 }
 
-if(!isSet($_SESSION['user'])) {
+if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']) {
 	die('401 - Unauthorized');
 }
 
@@ -23,6 +23,10 @@ $stmt->execute();
 $res = $stmt->get_result();
 $stmt->close();
 $row = $res->fetch_assoc();
+
+if($row['state']=='approved') {
+	$warn = 'Po úpravě musí být zajímavost znovu schválena.';
+}
 
 if(!$row) {
 	die('400 - Bad request');
@@ -50,13 +54,20 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		
 	} else if(isSet($_POST['save'])) {
 		
-		$image_name = $_FILES['image']['name'];
-		
 		$number = $_POST['number'];
 		$content = htmlspecialchars($_POST['content']);
 		$link = htmlspecialchars($_POST['link']);
+		$imageName = htmlspecialchars($_POST['imageName']);
 		
-		if(strlen($image_name)>50) {
+		if(isSet($_FILES['imageFile'])&&strlen(trim($_FILES['imageFile']['name']))>0&&strlen(trim($imageName))>0){ // upload image
+			
+			if(getimagesize($_FILES['imageFile']['tmp_name'])!==false){ // file is a valid image
+				move_uploaded_file($_FILES['imageFile']['tmp_name'], $imageName);
+			}
+			
+		}
+		
+		if(strlen($imageName)>50) {
 			$error = "Název obrázku nesmí být delší než 50 znaků!";
 		} else if(!($_POST['number']>0)){
 			$error = "Číslo musí být větší než 0!";
@@ -72,25 +83,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			$error = "Prosím vyberte aspoň jednu kategorii!";
 		} else {
 			
-			if(strlen(trim($image_name))>0) {
-				
-				if(getimagesize($_FILES['image']['tmp_name'])!==false){ // file is a valid image
-					if(move_uploaded_file($_FILES['image']['tmp_name'], "images/".$image_name)){ // file is successfully copied from tmp
-						
-						$image = "images/".$image_name;
-						
-						$stmt = $db->prepare('update NumberInfo set imgSrc=? where id=?');
-						$stmt->bind_param("si", $image, $_GET['id']);
-						$stmt->execute();
-						$stmt->close();
-						
-					}
-				}
-				
-			}
-			
-			$stmt = $db->prepare('update NumberInfo set number=?, content=?, link=? where id=?');
-			$stmt->bind_param("issi", $number, $content, $link, $_GET['id']);
+			$stmt = $db->prepare("update NumberInfo set number=?, content=?, link=?, state='pending', imgSrc=? where id=?");
+			$stmt->bind_param("isssi", $number, $content, $link, $imageName, $_GET['id']);
 			$stmt->execute();
 			$stmt->close();
 			
@@ -166,7 +160,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			.filebtn {
 				width: 150px;
 				text-align: center;
-				display: block;
+				display: inline;
 				color: white;
 				border: none;
 				background: #2edc15;
@@ -268,6 +262,14 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				font-size: 18px;
 			}
 			
+			.warn {
+				padding: 10px;
+				background: #EECC00;
+				font-weight: bold;
+				font-size: 18px;
+				color: white;
+			}
+			
 		</style>
 		
 	</head>
@@ -288,7 +290,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 					
 					<?php
 						
-						$stmt = $db->prepare('select number, content, link, imgSrc, approved from NumberInfo where id=?');
+						$stmt = $db->prepare('select number, content, link, imgSrc, state from NumberInfo where id=?');
 						$stmt->bind_param("i", $_GET['id']);
 						$stmt->execute();
 						$res = $stmt->get_result();
@@ -308,17 +310,25 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 							}
 						?>
 						
+						<?php
+							if(isSet($warn)) {
+								?><div class="warn"><?php
+									echo $warn;
+								?></div><?php
+							}
+						?>
+						
 						<div class="formrow">
 							<span class="formlbl">Číslo:</span>
-							<input class="formin" type="text" name="number" value="<?php echo $row['number'] ?>"></input>
+							<input class="formin" type="text" name="number" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['number']; else echo $row['number']; ?>"></input>
 						</div>
 						<div class="formrow">
 							<span class="formlbl">Popis:</span>
-							<textarea name="content"><?php echo $row['content'] ?></textarea>
+							<textarea name="content"><?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['content']; else echo $row['content']; ?></textarea>
 						</div>
 						<div class="formrow">
 							<span class="formlbl">Odkaz:</span>
-							<input class="formin" type="text" name="link" value="<?php echo $row['link'] ?>"></input>
+							<input class="formin" type="text" name="link" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['link']; else echo $row['link']; ?>"></input>
 						</div>
 						
 						<script>
@@ -326,16 +336,21 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 							function chooseFile(){
 								let val = filein.value.split('\\');
 								val = val[val.length-1];
-								filename.innerText = 'Vybráno: '+val;
+								imageName.value = "images/<?php echo $_SESSION['user']['username'] ?>_"+new Date().getTime()+"_"+val;
+							}
+							
+							function cancelFile(){
+								imageName.value = "";
 							}
 							
 						</script>
 						
 						<div class="formrow">
 							<span class="formlbl">Obrázek:</span>
-							<label><input id="filein" onchange="chooseFile();" class="filein" type="file" name="image" accept=".png,.jpg,.jpeg,.gif"></input><div class="filebtn">Vybrat soubor</div></label>
-							<div id="filename"><?php if($_SERVER['REQUEST_METHOD']==='POST') echo 'Vybráno: '.$_FILES['image']['name'] ?></div>
-							<input type="hidden" name="altImage" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_FILES['image']['name'] ?>"></input>
+							<input style="width:400px;" id="imageName" name="imageName" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['imageName']; else echo $row['imgSrc']; ?>" readonly></input>
+							<label><input id="filein" onchange="chooseFile();" class="filein" type="file" name="imageFile" accept=".png,.jpg,.jpeg,.gif"></input>
+							<br><br><div class="filebtn">Vybrat soubor</div></label>
+							<div type="button" onclick="cancelFile();" class="filebtn">Zrušit</div>
 						</div>
 						
 						<div class="formrow">
@@ -381,13 +396,16 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 										$name = $row['name'];
 										?><div><label><input type="checkbox" name="cat[]" <?php
 											
-											$stmt = $db->prepare('select * from InfoCat inner join Category on Category.id=catid where infoid=? and name=?');
-											$stmt->bind_param('is', $_GET['id'], $row['name']);
-											$stmt->execute();
-											$res2 = $stmt->get_result();
-											$stmt->close();
-											
-											if($res2->fetch_assoc()) echo 'checked';
+											if($_SERVER['REQUEST_METHOD']==='POST') {
+												if(isSet($_POST['cat'])&&in_array($name, $_POST['cat'])) echo 'checked';
+											} else {
+												$stmt = $db->prepare('select * from InfoCat inner join Category on Category.id=catid where infoid=? and name=?');
+												$stmt->bind_param('is', $_GET['id'], $name);
+												$stmt->execute();
+												$res2 = $stmt->get_result();
+												$stmt->close();
+												if($res2->fetch_assoc()) echo 'checked';
+											}
 											
 										?> value="<?php echo $name ?>"></input><?php echo $name ?></label></div><?php
 									}

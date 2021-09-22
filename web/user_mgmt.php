@@ -138,7 +138,13 @@ if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
 									<tr>
 										<td class="col1"><?php echo $row['username']; ?></td>
 										<td class="col2"><input type="checkbox" <?php if($row['admin']) echo 'checked'; ?> disabled></input></td>
-										<td class="col3"><a class="editbtn" href="edit_user.php?id=<?php echo $row['id'] ?>">Upravit</a></td>
+										<td class="col3">
+											<?php if($row['id']==$_SESSION['user']['id']) { ?>
+												<a class="editbtn" href="acc_mgmt.php">Spravovat účet</a>
+											<?php } else { ?>
+												<a class="editbtn" href="edit_user.php?id=<?php echo $row['id'] ?>">Upravit</a>
+											<?php } ?>
+										</td>
 									</tr>
 									<?php
 								}

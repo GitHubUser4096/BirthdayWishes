@@ -171,6 +171,11 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				font-size: 18px;
 			}
 			
+			.check {
+				width: 24px;
+				height: 24px;
+			}
+			
 		</style>
 		
 	</head>
@@ -210,6 +215,14 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 						<div class="formrow">
 							<span class="formlbl">Uživatelské jméno:</span>
 							<input class="formin" value="<?php echo $_SESSION['user']['username']; ?>" type="text" disabled></input>
+						</div>
+						
+						<div class="formrow">
+							<span class="formlbl">Ověřený účet:</span>
+							<input class="check" type="checkbox" <?php if($_SESSION['user']['verified']) echo 'checked'; ?> disabled></input>
+							<?php if(!$_SESSION['user']['verified']) { ?>
+								<a href="request_verify.php"><button type="button" class="bigbutton">Ověřit</button></a>
+							<?php } ?>
 						</div>
 						
 						<div class="formrow">

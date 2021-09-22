@@ -55,12 +55,14 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			$user['username'] = $username;
 			$user['email'] = $mail;
 			$user['admin'] = false;
+			$user['verified'] = false;
 			
 			$_SESSION['user'] = $user;
 			
-			$page = isSet($_GET['page']) ? $_GET['page'] : 'index.php';
+			header('Location: request_verify.php');
 			
-			header("Location: ".$page);
+			//$page = isSet($_GET['page']) ? $_GET['page'] : 'index.php';
+			//header("Location: ".$page);
 			
 		}
 		
@@ -89,6 +91,14 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		
 		<style>
 			
+			.info {
+				padding: 10px;
+				background: #2edc15;
+				font-weight: bold;
+				font-size: 18px;
+				color: white;
+			}
+			
 			.createbtn {
 				margin-left: 25%;
 				width: 50%;
@@ -111,6 +121,14 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			<div class="form">
 				
 				<form method="post">
+					
+					<?php
+						if(isSet($info)) {
+							?><div class="info"><?php
+								echo $info;
+							?></div><?php
+						}
+					?>
 					
 					<?php
 						if(isSet($error)) {

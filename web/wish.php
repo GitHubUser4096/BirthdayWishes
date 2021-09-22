@@ -83,9 +83,10 @@ if(!isSet($_SESSION['docname'])||$_SESSION['docname']==null) {
 	</div>';
 		
 	$num = $wish['bdayNumber'];
-
-	$stmt = $db->prepare('select id, content, link, imgSrc from NumberInfo where number=? and approved=true');
-	$stmt->bind_param("i", $num);
+	
+	$usr = isSet($_SESSION['user'])?$_SESSION['user']['id']:0;
+	$stmt = $db->prepare("select id, content, link, imgSrc from NumberInfo where number=? and (state='approved' or createdBy=?)");
+	$stmt->bind_param("ii", $num, $usr);
 	$stmt->execute();
 	$res = $stmt->get_result();
 	$stmt->close();

@@ -31,9 +31,10 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 	} else if(isSet($_POST['save'])) {
 		
 		$admin = (isSet($_POST['admin']) && $_POST['admin'])?1:0;
+		$verified = (isSet($_POST['verified']) && $_POST['verified'])?1:0;
 		
-		$stmt = $db->prepare('update User set admin=? where id=?');
-		$stmt->bind_param("ii", $admin, $_GET['id']);
+		$stmt = $db->prepare('update User set admin=?, verified=? where id=?');
+		$stmt->bind_param("iii", $admin, $verified, $_GET['id']);
 		$stmt->execute();
 		$stmt->close();
 		
@@ -184,7 +185,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 					
 					<?php
 						
-						$stmt = $db->prepare('select id, username, email, admin from User where id=?');
+						$stmt = $db->prepare('select id, username, email, admin, verified from User where id=?');
 						$stmt->bind_param("i", $_GET['id']);
 						$stmt->execute();
 						$res = $stmt->get_result();
@@ -222,6 +223,11 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 						<div class="formrow">
 							<label><span class="formlbl">Admin:</span>
 							<input class="check" type="checkbox" name="admin" <?php if($row['admin']) echo 'checked'; ?>></input></label>
+						</div>
+						
+						<div class="formrow">
+							<label><span class="formlbl">Ověřený:</span>
+							<input class="check" type="checkbox" name="verified" <?php if($row['verified']) echo 'checked'; ?>></input></label>
 						</div>
 						
 						<div class="formrow">

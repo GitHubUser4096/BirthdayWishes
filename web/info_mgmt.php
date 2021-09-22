@@ -15,13 +15,13 @@ if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
 
 if($_SERVER['REQUEST_METHOD']==='POST') {
 	
-	if(isSet($_POST['approve'])||isSet($_POST['unapprove'])) {
+	if(isSet($_POST['change_state'])) {
 		
 		$id = $_POST['id'];
-		$approved = isSet($_POST['approve'])?1:0;
+		$state = $_POST['state'];
 		
-		$stmt = $db->prepare('update NumberInfo set approved=? where id=?');
-		$stmt->bind_param("ii", $approved, $id);
+		$stmt = $db->prepare('update NumberInfo set state=? where id=?');
+		$stmt->bind_param("si", $state, $id);
 		$stmt->execute();
 		$stmt->close();
 		
@@ -98,7 +98,7 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 			.col1 { width: 35px; }
 			.col2 { width: auto; }
 			.col3 { width: 100px }
-			.col4 { width: 80px }
+			.col4 { width: 200px }
 			.col5 { width: 100px }
 			.col6 { width: 70px }
 			.col7 { width: 80px }
@@ -161,7 +161,7 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 								<th class="col3">Obrázek</th>
 								<th class="col4">Kategorie</th>
 								<th class="col5">Vytvořil</th>
-								<th class="col6">Potvrzeno</th>
+								<th class="col6">Stav</th>
 								<th class="col7">Upravit</th>
 							</tr>
 						</thead>
@@ -172,7 +172,7 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 						<tbody>
 							<?php
 								
-								$stmt = $db->prepare('select id, number, content, imgSrc, createdBy, createdTime, approved from NumberInfo order by number');
+								$stmt = $db->prepare('select id, number, content, imgSrc, createdBy, createdTime, state from NumberInfo order by number');
 								$stmt->execute();
 								$res = $stmt->get_result();
 								$stmt->close();
@@ -212,11 +212,19 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 											
 										?></td>
 										<td class="col6">
-											<input type="checkbox" <?php if($row['approved']) echo 'checked'; ?> disabled></input>
+											<?php
+												/*if($row['state']=='pending') echo '<span style="background:yellow">Nevyřízeno</span>';
+												else if($row['state']=='approved') echo '<span style="background:#0F0">Schváleno</span>';
+												else if($row['state']=='dismissed') echo '<span style="background:red;color:white">Zamítnuto</span>';*/
+												if($row['state']=='pending') echo '<img title="Před schválením" src="res/pending.png"></img>';
+												else if($row['state']=='approved') echo '<img title="Schváleno" src="res/approved.png"></img>';
+												else if($row['state']=='dismissed') echo '<img title="Zamítnuto" src="res/dismissed.png"></img>';
+											?>
 											<form method="post">
 												<input name="id" value="<?php echo $row['id']; ?>" type="hidden"></input>
-												<input type="submit" name="approve" value="Potvrdit"></input>
-												<input type="submit" name="unapprove" value="Zrušit"></input>
+												<input name="change_state" value="true" type="hidden"></input>
+												<button style="padding:0;border:none;background:none;cursor:pointer;" title="Schválit" name="state" value="approved"><img src="res/approve.png"></img></button>
+												<button style="padding:0;border:none;background:none;cursor:pointer;" title="Zamítnout" name="state" value="dismissed"><img src="res/dismiss.png"></img></button>
 											</form>
 										</td>
 										<td class="col7"><a class="editbtn" href="edit_info.php?id=<?php echo $row['id'] ?>">Upravit</a></td>

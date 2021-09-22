@@ -42,4 +42,6 @@
 ##### OSTATNÍ #####
 - db_manager.php - dočasná stránka pro úpravu databáze
 - reset_pass.php - stránka pro obnovení hesla, dostupná přes odkaz z e-mailu
+- request_verify.php - stránka, která odešle e-mail pro ověření účtu (zobrazí se po vytvoření účtu)
+- verify.php - stránka, která ověří účet (dostupná přes odkaz z e-mailu)
 - send_flush.php - stránka pro odeslání všech e-mailů k odeslání, spouštěná automaticky

@@ -164,7 +164,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 								
 								<?php
 									
-									$stmt = $db->prepare('select distinct name from InfoCat inner join NumberInfo on NumberInfo.id=infoid inner join Category on Category.id=catid where approved=1');
+									$stmt = $db->prepare("select distinct name from InfoCat inner join NumberInfo on NumberInfo.id=infoid inner join Category on Category.id=catid where state='approved'");
 									if($stmt) {
 										$stmt->execute();
 										$res = $stmt->get_result();

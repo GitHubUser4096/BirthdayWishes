@@ -28,10 +28,11 @@ foreach($wish['cat'] as $catname) {
 }
 $catnames = '('.implode(",", $quoted).')';
 
-$stmt = $db->prepare('select distinct NumberInfo.id, content, imgSrc from InfoCat '.
-		'inner join NumberInfo on NumberInfo.id=infoid inner join Category on Category.id=catid '.
-		'where NumberInfo.number=? and Category.name in '.$catnames.' and NumberInfo.approved=true');
-$stmt->bind_param("i", $num);
+$usr = isSet($_SESSION['user'])?$_SESSION['user']['id']:0;
+$stmt = $db->prepare("select distinct NumberInfo.id, content, imgSrc from InfoCat ".
+		"inner join NumberInfo on NumberInfo.id=infoid inner join Category on Category.id=catid ".
+		"where NumberInfo.number=? and Category.name in ".$catnames." and (NumberInfo.state='approved' or NumberInfo.createdBy=?)");
+$stmt->bind_param("ii", $num, $usr);
 $stmt->execute();
 $res = $stmt->get_result();
 $stmt->close();
@@ -193,26 +194,25 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 									}
 									$catnames = '('.implode(",", $quoted).')';
 									
-									$stmt = $db->prepare('select distinct NumberInfo.id, content, imgSrc from InfoCat '.
-											'inner join NumberInfo on NumberInfo.id=infoid inner join Category on Category.id=catid '.
-											'where NumberInfo.number=? and Category.name in '.$catnames.' and NumberInfo.approved=true');
-									if($stmt) {
-										$stmt->bind_param("i", $num);
-										$stmt->execute();
-										$res = $stmt->get_result();
-										$stmt->close();
+									$usr = isSet($_SESSION['user'])?$_SESSION['user']['id']:0;
+									$stmt = $db->prepare("select distinct NumberInfo.id, content, imgSrc from InfoCat ".
+											"inner join NumberInfo on NumberInfo.id=infoid inner join Category on Category.id=catid ".
+											"where NumberInfo.number=? and Category.name in ".$catnames." and (NumberInfo.state='approved' or NumberInfo.createdBy=?)");
+									$stmt->bind_param("ii", $num, $usr);
+									$stmt->execute();
+									$res = $stmt->get_result();
+									$stmt->close();
+									
+									while($row = $res->fetch_assoc()){
 										
-										while($row = $res->fetch_assoc()){
-											
-											?>
-											<tr>
-													<td><input id="row<?php echo $row['id'] ?>" class="check" type="checkbox" name="choice[]" value="<?php echo $row['id'] ?>"></input></td>
-													<td><label for="row<?php echo $row['id'] ?>"><?php echo $row['content'] ?></label></td>
-													<td><label for="row<?php echo $row['id'] ?>"><img src="<?php echo $row['imgSrc'] ?>"></img></label></td>
-											</tr>
-											<?php
-											
-										}
+										?>
+										<tr>
+												<td><input id="row<?php echo $row['id'] ?>" class="check" type="checkbox" name="choice[]" value="<?php echo $row['id'] ?>"></input></td>
+												<td><label for="row<?php echo $row['id'] ?>"><?php echo $row['content'] ?></label></td>
+												<td><label for="row<?php echo $row['id'] ?>"><img src="<?php echo $row['imgSrc'] ?>"></img></label></td>
+										</tr>
+										<?php
+										
 									}
 									
 								?>

@@ -9,8 +9,8 @@ require_once('php/db.php');
 
 $db = DB_CONNECT();
 
-if(!isSet($_SESSION['user'])) {
-	die('401 - Unauthorized');
+if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']) {
+	header('Location: login.php?page=user_info_mgmt.php');
 }
 
 ?>
@@ -81,11 +81,11 @@ if(!isSet($_SESSION['user'])) {
 			
 			.col1 { width: 35px; }
 			.col2 { width: auto; }
-			.col3 { width: 100px }
-			.col4 { width: 80px }
-			.col5 { width: 100px }
-			.col6 { width: 70px }
-			.col7 { width: 80px }
+			.col3 { width: 100px; }
+			.col4 { width: 200px; }
+			.col5 { width: 100px; }
+			.col6 { width: 70px; }
+			.col7 { width: 80px; }
 			
 			.editbtn {
 				text-decoration: underline;
@@ -145,7 +145,7 @@ if(!isSet($_SESSION['user'])) {
 								<th class="col3">Obrázek</th>
 								<th class="col4">Kategorie</th>
 								<th class="col5">Vytvořil</th>
-								<th class="col6">Potvrzeno</th>
+								<th class="col6">Stav</th>
 								<th class="col7">Upravit</th>
 							</tr>
 						</thead>
@@ -156,7 +156,7 @@ if(!isSet($_SESSION['user'])) {
 						<tbody>
 							<?php
 								
-								$stmt = $db->prepare('select id, number, content, imgSrc, createdBy, createdTime, approved from NumberInfo where createdBy=? order by number');
+								$stmt = $db->prepare('select id, number, content, imgSrc, createdBy, createdTime, state from NumberInfo where createdBy=? order by number');
 								$stmt->bind_param("i", $_SESSION['user']['id']);
 								$stmt->execute();
 								$res = $stmt->get_result();
@@ -196,11 +196,16 @@ if(!isSet($_SESSION['user'])) {
 											echo $row['createdTime'];
 											
 										?></td>
-										<td class="col6">
-											<input type="checkbox" <?php if($row['approved']) echo 'checked'; ?> disabled></input>
-											<form method="post">
+										<td class="col6" style="text-align:center;">
+											<?php
+												if($row['state']=='pending') echo '<img title="Před schválením" src="res/pending.png"></img>';
+												else if($row['state']=='approved') echo '<img title="Schváleno" src="res/approved.png"></img>';
+												else if($row['state']=='dismissed') echo '<img title="Zamítnuto" src="res/dismissed.png"></img>';
+											?>
+											<!--input type="checkbox" <?php if($row['approved']) echo 'checked'; ?> disabled></input-->
+											<!--form method="post">
 												<input name="id" value="<?php echo $row['id']; ?>" type="hidden"></input>
-											</form>
+											</form-->
 										</td>
 										<td class="col7"><a class="editbtn" href="edit_user_info.php?id=<?php echo $row['id'] ?>">Upravit</a></td>
 									</tr>

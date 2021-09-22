@@ -8,11 +8,14 @@
 		<hr>
 		<a href="create_wish.php">Vytvořit přání</a>
 		<?php
-			if(isSet($_SESSION['user'])) { ?>
+			if(isSet($_SESSION['user'])) {
 				
-				<hr><a href="add_info.php">Přidat zajímavost</a>
-				
-				<?php
+				if($_SESSION['user']['verified']){
+					?>
+					
+					<hr><a href="add_info.php">Přidat zajímavost</a>
+					
+					<?php
 					
 					if($_SESSION['user']['admin']) {
 						?>
@@ -25,6 +28,8 @@
 						<hr><a href="user_nfo_mgmt.php">Moje zajímavosti</a>
 						<?php
 					}
+					
+				}
 					
 				?>
 				
@@ -45,11 +50,14 @@
 	<div class="menu" id="menu">
 		<a href="create_wish.php">Vytvořit přání</a>
 		<?php
-			if(isSet($_SESSION['user'])) { ?>
+			if(isSet($_SESSION['user'])) {
 				
-				| <a href="add_info.php">Přidat zajímavost</a>
-				
-				<?php
+				if($_SESSION['user']['verified']){
+					?>
+					
+					| <a href="add_info.php">Přidat zajímavost</a>
+					
+					<?php
 					
 					if($_SESSION['user']['admin']) {
 						?>
@@ -62,6 +70,8 @@
 						| <a href="user_info_mgmt.php">Moje zajímavosti</a>
 						<?php
 					}
+					
+				}
 					
 				?>
 				

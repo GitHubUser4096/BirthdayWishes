@@ -9,16 +9,27 @@ require_once('php/db.php');
 
 $db = DB_CONNECT();
 
-if(!isSet($_SESSION['user'])){
+if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']){
 	header('Location: login.php?page=add_info.php');
 	//die("401 - Unauthorized");
 }
 
 if($_SERVER['REQUEST_METHOD']==='POST'){
 	
-	$image_name = $_FILES['image']['name'];
+	$number = $_POST['number'];
+	$content = htmlspecialchars($_POST['content']);
+	$link = htmlspecialchars($_POST['link']);
+	$imageName = htmlspecialchars($_POST['imageName']);
 	
-	if(strlen($image_name)>50) {
+	if(isSet($_FILES['imageFile'])&&strlen(trim($_FILES['imageFile']['name']))>0&&strlen(trim($imageName))>0){ // upload image
+		
+		if(getimagesize($_FILES['imageFile']['tmp_name'])!==false){ // file is a valid image
+			move_uploaded_file($_FILES['imageFile']['tmp_name'], $imageName);
+		}
+		
+	}
+	
+	if(strlen($imageName)>50) {
 		$error = "Název obrázku nesmí být delší než 50 znaků!";
 	} else if(!($_POST['number']>0)){
 		$error = "Číslo musí být větší než 0!";
@@ -34,18 +45,6 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		$error = "Prosím vyberte aspoň jednu kategorii!";
 	} else {
 		
-		$image = '';
-		
-		if(strlen(trim($image_name))>0) {
-			if(getimagesize($_FILES['image']['tmp_name'])!==false){ // file is a valid image
-				if(move_uploaded_file($_FILES['image']['tmp_name'], "images/".$image_name)){ // file is successfully copied from tmp
-					$image = "images/".$image_name;
-				}
-			}
-		} else if(strlen(trim($_POST['altImage']))>0) {
-			$image = 'images/'.$_POST['altImage'];
-		}
-		
 		$stmt = $db->prepare("select value from Config where name='infoLimit'");
 		$stmt->execute();
 		$res = $stmt->get_result();
@@ -58,10 +57,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		$stmt->close();
 		$infoLimitReset = $res->fetch_assoc()['value'];
 		
-		$number = $_POST['number'];
-		$content = htmlspecialchars($_POST['content']);
-		$link = htmlspecialchars($_POST['link']);
-		$categories = $_POST['cat'];
+		
 		
 		$stmt = $db->prepare('select * from NumberInfo where createdBy=? and createdTime>DATE_SUB(NOW(), INTERVAL ? MINUTE)');
 		$stmt->bind_param("si", $_SESSION['user']['id'], $infoLimitReset);
@@ -74,7 +70,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			$error = "Limit prekročen!";
 		} else {
 			
-			foreach($categories as $cat){
+			foreach($_POST['cat'] as $cat){
 				
 				$cat = htmlspecialchars($cat);
 				
@@ -97,14 +93,14 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				
 			}
 			
-			$stmt = $db->prepare('insert into NumberInfo(number, content, link, imgSrc, createdBy, createdTime, approved) values (?, ?, ?, ?, ?, now(), false)');
-			$stmt->bind_param("isssi", $number, $content, $link, $image, $_SESSION['user']['id']);
+			$stmt = $db->prepare('insert into NumberInfo(number, content, link, imgSrc, createdBy, createdTime) values (?, ?, ?, ?, ?, now())');
+			$stmt->bind_param("isssi", $number, $content, $link, $imageName, $_SESSION['user']['id']);
 			$stmt->execute();
 			$stmt->close();
 			
 			$id = $db->insert_id;
 			
-			foreach($categories as $cat){
+			foreach($_POST['cat'] as $cat){
 				
 				$stmt = $db->prepare('insert into InfoCat(infoId, catId) values (?, (select id from Category where name=?))');
 				$stmt->bind_param("ss", $id, $cat);
@@ -150,7 +146,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			.filebtn {
 				width: 150px;
 				text-align: center;
-				display: block;
+				display: inline;
 				color: white;
 				border: none;
 				background: #2edc15;
@@ -247,16 +243,21 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 							function chooseFile(){
 								let val = filein.value.split('\\');
 								val = val[val.length-1];
-								filename.innerText = 'Vybráno: '+val;
+								imageName.value = "images/<?php echo $_SESSION['user']['username'] ?>_"+new Date().getTime()+"_"+val;
+							}
+							
+							function cancelFile(){
+								imageName.value = "";
 							}
 							
 						</script>
 						
 						<div class="formrow">
 							<span class="formlbl">Obrázek:</span>
-							<label><input id="filein" onchange="chooseFile();" class="filein" type="file" name="image" accept=".png,.jpg,.jpeg,.gif"></input><div class="filebtn">Vybrat soubor</div></label>
-							<div id="filename"><?php if($_SERVER['REQUEST_METHOD']==='POST') echo 'Vybráno: '.$_FILES['image']['name'] ?></div>
-							<input type="hidden" name="altImage" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_FILES['image']['name'] ?>"></input>
+							<input style="width:400px;" id="imageName" name="imageName" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['imageName']; ?>" readonly></input>
+							<label><input id="filein" onchange="chooseFile();" class="filein" type="file" name="imageFile" accept=".png,.jpg,.jpeg,.gif"></input>
+							<br><br><div class="filebtn">Vybrat soubor</div></label>
+							<div type="button" onclick="cancelFile();" class="filebtn">Zrušit</div>
 						</div>
 						
 						<div class="formrow">

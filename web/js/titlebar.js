@@ -16,7 +16,7 @@ document.addEventListener('mouseup', function(e){
 
 window.addEventListener('load', function(e){
 	menuWidth = menu.clientWidth;
-	if(window.innerWidth-titlea.clientWidth<menuWidth){
+	if(window.innerWidth-titlea.clientWidth<menuWidth||window.innerWidth<=600){
 		menu.style.display = "none";
 		hamburger.style.display = "block";
 	} else {
@@ -26,7 +26,7 @@ window.addEventListener('load', function(e){
 });
 
 window.addEventListener('resize', function(e){
-	if(window.innerWidth-titlea.clientWidth<menuWidth){
+	if(window.innerWidth-titlea.clientWidth<menuWidth||window.innerWidth<=600){
 		menu.style.display = "none";
 		hamburger.style.display = "block";
 	} else {
