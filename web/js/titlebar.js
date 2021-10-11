@@ -1,3 +1,7 @@
+/*
+ * Projekt: Narozeninová přání
+ * Vytvořil: Michal
+ */
 
 let menuWidth;
 

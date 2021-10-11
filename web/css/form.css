@@ -12,12 +12,61 @@ form {
 	background: #f3eee3;
 }
 
-.error {
+.formPage {
+	width: 100%;
+}
+
+.pageBody {
+	position: absolute;
+	max-height: calc(100% - 40px);
+	width: 50%;
+	overflow-y: auto;
+}
+
+.pageControls {
+	height: 40px;
+	position: absolute;
+	bottom: 0px;
+}
+
+.tooltip {
+	position: fixed;
+	z-index: 999;
+	background: #2edc15;
+	color: white;
+	padding: 5px;
+	display: none;
+}
+
+/*.error {
 	padding: 10px;
 	background: red;
 	font-weight: bold;
 	font-size: 18px;
 	color: white;
+}*/
+
+.message {
+	padding: 10px;
+	font-weight: bold;
+	font-size: 18px;
+	color: white;
+}
+
+.message.error {
+	background: red;
+}
+
+.message.warning {
+	background: #EECC00;
+}
+
+.message.status {
+	background: #00AACC;
+}
+
+.message.info {
+	background: #2edc15;
 }
 
 .leftcol {
@@ -49,6 +98,7 @@ form {
 
 .formrow {
 	padding: 10px;
+	display: block;
 }
 
 .formlbl {
@@ -66,8 +116,21 @@ form {
 	padding: 5px;
 }
 
+.input {
+	font-size: 20px;
+	border-radius: 0px;
+	border: none;
+	background: #e6e2d7;
+	color: black;
+	padding: 5px;
+}
+
 .formin:focus {
 	outline: none;
+}
+
+::placeholder {
+	color: #BBB;
 }
 
 .catfield {
@@ -76,7 +139,52 @@ form {
 	font-size: 20px;
 }
 
-textarea {
+.action {
+	border: none;
+	background: #2edc15;
+	color: white;
+	font-size: 16px;
+	margin: 10px;
+	padding: 8px;
+}
+
+.action:hover {
+	background: #7be96c;
+}
+
+.tabbtn {
+	border: none;
+	color: white;
+	background: #AAA;
+	font-size: 16px;
+	margin: 10px;
+	padding: 8px;
+}
+
+.tabbtn.selected {
+	background: #2edc15;
+}
+
+.tabbtn:hover {
+	background: #BBB;
+}
+
+.tabbtn.selected:hover {
+	background: #7be96c;
+}
+
+.moveField {
+	margin: 2px;
+	background: #e6e2d7;
+	height: 30px;
+	overflow: hidden;
+}
+
+.moveField.selected {
+	background: #7be96c;
+}
+
+.textarea {
 	width: 100%;
 	height: 150px;
 	background: #e6e2d7;
@@ -86,7 +194,7 @@ textarea {
 	font-size: 20px;
 }
 
-textarea:focus {
+.textarea:focus {
 	outline: none;
 }
 

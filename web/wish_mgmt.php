@@ -13,8 +13,8 @@ require_once('php/db.php');
 
 $db = DB_CONNECT();
 
-if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
-	die('401 - Unauthorized');
+if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']) {
+	header('Location: login.php?page=user_info_mgmt.php');
 }
 
 ?>
@@ -23,7 +23,7 @@ if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
 
 	<head>
 		
-		<title>Spravovat uživatele</title>
+		<title>Moje přání</title>
 		
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		
@@ -31,6 +31,9 @@ if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
 		<link rel="stylesheet" href="css/page.css">
 		<link rel="stylesheet" href="css/titlebar.css">
 		<script src="js/titlebar.js"></script>
+		
+		<!--link rel="stylesheet" href="css/form_page.css">
+		<link rel="stylesheet" href="css/form.css"-->
 		
 		<style>
 			
@@ -80,9 +83,13 @@ if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
 				height: 100%;
 			}
 			
-			.col1 { width: auto; }
-			.col2 { width: 100px; }
-			.col3 { width: 100px }
+			.col1 { width: 100px; }
+			.col2 { width: auto; }
+			.col3 { width: 160px; }
+			.col4 { width: 100px; }
+			.col5 { width: 120px; }
+			.col6 { width: 70px; }
+			.col7 { width: 80px; }
 			
 			.editbtn {
 				text-decoration: underline;
@@ -100,6 +107,22 @@ if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
 				padding: 10px;
 			}
 			
+			.addbtn {
+				float: right;
+				margin: 5px;
+				width: 30px;
+				height: 30px;
+				font-size: 20px;
+				border: none;
+				background: #2edc15;
+				color: white;
+				cursor: pointer;
+			}
+			
+			.addbtn:hover {
+				background: #7be96c;
+			}
+			
 		</style>
 		
 	</head>
@@ -111,7 +134,8 @@ if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
 		<div class="content">
 			
 			<div class="subtitlebar">
-				<a class="backbtn" href="index.php"><</a><span class="subtitle">Spravovat uživatele</span>
+				<a class="backbtn" href="index.php"><</a><span class="subtitle">Moje přání</span>
+				<a href="create_wish.php"><button class="addbtn">+</button></a>
 			</div>
 			
 			<div class="tablecont">
@@ -120,9 +144,11 @@ if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
 					<table>
 						<thead>
 							<tr>
-								<th class="col1">Jméno</th>
-								<th class="col2">Admin</th>
-								<th class="col3">Upravit</th>
+								<th class="col1">Narozeniny</th>
+								<th class="col2">Text přání</th>
+								<th class="col3">Datum vytvoření</th>
+								<th class="col4">Stav</th>
+								<th class="col5">Zobrazit/Upravit</th>
 							</tr>
 						</thead>
 					</table>
@@ -132,7 +158,8 @@ if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
 						<tbody>
 							<?php
 								
-								$stmt = $db->prepare('select id, username, admin from User');
+								$stmt = $db->prepare('select uid, number, preview_text, date_created, mail_date, mail_sent from Wish where userId=?');
+								$stmt->bind_param("i", $_SESSION['user']['id']);
 								$stmt->execute();
 								$res = $stmt->get_result();
 								$stmt->close();
@@ -140,15 +167,11 @@ if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
 								while($row = $res->fetch_assoc()){
 									?>
 									<tr>
-										<td class="col1"><?php echo $row['username']; ?></td>
-										<td class="col2"><input type="checkbox" <?php if($row['admin']) echo 'checked'; ?> disabled></input></td>
-										<td class="col3">
-											<?php if($row['id']==$_SESSION['user']['id']) { ?>
-												<a class="editbtn" href="acc_mgmt.php">Spravovat účet</a>
-											<?php } else { ?>
-												<a class="editbtn" href="edit_user.php?id=<?php echo $row['id'] ?>">Upravit</a>
-											<?php } ?>
-										</td>
+										<td class="col1"><?php echo $row['number']; ?></td>
+										<td class="col2"><?php echo $row['preview_text']; ?></td>
+										<td class="col3"><?php echo $row['date_created']; ?></td>
+										<td class="col4"><?php echo $row['mail_sent']=='1'?'Odesláno':($row['mail_date']?('Bude odesláno '.$row['mail_date']):'Neodesláno'); ?></td>
+										<td class="col5"><a class="editbtn" href="create_wish.php?uid=<?php echo $row['uid'] ?>">Zobrazit/Upravit</a></td>
 									</tr>
 									<?php
 								}

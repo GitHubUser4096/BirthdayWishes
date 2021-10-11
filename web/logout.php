@@ -1,4 +1,8 @@
 <?php
+/*
+ * Projekt: Narozeninová přání
+ * Vytvořil: Michal
+ */
 session_start();
 
 $_SESSION = [];

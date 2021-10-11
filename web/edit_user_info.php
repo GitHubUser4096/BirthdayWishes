@@ -1,4 +1,8 @@
 <?php
+/*
+ * Projekt: Narozeninová přání
+ * Vytvořil: Michal
+ */
 session_start();
 
 if(!isSet($_SERVER['HTTPS'])){
@@ -6,6 +10,7 @@ if(!isSet($_SERVER['HTTPS'])){
 }
 
 require_once('php/db.php');
+require_once('php/process_image.php');
 
 $db = DB_CONNECT();
 
@@ -24,7 +29,9 @@ $res = $stmt->get_result();
 $stmt->close();
 $row = $res->fetch_assoc();
 
-if($row['state']=='approved') {
+if(isSet($_GET['justAdded'])){
+	$info = 'Vaše zajímavost byla přidána, bude dostupná po potvrzení administrátorem. <a class="link" href="user_info_mgmt.php">Zobrazit/Upravit moje zajímavosti</a>';
+} else if($row['state']=='approved') {
 	$warn = 'Po úpravě musí být zajímavost znovu schválena.';
 }
 
@@ -58,17 +65,19 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		$content = htmlspecialchars($_POST['content']);
 		$link = htmlspecialchars($_POST['link']);
 		$imageName = htmlspecialchars($_POST['imageName']);
+		$imgAttrib = htmlspecialchars($_POST['imgAttrib']);
 		
 		if(isSet($_FILES['imageFile'])&&strlen(trim($_FILES['imageFile']['name']))>0&&strlen(trim($imageName))>0){ // upload image
 			
 			if(getimagesize($_FILES['imageFile']['tmp_name'])!==false){ // file is a valid image
 				move_uploaded_file($_FILES['imageFile']['tmp_name'], $imageName);
+				$imgRes = processImage($imageName);
 			}
 			
 		}
 		
-		if(strlen($imageName)>50) {
-			$error = "Název obrázku nesmí být delší než 50 znaků!";
+		if(strlen($imageName)>80) {
+			$error = "Název obrázku nesmí být delší než 80 znaků!";
 		} else if(!($_POST['number']>0)){
 			$error = "Číslo musí být větší než 0!";
 		} else if($_POST['number']>999){
@@ -83,8 +92,15 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			$error = "Prosím vyberte aspoň jednu kategorii!";
 		} else {
 			
-			$stmt = $db->prepare("update NumberInfo set number=?, content=?, link=?, state='pending', imgSrc=? where id=?");
-			$stmt->bind_param("isssi", $number, $content, $link, $imageName, $_GET['id']);
+			if(isSet($imgRes)){
+				$stmt = $db->prepare("update NumberInfo set color=?, background=? where id=?");
+				$stmt->bind_param("ssi", $imgRes['color'], $imgRes['background'], $_GET['id']);
+				$stmt->execute();
+				$stmt->close();
+			}
+			
+			$stmt = $db->prepare("update NumberInfo set number=?, content=?, link=?, imgSrc=?, imgAttrib=?, state='pending' where id=?");
+			$stmt->bind_param("issssi", $number, $content, $link, $imageName, $imgAttrib, $_GET['id']);
 			$stmt->execute();
 			$stmt->close();
 			
@@ -270,6 +286,18 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				color: white;
 			}
 			
+			.info {
+				padding: 10px;
+				background: #2edc15;
+				font-weight: bold;
+				font-size: 18px;
+				color: white;
+			}
+			
+			.link {
+				color: white;
+			}
+			
 		</style>
 		
 	</head>
@@ -290,7 +318,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 					
 					<?php
 						
-						$stmt = $db->prepare('select number, content, link, imgSrc, state from NumberInfo where id=?');
+						$stmt = $db->prepare('select number, content, link, imgSrc, imgAttrib, state from NumberInfo where id=?');
 						$stmt->bind_param("i", $_GET['id']);
 						$stmt->execute();
 						$res = $stmt->get_result();
@@ -318,13 +346,21 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 							}
 						?>
 						
+						<?php
+							if(isSet($info)) {
+								?><div class="info"><?php
+									echo $info;
+								?></div><?php
+							}
+						?>
+						
 						<div class="formrow">
 							<span class="formlbl">Číslo:</span>
 							<input class="formin" type="text" name="number" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['number']; else echo $row['number']; ?>"></input>
 						</div>
 						<div class="formrow">
 							<span class="formlbl">Popis:</span>
-							<textarea name="content"><?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['content']; else echo $row['content']; ?></textarea>
+							<textarea class="textarea" name="content"><?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['content']; else echo $row['content']; ?></textarea>
 						</div>
 						<div class="formrow">
 							<span class="formlbl">Odkaz:</span>
@@ -347,10 +383,21 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 						
 						<div class="formrow">
 							<span class="formlbl">Obrázek:</span>
-							<input style="width:400px;" id="imageName" name="imageName" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['imageName']; else echo $row['imgSrc']; ?>" readonly></input>
+							<input class="input" style="width:400px;" id="imageName" name="imageName" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['imageName']; else echo $row['imgSrc']; ?>" readonly></input>
 							<label><input id="filein" onchange="chooseFile();" class="filein" type="file" name="imageFile" accept=".png,.jpg,.jpeg,.gif"></input>
 							<br><br><div class="filebtn">Vybrat soubor</div></label>
 							<div type="button" onclick="cancelFile();" class="filebtn">Zrušit</div>
+						</div>
+						
+						<div class="formrow">
+							<span class="formlbl">Zdroj obrázku: <img src="res/hint.png" onmousemove="
+								attribInfo.style.display = 'block';
+								attribInfo.style.left = event.clientX+10+'px';
+								attribInfo.style.top = event.clientY+'px';
+							" onmouseleave="
+								attribInfo.style.display = 'none';
+							"></img></span>
+							<textarea class="textarea" name="imgAttrib"><?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['imgAttrib']; else echo $row['imgAttrib']; ?></textarea>
 						</div>
 						
 						<div class="formrow">
@@ -445,6 +492,10 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				
 			</div>
 			
+		</div>
+		
+		<div id="attribInfo" class="tooltip">
+			[TEMP] Popis licence obrázku
 		</div>
 		
     </body>

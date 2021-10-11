@@ -1,3 +1,9 @@
+<?php
+/*
+ * Projekt: Narozeninová přání
+ * Vytvořil: Michal
+ */
+?>
 <div class="titlebar">
 	<a id="titlea" class="titlea" href="index.php">
 		<div class="icon"><img class="iconimg" src="res/cake.png"></img></div>
@@ -13,6 +19,7 @@
 				if($_SESSION['user']['verified']){
 					?>
 					
+					<hr><a href="wish_mgmt.php">Moje přání</a>
 					<hr><a href="add_info.php">Přidat zajímavost</a>
 					
 					<?php
@@ -55,6 +62,7 @@
 				if($_SESSION['user']['verified']){
 					?>
 					
+					| <a href="wish_mgmt.php">Moje přání</a>
 					| <a href="add_info.php">Přidat zajímavost</a>
 					
 					<?php

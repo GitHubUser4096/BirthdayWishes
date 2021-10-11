@@ -1,12 +1,18 @@
 create database Wishes;
 
-drop table if exists Scheduled;
-create table Scheduled(
-	id int primary key not null auto_increment,
-    sent_by varchar(30),
-    email varchar(63) not null,
-    date date not null,
-    document varchar(255) not null
+drop table if exists Wish;
+create table Wish(
+	id int primary key auto_increment,
+    uid varchar(50) unique not null,
+    userId int,
+    number int,
+    preview_text varchar(255),
+    date_created date,
+    mail_address varchar(255),
+    mail_hidden varchar(255),
+    mail_date date,
+    mail_sent bool,
+    foreign key (userId) references User(id)
 );
 
 drop table if exists PassRequests;
@@ -41,8 +47,11 @@ create table NumberInfo(
 	id int primary key not null auto_increment,
 	number int not null,
 	content varchar(1023),
+    background varchar(23),
+    color varchar(23),
     link varchar(100),
-	imgSrc varchar(50),
+	imgSrc varchar(80),
+    imgAttrib varchar(255),
     createdBy int,
     createdTime datetime,
 	state enum('approved', 'dismissed', 'pending') default 'pending',
@@ -76,6 +85,30 @@ create table Config(
 insert into Config(description, name, value, type) values ('Limit přidaných zajímavostí (za daný čas)', 'infoLimit', '1', 'number');
 insert into Config(description, name, value, type) values ('Čas resetování limitu (v minutách)', 'infoLimitReset', '1', 'number');
 
+-- Update to V0.1
+
 alter table NumberInfo drop column approved;
 alter table NumberInfo add column state enum('approved', 'dismissed', 'pending') default 'pending';
 alter table User add column verified bool;
+
+-- Update to V0.2
+
+alter table NumberInfo add column background varchar(23);
+alter table NumberInfo add column color varchar(23);
+alter table NumberInfo modify column imgSrc varchar(80);
+alter table NumberInfo add column imgAttrib varchar(255);
+drop table Scheduled;
+
+create table Wish(
+	id int primary key auto_increment,
+    uid varchar(50) unique not null,
+    userId int,
+    number int,
+    preview_text varchar(255),
+    date_created date,
+    mail_address varchar(255),
+    mail_hidden varchar(255),
+    mail_date date,
+    mail_sent bool,
+    foreign key (userId) references User(id)
+);

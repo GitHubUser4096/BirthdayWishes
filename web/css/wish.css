@@ -1,0 +1,40 @@
+
+.previewbox {
+	background: gray;
+}
+
+.wish_page {
+	margin: 10px;
+	padding: 10px;
+	overflow: hidden;
+}
+
+.wish_image {
+	width: 150px;
+}
+
+.wish_for {
+	font-size: 32px;
+}
+
+.wish_text {
+	font-size: 22px;
+}
+
+.info_text {
+	font-size: 22px;
+}
+
+.info_link {
+	font-size: 18px;
+	text-decoration: underline;
+}
+
+.info_img {
+	width: 100%;
+}
+
+.attribution {
+	font-style: italic;
+	font-size: 14px;
+}

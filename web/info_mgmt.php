@@ -1,4 +1,8 @@
 <?php
+/*
+ * Projekt: Narozeninová přání
+ * Vytvořil: Michal
+ */
 session_start();
 
 if(!isSet($_SERVER['HTTPS'])){
@@ -98,10 +102,11 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 			.col1 { width: 35px; }
 			.col2 { width: auto; }
 			.col3 { width: 100px }
-			.col4 { width: 200px }
-			.col5 { width: 100px }
-			.col6 { width: 70px }
-			.col7 { width: 80px }
+			.col4 { width: 100px }
+			.col5 { width: 200px }
+			.col6 { width: 100px }
+			.col7 { width: 70px }
+			.col8 { width: 80px }
 			
 			.editbtn {
 				text-decoration: underline;
@@ -159,10 +164,11 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 								<th class="col1">Číslo</th>
 								<th class="col2">Popis</th>
 								<th class="col3">Obrázek</th>
-								<th class="col4">Kategorie</th>
-								<th class="col5">Vytvořil</th>
-								<th class="col6">Stav</th>
-								<th class="col7">Upravit</th>
+								<th class="col4">Barva</th>
+								<th class="col5">Kategorie</th>
+								<th class="col6">Vytvořil</th>
+								<th class="col7">Stav</th>
+								<th class="col8">Upravit</th>
 							</tr>
 						</thead>
 					</table>
@@ -172,7 +178,7 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 						<tbody>
 							<?php
 								
-								$stmt = $db->prepare('select id, number, content, imgSrc, createdBy, createdTime, state from NumberInfo order by number');
+								$stmt = $db->prepare('select id, number, content, background, color, imgSrc, createdBy, createdTime, state from NumberInfo order by number');
 								$stmt->execute();
 								$res = $stmt->get_result();
 								$stmt->close();
@@ -183,7 +189,8 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 										<td class="col1"><?php echo $row['number']; ?></td>
 										<td class="col2"><?php echo $row['content']; ?></td>
 										<td class="col3"><img src="<?php echo $row['imgSrc']; ?>"></img></td>
-										<td class="col4"><?php
+										<td class="col4"><span style="background:<?php echo $row['background']?>;color:<?php echo $row['color']?>">Barva</span></td>
+										<td class="col5"><?php
 											
 											$stmt = $db->prepare('select name from InfoCat inner join Category on Category.id=catid where infoid=?');
 											$stmt->bind_param('i', $row['id']);
@@ -196,7 +203,7 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 											}
 											
 										?></td>
-										<td class="col5"><?php
+										<td class="col6"><?php
 											
 											$stmt = $db->prepare('select username from User where id=?');
 											$stmt->bind_param('i', $row['createdBy']);
@@ -211,7 +218,7 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 											echo $row['createdTime'];
 											
 										?></td>
-										<td class="col6">
+										<td class="col7">
 											<?php
 												/*if($row['state']=='pending') echo '<span style="background:yellow">Nevyřízeno</span>';
 												else if($row['state']=='approved') echo '<span style="background:#0F0">Schváleno</span>';
@@ -227,7 +234,7 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 												<button style="padding:0;border:none;background:none;cursor:pointer;" title="Zamítnout" name="state" value="dismissed"><img src="res/dismiss.png"></img></button>
 											</form>
 										</td>
-										<td class="col7"><a class="editbtn" href="edit_info.php?id=<?php echo $row['id'] ?>">Upravit</a></td>
+										<td class="col8"><a class="editbtn" href="edit_info.php?id=<?php echo $row['id'] ?>">Upravit</a></td>
 									</tr>
 									<?php
 								}

@@ -1,14 +1,12 @@
 ##### WEB #####
 === všichni uživatelé ===
 - index.php - úvodní stránka
-	- create_wish.php - vytvořit přání 1/2
-		- choose_info.php - vytvořit přání 2/2 (výběr zajímavostí)
-			- wish.php - zobrazení vytvořeného přání
-				- schedule_send.php - odeslání přání na e-mail
+	- create_wish.php - vytvořit přání (dynamický formulář)
 === nepřihlášený uživatel ===
 	- login.php - přihlášení
 	- new_account.php - vytvoření účtu
 === přihlášený uživatel ===
+	- wish_mgmt.php - seznam mých přání, možnost zobrazit/upravit
 	- add_info.php - přidat novou zajímavost
 	- user_info_mgmt.php - spravovat moje zajímavosti
 		- edit_user_info - upravit mojí zajímavost
@@ -16,7 +14,7 @@
 	- logout.php - odhlásit se (přesměruje na index)
 === admin ===
 	- info_mgmt.php - spravovat všechny zajímavosti
-	- edit_info.php - upravit zajímavost
+		- edit_info.php - upravit zajímavost
 	- user_mgmt.php - spravovat uživatele
 		- edit_user.php - upravit uživatele
 	- edit_config.php - změnit konfiguraci webu
@@ -24,24 +22,40 @@
 ##### SDÍLENÉ SOUBORY #####
 === php ===
 - php/db.conf - konfigurace připojení k databázi
-- php/db.php - připojení k databázi
+- php/db.php - skript připojení k databázi
 - php/mail.php - konfigurace připojení k e-mailovému serveru
 - php/titlebar.php - záhlaví všech stránek (ikona, název, menu)
+- php/process_image.php - uloží obrázek na server a vygeneruje barvu textu a pozadí (pro nahrané obrázky zajímavostí)
 === externí knihovny ===
 - lib/dompdf/* - knihovna pro generování .PDF souborů
 - lib/phpMailer/* - knihovna pro odesílání e-mailů
 === skripty ===
 - js/titlebar.js - skript pro záhlaví
+- js/xhr.js - skript pro XML HTTP Request (asynchronní komunikace klienta se serverem na pozadí)
+- js/form.js - prvky pro dynamický front-end formulář
+- js/doubleList.js - seznam pro výběr zajímavostí (pole na výběr a vybráno, možnost řazení)
+- js/bagList.js - rozhraní výběru náhodných zajímavostí (možnost řazení, možnost změnit zajímavost)
 === styly ===
 - css/titlebar.css - styl pro záhlaví
 - css/controls.css - styl pro obecné ovládací prvky
 - css/form.css - styl pro formulář
 - css/form_page.css - styl pro stránku s formulářem
 - css/page.css - styl pro obecné vlastnosti všech stránek
+- css/wish.css - styl pro dynamický náhled přání
+
+##### KOMUNIKACE BACK-END A FRONT-END #####
+- get/auth.php - ověří přihlášení uživatele - vrátí ID a username ve formátu JSON, pokud je uživatel přihlášen, jinak 'false'
+- get/categories.php - vrátí všechny dostupné kategorie zajímavostí ve formátu JSON
+- get/info.php - vrátí všechny zajímavosti k číslu a kategoriím (GET parametry bday a categories) ve formátu JSON
+- get/wish.php - vrátí informace o přání (GET parametr uid) ve formátu JSON
+- post/schedule_send.php - uloží do databáze e-mailovou adresu a datum odeslání (POST parametry uid, mailAddress, mailHiddenCopy, date)
+- post/send_mail.php - odešle přání na e-mail (POST parametry uid, mailAddress, mailHiddenCopy)
+- post/cancel_send.php - zruší odeslání přání (POST parametr uid)
 
 ##### OSTATNÍ #####
-- db_manager.php - dočasná stránka pro úpravu databáze
-- reset_pass.php - stránka pro obnovení hesla, dostupná přes odkaz z e-mailu
+- makepdf.php - stránka, která vytvoří PDF přání a vrátí ID (pouze backend)
+- db_manager.php - dočasná stránka pro úpravu databáze (temp)
+- reset_pass.php - stránka pro obnovení hesla (dostupná přes odkaz z e-mailu)
 - request_verify.php - stránka, která odešle e-mail pro ověření účtu (zobrazí se po vytvoření účtu)
 - verify.php - stránka, která ověří účet (dostupná přes odkaz z e-mailu)
-- send_flush.php - stránka pro odeslání všech e-mailů k odeslání, spouštěná automaticky
+- send_flush.php - stránka pro odeslání všech e-mailů k odeslání (spouštěná automaticky, pouze backend)

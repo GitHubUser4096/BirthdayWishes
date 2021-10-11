@@ -87,10 +87,6 @@ a {
 
 @media only screen and (max-width: 600px) {
 	
-	.menu {
-		display: none;
-	}
-	
 	.mobilemenu {
 		background: #f3eee3;
 		top: 60px;
@@ -123,10 +119,6 @@ a {
 		height: 60px;
 		background: #f3eee3;
 		overflow: hidden;
-	}
-	
-	.hamburger {
-		display: block;
 	}
 	
 }
