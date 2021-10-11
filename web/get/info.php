@@ -36,7 +36,9 @@ while($row = $res->fetch_assoc()){
 	foreach($row as $key=>$val){
 		if(!$firstEntry) echo ', ';
 		else $firstEntry = false;
-		echo '"'.$key.'":"'.$val.'"';
+		$v = str_replace("\n", " ", $val);
+		$v = str_replace("\r", "", $v);
+		echo '"'.$key.'":"'.$v.'"';
 	}
 	echo '}';
 }
