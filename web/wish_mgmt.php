@@ -158,7 +158,7 @@ if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']) {
 						<tbody>
 							<?php
 								
-								$stmt = $db->prepare('select uid, number, preview_text, date_created, mail_date, mail_sent from Wish where userId=?');
+								$stmt = $db->prepare('select uid, number, preview_text, date_created, mail_date, mail_sent from Wish where userId=? and ifnull(mail_sent, 0)=0');
 								$stmt->bind_param("i", $_SESSION['user']['id']);
 								$stmt->execute();
 								$res = $stmt->get_result();

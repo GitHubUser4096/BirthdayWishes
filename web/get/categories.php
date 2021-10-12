@@ -3,12 +3,16 @@
  * Projekt: Narozeninová přání
  * Vytvořil: Michal
  */
+session_start();
 
 require_once('../php/db.php');
 
 $db = DB_CONNECT();
 
-$stmt = $db->prepare("select distinct Category.name from InfoCat inner join Category on Category.id=InfoCat.catId inner join NumberInfo on NumberInfo.id=InfoCat.infoId where NumberInfo.state='approved'");
+$usrId = isSet($_SESSION['user'])?$_SESSION['user']['id']:0;
+
+$stmt = $db->prepare("select distinct Category.name from InfoCat inner join Category on Category.id=InfoCat.catId inner join NumberInfo on NumberInfo.id=InfoCat.infoId where (NumberInfo.state='approved' or NumberInfo.createdBy=?)");
+$stmt->bind_param('i', $usrId);
 $stmt->execute();
 $res = $stmt->get_result();
 $stmt->close();

@@ -9,11 +9,11 @@ $_SESSION = [];
 
 session_destroy();
 
+header('Location: index.php');
+
 if(!isSet($_SERVER['HTTPS'])){
 	header("Location: https://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
 }
-
-header('Location: index.php');
 
 ?>
 <!doctype html>

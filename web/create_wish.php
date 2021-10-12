@@ -70,7 +70,7 @@ if(!isSet($_SERVER['HTTPS'])){
 				let bday = wish['bday']??'42';
 				let wishText = wish['wishText']??'Všechno nejlepší!';
 				
-				let width = preview.getBoundingClientRect().width;
+				let width = preview.getBoundingClientRect().width-40;
 				let height = width*Math.sqrt(2);
 				
 				/* Title page */
@@ -99,7 +99,7 @@ if(!isSet($_SERVER['HTTPS'])){
 					let info = wish.infoCache[infoId];
 					let background = info.background?info.background:'white';
 					let color = info.color?info.color:'black';
-					previewHTML += '<div class="wish_page" style="width:'+width+'px;height:'+height+'px;background:'+background+'">';
+					previewHTML += '<div id="page_'+info.id+'" class="wish_page" style="width:'+width+'px;height:'+height+'px;background:'+background+'">';
 					previewHTML += '	<p class="info_text" style="color:'+color+'">'+info.content+'</p>';
 					previewHTML += '	<a class="info_link" href="'+info.link+'" style="color:'+color+'">'+info.link+'</a>';
 					previewHTML += '	<img class="info_img" src="'+info.imgSrc+'"></img>';
@@ -203,6 +203,10 @@ if(!isSet($_SERVER['HTTPS'])){
 					
 					//let infoList = createCheckList(form, 'infoList', 'Zajímavosti', 'Vybrat všechny');
 					let infoList = createDoubleList(form, 'infoList', 'Zajímavosti');
+					
+					infoList.onSelect = function(name){
+						previewBox.scrollTo(0, window['page_'+name].offsetTop-5);
+					}
 					
 					listInfoTab.add(infoList);
 					
@@ -478,7 +482,7 @@ if(!isSet($_SERVER['HTTPS'])){
 					
 				</div>
 				
-				<div class="rightcol previewbox">
+				<div id="previewBox" class="rightcol previewbox">
 					
 					<div id="preview"></div>
 					

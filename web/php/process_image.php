@@ -5,14 +5,16 @@
  */
 
 function processImage($imageName){
-
-	if(strpos(strtolower($imageName), ".png")) {
+	
+	$img = imagecreatefromstring(file_get_contents($imageName));
+	
+	/*if(strpos(strtolower($imageName), ".png")) {
 		$img = imagecreatefrompng($imageName);
 	} else if(strpos(strtolower($imageName), ".jpg") || strpos(strtolower($imageName), ".jpeg")) {
 		$img = imagecreatefromjpeg($imageName);
 	} if(strpos(strtolower($imageName), ".gif")) {
 		$img = imagecreatefromgif($imageName);
-	}
+	}*/
 
 	imagealphablending($img, false);
 	imagesavealpha($img, true);
@@ -90,7 +92,7 @@ function processImage($imageName){
 	$hg = dechex($g); if(strlen($hg)==1) $hg = '0'.$hg;
 	$hb = dechex($b); if(strlen($hb)==1) $hb = '0'.$hb;
 	
-	$av = ($r+$g+$b)/3;
+	$av = .3*$r+.6*$g+.1*$b;
 	$background = '#'.$hr.$hg.$hb;
 	$color = $av>128?'black':'white';
 

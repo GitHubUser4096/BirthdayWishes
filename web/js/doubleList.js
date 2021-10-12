@@ -185,6 +185,7 @@ function createDoubleList(form, name, title){
 				deselectedBox.appendChild(holder);
 			}
 			updateForm();
+			if(checkBox.checked && listBox.onSelect) listBox.onSelect(name);
 		}
 		
 		let holder = document.createElement('div');

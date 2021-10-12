@@ -3,6 +3,7 @@
  * Projekt: Narozeninová přání
  * Vytvořil: Michal
  */
+session_start();
 
 require_once('../php/db.php');
 
@@ -17,11 +18,13 @@ $firstRow = true;
 foreach($catList as $cat){
 	if($firstRow) $firstRow = false;
 	else $cats .= ',';
-	$cats .= "'".$cat."'";
+	$cats .= "'".$db->real_escape_string($cat)."'";
 }
 
-$stmt = $db->prepare("select distinct NumberInfo.id, number, content, color, background, link, imgSrc, imgAttrib, createdBy, createdTime, state from InfoCat inner join NumberInfo on InfoCat.infoId=NumberInfo.id inner join Category on InfoCat.catId=Category.id where number=? and Category.name in (".$cats.") and state='approved'");
-$stmt->bind_param('i', $_GET['bday']);
+$usrId = isSet($_SESSION['user'])?$_SESSION['user']['id']:0;
+
+$stmt = $db->prepare("select distinct NumberInfo.id, number, content, color, background, link, imgSrc, imgAttrib, createdBy, createdTime, state from InfoCat inner join NumberInfo on InfoCat.infoId=NumberInfo.id inner join Category on InfoCat.catId=Category.id where number=? and Category.name in (".$cats.") and (state='approved' or createdBy=?)");
+$stmt->bind_param('ii', $_GET['bday'], $usrId);
 $stmt->execute();
 $res = $stmt->get_result();
 $stmt->close();
