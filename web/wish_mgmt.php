@@ -85,10 +85,10 @@ if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']) {
 			
 			.col1 { width: 100px; }
 			.col2 { width: auto; }
-			.col3 { width: 160px; }
+			.col3 { width: 100px; }
 			.col4 { width: 100px; }
-			.col5 { width: 120px; }
-			.col6 { width: 70px; }
+			.col5 { width: 100px; }
+			.col6 { width: 120px; }
 			.col7 { width: 80px; }
 			
 			.editbtn {
@@ -167,9 +167,10 @@ if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']) {
 							<tr>
 								<th class="col1">Narozeniny</th>
 								<th class="col2">Text přání</th>
-								<th class="col3">Datum vytvoření</th>
-								<th class="col4">Stav</th>
-								<th class="col5">Zobrazit/Upravit</th>
+								<th class="col3">Vytvořeno</th>
+								<th class="col4">Upraveno</th>
+								<th class="col5">Stav</th>
+								<th class="col6">Zobrazit/Upravit</th>
 							</tr>
 						</thead>
 					</table>
@@ -179,7 +180,7 @@ if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']) {
 						<tbody>
 							<?php
 								
-								$stmt = $db->prepare('select uid, number, preview_text, date_created, mail_date, mail_sent from Wish where userId=? and ifnull(mail_sent, 0)=0 and not deleted');
+								$stmt = $db->prepare('select uid, number, preview_text, date_created, lastEdited, mail_date, mail_sent from Wish where userId=? and ifnull(mail_sent, 0)=0 and not deleted');
 								$stmt->bind_param("i", $_SESSION['user']['id']);
 								$stmt->execute();
 								$res = $stmt->get_result();
@@ -191,8 +192,9 @@ if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']) {
 										<td class="col1"><?php echo htmlspecialchars($row['number']); ?></td>
 										<td class="col2"><?php echo htmlspecialchars($row['preview_text']); ?></td>
 										<td class="col3"><?php echo htmlspecialchars($row['date_created']); ?></td>
-										<td class="col4"><?php echo htmlspecialchars($row['mail_sent']=='1'?'Odesláno':($row['mail_date']?('Bude odesláno '.$row['mail_date']):'Neodesláno')); ?></td>
-										<td class="col5"><a class="editbtn" href="create_wish.php?uid=<?php echo $row['uid'] ?>">Zobrazit/Upravit</a></td>
+										<td class="col4"><?php echo htmlspecialchars($row['lastEdited']); ?></td>
+										<td class="col5"><?php echo htmlspecialchars($row['mail_sent']=='1'?'Odesláno':($row['mail_date']?('Bude odesláno '.$row['mail_date']):'Neodesláno')); ?></td>
+										<td class="col6"><a class="editbtn" href="create_wish.php?uid=<?php echo $row['uid'] ?>">Zobrazit/Upravit</a></td>
 									</tr>
 									<?php
 								}
