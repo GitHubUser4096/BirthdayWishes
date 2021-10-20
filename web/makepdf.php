@@ -66,12 +66,18 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 	$stmt->execute();
 	$stmt->close();
 	
+	function esc($txt){
+		$txt = str_replace("\\", "\\\\", $txt);
+		$txt = str_replace("\"", "\\\"", $txt);
+		return $txt;
+	}
+	
 	$json = '{'.
 			'"bday":"'.$_POST['bday'].'"'.
 			',"textMode":"'.$_POST['textMode'].'"'.
-			',"for":"'.urlencode($_POST['for']).'"'.
-			',"from":"'.urlencode($_POST['from']).'"'.
-			',"wishText":"'.urlencode($_POST['wishText']).'"'.
+			',"for":"'.esc($_POST['for']).'"'.
+			',"from":"'.esc($_POST['from']).'"'.
+			',"wishText":"'.esc($_POST['wishText']).'"'.
 			',"categories":"'.$_POST['categories'].'"'.
 			',"infoMode":"'.$_POST['infoMode'].'"'.
 			',"infoList":"'.$_POST['infoList'].'"'.
