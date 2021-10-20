@@ -37,9 +37,55 @@ if(!isSet($_SERVER['HTTPS'])){
 
 		<style>
 			
+			.pageBody {
+				
+			}
+			
+			@media only screen and (max-width: 600px) {
+				
+				.pageBody {
+					width: 100%;
+					height: calc(50% - 40px);
+				}
+				
+				.pageControls {
+					bottom: 50%;
+					height: 40px;
+				}
+				
+				.previewbox {
+					position: absolute;
+					top: 50%;
+					height: 50%;
+				}
+				
+			}
+			
 		</style>
 		
 		<script>
+			
+			function esc(str){
+				
+				let map = {
+					'&': '&amp;',
+					'<': '&lt;',
+					'>': '&gt;',
+					'"': '&quot;',
+					"'": '&apos;',
+					"`": '&#96;',
+					'\\': '&#92;',
+				};
+				
+				let res = str;
+				
+				for(ch in map){
+					res = res.replaceAll(ch, map[ch]);
+				}
+				
+				return res;
+				
+			}
 			
 			function getSearchObj(){
 				let txt = location.search;
@@ -60,15 +106,33 @@ if(!isSet($_SERVER['HTTPS'])){
 			let loc = location.href.substring(0, location.href.lastIndexOf('/'));
 			
 			let wish = {};
+			let infoCache = {};
+			let highlight = null;
 			
-			function updateWish(){
+			async function getInfo(id){
+				
+				if(infoCache[id]) return infoCache[id];
+				
+				let info = await get(loc+'/get/info.php?id='+encodeURIComponent(id));
+				
+				let json = JSON.parse(info);
+				for(let row of json){
+					infoCache[row.id] = row;
+					return row;
+				}
+				
+				return null;
+				
+			}
+			
+			async function updateWish(){
 				
 				let previewHTML = '';
 				
-				let wish_for = wish['for']??'Milá Alice';
-				let wish_from = wish['from']??'Bob';
-				let bday = wish['bday']??'42';
-				let wishText = wish['wishText']??'Všechno nejlepší!';
+				let wish_for = esc(wish['for']??'Milá Alice');
+				let wish_from = esc(wish['from']??'Bob');
+				let bday = esc(wish['bday']??'42');
+				let wishText = esc(wish['wishText']??'Všechno nejlepší!');
 				
 				let width = preview.getBoundingClientRect().width-40;
 				let height = width*Math.sqrt(2);
@@ -83,7 +147,7 @@ if(!isSet($_SERVER['HTTPS'])){
 				} else if(wish.textMode=='custom'){
 					previewHTML += '		<div class="wish_text">'+wishText+'</div>';
 				}
-				previewHTML += '	<div class="wish_text">Na dalších stranách najdeš zajímavosti k číslu tvých narozenin!</div>';
+				previewHTML += '		<div class="wish_text">Na dalších stranách najdeš zajímavosti k číslu tvých narozenin!</div>';
 				previewHTML += '	</div>';
 				previewHTML += '</div>';
 				
@@ -94,21 +158,52 @@ if(!isSet($_SERVER['HTTPS'])){
 					infos = wish.randomInfoList.split(',');
 				}
 				
+				/* Info pages */
 				for(let infoId of infos){
 					
-					let info = wish.infoCache[infoId];
-					let background = info.background?info.background:'white';
-					let color = info.color?info.color:'black';
-					previewHTML += '<div id="page_'+info.id+'" class="wish_page" style="width:'+width+'px;height:'+height+'px;background:'+background+'">';
-					previewHTML += '	<p class="info_text" style="color:'+color+'">'+info.content+'</p>';
-					previewHTML += '	<a class="info_link" href="'+info.link+'" style="color:'+color+'">'+info.link+'</a>';
-					previewHTML += '	<img class="info_img" src="'+info.imgSrc+'"></img>';
-					previewHTML += '	<div class="attribution" style="color:'+color+'">'+info.imgAttrib+'</div>';
-					previewHTML += '</div>';
+					let info = await getInfo(infoId);
+					if(info){
+						let background = esc(info.background?info.background:'white');
+						let color = esc(info.color?info.color:'black');
+						previewHTML += '<div id="page_'+esc(info.id)+'" class="wish_page" style="width:'+width+'px;height:'+height+'px;background:'+background+'">';
+						previewHTML += '	<p class="info_text" style="color:'+color+'">'+esc(info.content)+'</p>';
+						previewHTML += '	<a target="_blank" class="info_link" href="'+esc(info.link)+'" style="color:'+color+'">'+esc(info.link)+'</a>';
+						previewHTML += '	<img class="info_img" src="'+esc(info.imgSrc)+'"></img>';
+						previewHTML += '	<div class="attribution" style="color:'+color+'">'+esc(info.imgAttrib)+'</div>';
+						previewHTML += '</div>';
+					} else {
+						form.setMessage('Některé z použitých zajímavosti nejsou momentálně dostupné.', MESSAGE_WARNING);
+					}
 					
 				}
 				
+				/* End page */
+				previewHTML += '<div class="wish_page" style="width:'+width+'px;height:'+height+'px;background:#f3eee3">';
+				previewHTML += '	<div class="wish_image"><img src="res/cake.png"></img></div>';
+				previewHTML += '	<div class="wish_body">';
+				previewHTML += '		<div class="wish_text">Přání pomohl vytvořit web Narozeninová přání.</div>';
+				previewHTML += `		<div>
+											<br>Chcete svému blízkému udělat radost něčím netradičním?
+											<br>Popřejte mu formou přání zaslaného v den narozenin.
+											<ul>
+												<li>Přání si zde sestavíte z různých ftipných i seriózních zajímavostí.</li>
+												<li>Vybrané zajímavosti se číselně pojí s oslavencovým věkem.</li>
+												<li>Po registraci také můžete přispět do sdíleného seznamu vlastní zajímavostí.</li>
+												<li>Můžete odeslání přání naplánovat dopředu a pustit to z hlavy.</li>
+											</ul>
+											Je to opravdu jednoduché :)
+											<br><a target="_blank" style="text-decoration:underline;" href="`+loc+`">VYTVOŘIT PŘÁNÍ</a>
+										</div>`;
+				previewHTML += '	</div>';
+				previewHTML += '</div>';
+				
 				preview.innerHTML = previewHTML;
+				
+				let pages = document.querySelectorAll('.wish_page');
+				if(highlight) {
+					previewBox.scrollTo(0, pages[highlight].offsetTop-5);
+					highlight = null;
+				}
 				
 			}
 			
@@ -156,12 +251,16 @@ if(!isSet($_SERVER['HTTPS'])){
 					page.addControlF('Další >', function(){
 						if(!wish['bday']){
 							form.setMessage('Prosím vyplňte Číslo narozenin!');
+						} else if(wish['bday']!=Math.floor(wish['bday'])){
+							form.setMessage('Neplatné číslo narozenin!');
 						} else if(wish['bday']<1){
 							form.setMessage('Číslo narozenin musí být větší než 0!');
 						} else if((wish['textMode']=='auto' && (!wish['for'] || !wish['from'])) || (wish['textMode']=='custom' && !wish['wishText'])){
 							form.setMessage('Prosím vyplňte Text přání!');
 						} else if(!wish['categories']){
 							form.setMessage('Prosím vyberte aspoň jeden zájem!');
+						} else if((wish['textMode']=='auto' && (wish['for']+wish['from']).length>209) || (wish['textMode']=='custom' && wish['wishText'].length>255)){
+							form.setMessage('Text přání je příliš dlouhý!');
 						} else {
 							form.setPage(1);
 						}
@@ -191,10 +290,13 @@ if(!isSet($_SERVER['HTTPS'])){
 					
 					randomInfoTab.add(createButton('Vybrat náhodně', function(){
 						let infos = [];
-						for(let i in wish.infoCache){
-							infos[infos.length] = {name:wish.infoCache[i].id, label:wish.infoCache[i].content};
+						for(let i in infoCache){
+							if(infoCache[i].number==wish['bday']) infos[infos.length] = {name:infoCache[i].id, label:infoCache[i].content};
 						}
 						randomList.set(infos, wish.infoCount);
+						//let pages = document.querySelectorAll('.wish_page');
+						//if(pages.length>1) previewBox.scrollTo(0, pages[1].offsetTop-5);
+						highlight = 1;
 					}));
 					
 					randomInfoTab.add(randomList);
@@ -205,7 +307,9 @@ if(!isSet($_SERVER['HTTPS'])){
 					let infoList = createDoubleList(form, 'infoList', 'Zajímavosti');
 					
 					infoList.onSelect = function(name){
-						previewBox.scrollTo(0, window['page_'+name].offsetTop-5);
+						//previewBox.scrollTo(0, window['page_'+name].offsetTop-5);
+						highlight = infoList.getSelected().indexOf(name)+1;
+						if(highlight<0) highlight = null;
 					}
 					
 					listInfoTab.add(infoList);
@@ -223,16 +327,15 @@ if(!isSet($_SERVER['HTTPS'])){
 						
 						form.setMessage('Načítání zajímavostí...', MESSAGE_STATUS, false);
 						
-						get(loc+'/get/info.php?bday='+wish.bday+'&categories='+wish.categories, function(res){
+						get(loc+'/get/info.php?bday='+encodeURIComponent(wish.bday)+'&categories='+encodeURIComponent(wish.categories), function(res){
 							form.clearMessage();
 							let json = JSON.parse(res);
 							if(json.length==0){
 								form.setMessage('Nenalezeny žádné zajímavosti. <a style="color:white" class="link" href="add_info.php">Přidat zajímavost</a>', MESSAGE_WARNING);
 							}
-							wish.infoCache = {};
 							for(let row of json){
 								infoList.addItem(row.id, row.content);
-								wish.infoCache[row.id] = row;
+								infoCache[row.id] = row;
 							}
 						});
 						
@@ -250,16 +353,16 @@ if(!isSet($_SERVER['HTTPS'])){
 								get = '?uid='+uid;
 							}
 							post(loc+'/makepdf.php'+get,
-									'bday='+(wish['bday']??'')+
-									'&textMode='+wish['textMode']+
-									'&for='+(wish['for']??'')+
-									'&from='+(wish['from']??'')+
-									'&wishText='+(wish['wishText']??'')+
-									'&categories='+(wish['categories']??'')+
-									'&infoMode='+wish['infoMode']+
-									'&infoList='+(wish['infoList']??'')+
-									'&infoCount='+(wish['infoCount']??'')+
-									'&randomInfoList='+(wish['randomInfoList']??''),
+									'bday='+encodeURIComponent(wish['bday']??'')+
+									'&textMode='+encodeURIComponent(wish['textMode'])+
+									'&for='+encodeURIComponent(wish['for']??'')+
+									'&from='+encodeURIComponent(wish['from']??'')+
+									'&wishText='+encodeURIComponent(wish['wishText']??'')+
+									'&categories='+encodeURIComponent(wish['categories']??'')+
+									'&infoMode='+encodeURIComponent(wish['infoMode'])+
+									'&infoList='+encodeURIComponent(wish['infoList']??'')+
+									'&infoCount='+encodeURIComponent(wish['infoCount']??'')+
+									'&randomInfoList='+encodeURIComponent(wish['randomInfoList']??''),
 									function(res){
 										let json = JSON.parse(res);
 										setSearchText('uid='+json.uid);
@@ -284,28 +387,28 @@ if(!isSet($_SERVER['HTTPS'])){
 						
 						// TODO get dl link
 						
-						get(loc+'/get/wish.php?uid='+getSearchObj().uid, function(res){
+						get(loc+'/get/wish_mailInfo.php?uid='+getSearchObj().uid, function(res){
 							
 							let json = JSON.parse(res);
 							
-							dlbox.innerHTML = '<a href="'+loc+'/'+json.document+'" download="Přání.pdf"><button class="formrow action">Stáhnout přání</button></a>';
+							dlbox.innerHTML = '<a href="'+loc+'/get/wish_pdf.php?uid='+getSearchObj().uid+'" download="Přání.pdf"><button class="formrow action">Stáhnout přání</button></a>';
 							
 							if(json.mail_sent=='1'){
 								//dlbox.appendChild(document.createTextNode('Přání již bylo odelsáno.'));
-								dlbox.innerHTML += '<div class="formrow"><span class="formlbl">Přání již bylo odelsáno.</span></div>';
+								dlbox.innerHTML += '<div class="formrow"><span class="formlbl">Přání bylo odelsáno.</span></div>';
 							} else {
 								
-								wish['mailAddress'] = json['mail_address'];
-								wish['mailHiddenCopy'] = json['mail_hidden'];
-								wish['mailDate'] = json['mail_date'];
+								wish['mailAddress'] = decodeURIComponent(json['mail_address']);
+								wish['mailHiddenCopy'] = decodeURIComponent(json['mail_hidden']);
+								wish['mailDate'] = decodeURIComponent(json['mail_date']);
 								
-								form.inputs['mailAddress'].value = json['mail_address'];
-								form.inputs['mailHiddenCopy'].value = json['mail_hidden'];
-								form.inputs['mailDate'].value = json['mail_date'];
+								form.inputs['mailAddress'].value = decodeURIComponent(json['mail_address']);
+								form.inputs['mailHiddenCopy'].value = decodeURIComponent(json['mail_hidden']);
+								form.inputs['mailDate'].value = decodeURIComponent(json['mail_date']);
 								
 								if(json.mail_date){
 									//dlbox.appendChild(document.createTextNode('Přání bude odesláno '+json.mail_date));
-									dlbox.innerHTML += '<div class="formrow"><span class="formlbl">Přání bude odesláno '+json.mail_date+'</span></div>';
+									dlbox.innerHTML += '<div class="formrow"><span class="formlbl">Přání bude odesláno '+decodeURIComponent(json.mail_date)+'</span></div>';
 								}
 								
 								dlbox.appendChild(createButton('Možnosti odeslání', function(){
@@ -323,6 +426,19 @@ if(!isSet($_SERVER['HTTPS'])){
 					}
 					
 				}));
+				
+				function checkAddresses(addr){
+					
+					let regex = /^[A-Za-z0-9\.\_\-]+@[A-Za-z0-9\_\-]+\.[A-Za-z0-9]+$/;
+					let list = addr.split('\n');
+					for(let i=0; i<list.length; i++){
+						let line = list[i].trim();
+						if(!regex.test(line)) return false;
+					}
+					
+					return true;
+					
+				}
 				
 				/* Mail Page */
 				
@@ -344,14 +460,22 @@ if(!isSet($_SERVER['HTTPS'])){
 						let nextYear = new Date(new Date().setDate(new Date().getDate()+365));
 						if(!wish['mailAddress']){
 							form.setMessage('Prosím vyplňte E-mail!');
+						} else if(wish['mailAddress'].length>255){
+							form.setMessage('E-mail je příliš dlouhý!');
+						} else if(wish['mailHiddenCopy'].length>255){
+							form.setMessage('Skrytá kopie je příliš dlouhá!');
+						} else if(!checkAddresses(wish['mailAddress'])){
+							form.setMessage('Neplatný e-mail!');
+						} else if(wish['mailHiddenCopy']&&!checkAddresses(wish['mailHiddenCopy'])){
+							form.setMessage('Neplatná skrytá kopie!');
 						} else if(!(mailDate>new Date() && mailDate<nextYear)){
 							form.setMessage('Neplatné datum!');
 						} else {
 							post(loc+'/post/schedule_send.php',
 									'uid='+getSearchObj().uid+
-									'&mailAddress='+wish['mailAddress']+
-									'&mailHiddenCopy='+wish['mailHiddenCopy']+
-									'&date='+wish['mailDate'],
+									'&mailAddress='+encodeURIComponent(wish['mailAddress'])+
+									'&mailHiddenCopy='+encodeURIComponent(wish['mailHiddenCopy'])+
+									'&date='+encodeURIComponent(wish['mailDate']),
 									function(res){
 										form.setPage(2);
 									});
@@ -369,11 +493,20 @@ if(!isSet($_SERVER['HTTPS'])){
 					tab2.add(createButton('Odeslat', function(){
 						if(!wish['mailAddress']){
 							form.setMessage('Prosím vyplňte E-mail!');
+						} else if(wish['mailAddress'].length>255){
+							form.setMessage('E-mail je příliš dlouhý!');
+						} else if(wish['mailHiddenCopy'].length>255){
+							form.setMessage('Skrytá kopie je příliš dlouhá!');
+						} else if(!checkAddresses(wish['mailAddress'])){
+							form.setMessage('Neplatný e-mail!');
+						} else if(wish['mailHiddenCopy']&&!checkAddresses(wish['mailHiddenCopy'])){
+							form.setMessage('Neplatná skrytá kopie!');
 						} else {
+							form.setMessage('Odesílání', MESSAGE_STATUS, false);
 							post(loc+'/post/send_mail.php',
 									'uid='+getSearchObj().uid+
-									'&mailAddress='+wish['mailAddress']+
-									'&mailHiddenCopy='+wish['mailHiddenCopy'],
+									'&mailAddress='+encodeURIComponent(wish['mailAddress'])+
+									'&mailHiddenCopy='+encodeURIComponent(wish['mailHiddenCopy']),
 									function(res){
 										form.setPage(2);
 									});
@@ -392,9 +525,13 @@ if(!isSet($_SERVER['HTTPS'])){
 					page.onOpen = function(){
 						get(loc+'/get/auth.php', function(res){
 							if(res=='false') {
-								location.href = loc+"/login.php?page="+location.href;
+								location.href = loc+"/login.php?page="+encodeURIComponent(location.href);
 							} else {
 								let json = JSON.parse(res);
+								if(!json.verified){
+									form.setPage(2);
+									form.setMessage('Učet není ověřen!');
+								}
 							}
 						});
 					}
@@ -405,42 +542,41 @@ if(!isSet($_SERVER['HTTPS'])){
 				
 				if(uid){
 					
-					get(loc+'/generated/json/'+uid+'.json', function(res){
+					get(loc+'/get/wish_json.php?uid='+uid, function(res){
 						
 						let json = JSON.parse(res);
 						
-						wish['bday'] = json['bday'];
-						wish['textMode'] = json['textMode'];
-						wish['for'] = json['for'];
-						wish['from'] = json['from'];
-						wish['wishText'] = json['wishText'];
-						wish['categories'] = json['categories'];
-						wish['infoMode'] = json['infoMode'];
-						wish['infoList'] = json['infoList'];
-						wish['infoCount'] = json['infoCount'];
-						wish['randomInfoList'] = json['randomInfoList'];
+						wish['bday'] = decodeURIComponent(json['bday']);
+						wish['textMode'] = decodeURIComponent(json['textMode']);
+						wish['for'] = decodeURIComponent(json['for']);
+						wish['from'] = decodeURIComponent(json['from']);
+						wish['wishText'] = decodeURIComponent(json['wishText']);
+						wish['categories'] = decodeURIComponent(json['categories']);
+						wish['infoMode'] = decodeURIComponent(json['infoMode']);
+						wish['infoList'] = decodeURIComponent(json['infoList']);
+						wish['infoCount'] = decodeURIComponent(json['infoCount']);
+						wish['randomInfoList'] = decodeURIComponent(json['randomInfoList']);
 						
-						get(loc+'/get/info.php?bday='+wish.bday+'&categories='+wish.categories, function(res){
+						get(loc+'/get/info.php?bday='+encodeURIComponent(wish.bday)+'&categories='+encodeURIComponent(wish.categories), function(res){
 							
 							let json2 = JSON.parse(res);
-							wish.infoCache = {};
 							for(let row of json2){
-								wish.infoCache[row.id] = row;
+								infoCache[row.id] = row;
 							}
 							
 							form.setPage(2);
 							
 							updateWish();
 							
-							form.inputs['bday'].value = json['bday'];
-							form.inputs['for'].value = json['for'];
-							form.inputs['from'].value = json['from'];
-							form.inputs['wishText'].value = json['wishText'];
+							form.inputs['bday'].value = decodeURIComponent(json['bday']);
+							form.inputs['for'].value = decodeURIComponent(json['for']);
+							form.inputs['from'].value = decodeURIComponent(json['from']);
+							form.inputs['wishText'].value = decodeURIComponent(json['wishText']);
 							
-							form.inputs['textMode'].setTab(json['textMode']);
-							form.inputs['infoMode'].setTab(json['infoMode']);
+							form.inputs['textMode'].setTab(decodeURIComponent(json['textMode']));
+							form.inputs['infoMode'].setTab(decodeURIComponent(json['infoMode']));
 							
-							let cats = json['categories'].split(',');
+							let cats = decodeURIComponent(json['categories']).split(',');
 							
 							for(let cat of cats){
 								form.inputs['categories'].check(cat, true);
@@ -448,6 +584,8 @@ if(!isSet($_SERVER['HTTPS'])){
 							
 						});
 						
+					}, function(status, message){
+						form.setMessage(message);
 					});
 					
 				} else {

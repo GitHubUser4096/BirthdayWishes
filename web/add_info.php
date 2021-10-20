@@ -33,6 +33,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		if(getimagesize($_FILES['imageFile']['tmp_name'])!==false){ // file is a valid image
 			move_uploaded_file($_FILES['imageFile']['tmp_name'], $imageName);
 			$imgRes = processImage($imageName);
+		} else {
+			$error = 'Neplatný soubor obrázku!';
 		}
 		
 	}
@@ -51,7 +53,9 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		$error = "Odkaz nesmí být delší než 100 znaků!";
 	} else if(!isset($_POST['cat'])) {
 		$error = "Prosím vyberte aspoň jednu kategorii!";
-	} else {
+	}
+	
+	if(!isSet($error)){
 		
 		$stmt = $db->prepare("select value from Config where name='infoLimit'");
 		$stmt->execute();
@@ -110,6 +114,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			$id = $db->insert_id;
 			
 			foreach($_POST['cat'] as $cat){
+				
+				$cat = htmlspecialchars($cat);
 				
 				$stmt = $db->prepare('insert into InfoCat(infoId, catId) values (?, (select id from Category where name=?))');
 				$stmt->bind_param("ss", $id, $cat);
@@ -272,13 +278,15 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 						</div>
 						
 						<div class="formrow">
-							<span class="formlbl">Zdroj obrázku: <img src="res/hint.png" onmousemove="
-								attribInfo.style.display = 'block';
-								attribInfo.style.left = event.clientX+10+'px';
-								attribInfo.style.top = event.clientY+'px';
-							" onmouseleave="
-								attribInfo.style.display = 'none';
-							"></img></span>
+							<span class="formlbl">Zdroj/autor obrázku:
+								<!--img src="res/hint.png" onmousemove="
+									attribInfo.style.display = 'block';
+									attribInfo.style.left = event.clientX+10+'px';
+									attribInfo.style.top = event.clientY+'px';
+								" onmouseleave="
+									attribInfo.style.display = 'none';
+								"></img-->
+							</span>
 							<textarea class="textarea" name="imgAttrib"><?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['imgAttrib'] ?></textarea>
 						</div>
 						
@@ -328,7 +336,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 										
 										while($row = $res->fetch_assoc()){
 											$name = $row['name'];
-											$cats[count($cats)] = "'".$name."'";
+											$cats[count($cats)] = '"'.$name.'"';
 											?><div><label><input type="checkbox" name="cat[]" value="<?php echo $name ?>"
 												<?php if($_SERVER['REQUEST_METHOD']==='POST'&&isSet($_POST['cat'])) if(in_array($name, $_POST['cat'])) echo 'checked' ?>></input><?php echo $name ?></label></div><?php
 										}
@@ -341,7 +349,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 										$catnames = '['.implode(",", $cats).']';
 									?>
 									
-									cats = <?php echo $catnames; ?>
+									cats = <?php echo $catnames; ?>;
 									
 								</script>
 							</div>
@@ -357,9 +365,9 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			
 		</div>
 		
-		<div id="attribInfo" class="tooltip">
+		<!--div id="attribInfo" class="tooltip">
 			[TEMP] Popis licence obrázku
-		</div>
+		</div-->
 		
     </body>
 

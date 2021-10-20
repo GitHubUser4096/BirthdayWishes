@@ -19,6 +19,7 @@ if(!isSet($_GET['token'])) {
 
 if(!isSet($_SESSION['user'])){
 	$error = "Nelze ověřit účet. Prosím přihlašte se.";
+	header('Location: login.php?page='.urlencode('verify.php?token='.$_GET['token']).(isSet($_GET['page'])?('&page='.urlencode($_GET['page'])):''));
 } else {
 	
 	$stmt = $db->prepare('select * from VerifyRequests where token=?');
@@ -53,7 +54,7 @@ if(!isSet($_SESSION['user'])){
 			$stmt->execute();
 			$stmt->close();
 			
-			$info = "Váš účet byl úspěšně ověřen.";
+			$info = 'Váš účet byl úspěšně ověřen. <a style="color:white;text-decoration:underline;" href="'.(isSet($_GET['page'])?$_GET['page']:'index.php').'">Pokračovat</a>';
 			
 		}
 		

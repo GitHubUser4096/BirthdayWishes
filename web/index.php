@@ -10,6 +10,10 @@ if(!isSet($_SERVER['HTTPS'])){
 	header("Location: https://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
 }
 
+require_once('php/db.php');
+
+$db = DB_CONNECT();
+
 ?>
 <!doctype html>
 <html>
@@ -38,13 +42,14 @@ if(!isSet($_SERVER['HTTPS'])){
 			.sidebar {
 				width: 30%;
 				height: 100%;
-				overflow: hidden;
+				overflow: auto;
 				background: #e6e2d7;
 				float: left;
 			}
 			
 			.sidebarcontent {
 				margin: 30px;
+				font-size: 18px;
 			}
 			
 			.sidebarmenu {
@@ -70,16 +75,30 @@ if(!isSet($_SERVER['HTTPS'])){
 			}
 			
 			.slide {
-				width: calc(100% / 3 - 10px);
-				margin-right: 10px;
-				height: 100%;
-				float: left;
-			}
-			
-			.slideimg {
-				object-fit: contain;
 				width: 100%;
 				height: 100%;
+			}
+			
+			.slideText {
+				font-size: 24px;
+				color: white;
+				margin-left: 10%;
+				margin-right: 10%;
+				margin-top: 20px;
+			}
+			
+			.slideImg {
+				width: 80%;
+				margin-left: 10%;
+				margin-top: 20px;
+			}
+			
+			.image {
+				width: 100%;
+			}
+			
+			.phoneBtn {
+				display: none;
 			}
 			
 			@media only screen and (max-width: 600px) {
@@ -88,20 +107,23 @@ if(!isSet($_SERVER['HTTPS'])){
 					position: absolute;
 					width: 100%;
 					height: calc(100% - 60px);
-					overflow: hidden;
+					overflow: auto;
 				}
 				
 				.sidebar {
 					width: 100%;
-					height: 100%;
+					height: auto;
 					overflow: hidden;
 					background: #e6e2d7;
 					float: left;
 				}
 				
+				.sidebarcontent {
+					font-size: 20px;
+				}
+				
 				.slideshow {
-					position: absolute;
-					top: 20%;
+					position: relative;
 					right: 0px;
 					width: 100%;
 					height: 60%;
@@ -109,6 +131,7 @@ if(!isSet($_SERVER['HTTPS'])){
 				}
 				
 				.sidebarmenu {
+					display: none;
 					position: absolute;
 					bottom: 0px;
 					width: 100%;
@@ -116,8 +139,13 @@ if(!isSet($_SERVER['HTTPS'])){
 				}
 				
 				.wishbtn {
-					width: calc(100% - 60px);
-					height: 100%;
+					width: 100%;
+				}
+				
+				.phoneBtn {
+					display: block;
+					padding: 20px;
+					background: #e6e2d7;
 				}
 				
 			}
@@ -133,12 +161,16 @@ if(!isSet($_SERVER['HTTPS'])){
 				
 				setInterval(function(){
 					
-					slideshow.scroll({left: slides[i%slides.length].offsetLeft, behavior: 'smooth'});
+					if(slides.length>0) slideshow.scroll({left: slides[i%slides.length].offsetLeft, behavior: 'smooth'});
 					i++;
 					
 				}, 5000);
 				
 			}
+			
+			window.addEventListener('resize', function(e){
+				slideshow.scroll({left: 0});
+			});
 			
 		</script>
 		
@@ -151,21 +183,56 @@ if(!isSet($_SERVER['HTTPS'])){
 		<div class="content">
 			<div class="sidebar">
 				<div class="sidebarcontent">
-					<p>Web narozeninová přání ...</p>
+					<b>Chcete svému blízkému udělat radost něčím netradičním?</b>
+					<br>Popřejte mu formou přání zaslaného v den narozenin.
+					<ul>
+						<li>Přání si zde sestavíte z různých ftipných i seriózních zajímavostí.</li>
+						<li>Vybrané zajímavosti se číselně pojí s oslavencovým věkem.</li>
+						<li>Po registraci také můžete přispět do sdíleného seznamu vlastní zajímavostí.</li>
+						<li>Můžete odeslání přání naplánovat dopředu a pustit to z hlavy.</li>
+					</ul>
+					<b>Je to opravdu jednoduché :)</b>
 				</div>
 				<div class="sidebarmenu">
-					<a href="create_wish.php"><button class="bigbutton wishbtn">VYTVOŘIT PŘÁNÍ ></button></a>
+					<a href="create_wish.php"><button class="bigbutton wishbtn">VYTVOŘIT PŘÁNÍ</button></a>
 				</div>
 			</div>
 			<div id="slideshow" class="slideshow">
 				<div class="slidecontainer">
-					<div style="background: #003089;" class="slide"><img class="slideimg" src="res/info1.png"></img></div>
+					<?php
+						
+						$stmt = $db->prepare("select * from NumberInfo where titlePage=1");
+						$stmt->execute();
+						$res = $stmt->get_result();
+						$stmt->close();
+						
+						$i = 0;
+						
+						while($row = $res->fetch_assoc()){
+							
+							?><div class="slide" style="background:<?php echo $row['background']; ?>;position:absolute;left:<?php echo $i*101; ?>%;">
+								<div class="slideText" style="color:<?php echo $row['color']; ?>"><?php echo $row['content']; ?></div>
+								<div class="slideImg"><img src="<?php echo $row['imgSrc']; ?>" class="image"></img></div>
+							</div><?php
+							
+							$i++;
+							
+						}
+						
+					?>
+					<!--div style="background: #003089;" class="slide"><img class="slideimg" src="res/info1.png"></img></div>
 					<div style="background: #8d2722;" class="slide"><img class="slideimg" src="res/info2.png"></img></div>
-					<div style="background: #000000;" class="slide"><img class="slideimg" src="res/info3.png"></img></div>
+					<div style="background: #000000;" class="slide"><img class="slideimg" src="res/info3.png"></img></div-->
 				</div>
+			</div>
+			<div class="phoneBtn">
+				<a href="create_wish.php"><button class="bigbutton wishbtn">VYTVOŘIT PŘÁNÍ</button></a>
 			</div>
 		</div>
 		
     </body>
 
 </html>
+<?php
+$db->close();
+?>

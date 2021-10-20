@@ -36,11 +36,55 @@
 
 .menu {
 	float: right;
-	font-size: 18px;
 	color: black;
 	margin-top: 28px;
 	margin-right: 10px;
 	overflow-x: auto;
+	font-size: 22px;
+}
+
+.menuItem {
+	display: inline;
+	cursor: pointer;
+	padding-right: 5px;
+	padding-left: 5px;
+}
+
+.menuImg {
+	margin-bottom: -4px;
+	width: 24px;
+}
+
+.menuTextMode {
+	display: inline;
+}
+
+.menuImgMode {
+	margin-bottom: -4px;
+	width: 24px;
+	display: none;
+}
+
+.popupMenu {
+	z-index: 99;
+	background: white;
+	display: none;
+	position: fixed;
+	width: 200px;
+	line-height: 1.2;
+	box-shadow: 0 0 5px 0 gray;
+	top: 60px;
+	right: 15px;
+	background: #f3eee3;
+}
+
+.popupMenuItem {
+	margin: 5px;
+	font-size: 18px;
+}
+
+.menuItemIcon {
+	float: right;
 }
 
 .usermenu {
@@ -87,6 +131,31 @@ a {
 
 @media only screen and (max-width: 600px) {
 	
+	.menu {
+		margin-top: 18px;
+		margin-right: 5px;
+	}
+	
+	.menuImg {
+		
+	}
+	
+	.menuTextMode {
+		display: none;
+	}
+	
+	.menuImgMode {
+		display: inline;
+	}
+	
+	.popupMenu {
+		width: 80%;
+	}
+	
+	.popupMenuItem {
+		font-size: 22px;
+	}
+	
 	.mobilemenu {
 		background: #f3eee3;
 		top: 60px;
@@ -102,8 +171,8 @@ a {
 		float: left;
 		color: black;
 		font-weight: bold;
-		font-size: 30px;
-		padding-top: 12px;
+		font-size: 28px;
+		padding-top: 16px;
 	}
 	
 	.icon {

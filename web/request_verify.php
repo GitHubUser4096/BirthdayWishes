@@ -40,6 +40,7 @@ $stmt->execute();
 $stmt->close();
 
 $link = 'https://'.$page.'/verify.php?token='.$token;
+if(isSet($_GET['page'])) $link .= '&page='.urlencode($_GET['page']);
 
 $mail = new PHPMailer(true);
 
@@ -61,7 +62,10 @@ $mail->Body = 'Pro ověření účtu klikněte zde: '.$link;
 
 $mail->send();
 
-$info = 'Prosím ověřte účet kliknutím na odkaz, který byl zaslán na váš e-mail. <a class="link" href="request_verify.php">Odeslat znovu</a>';
+$resendLink = 'request_verify.php?';
+if(isSet($_GET['page'])) $resendLink .= 'page='.urlencode($_GET['page']);
+
+$info = 'Prosím ověřte účet kliknutím na odkaz, který byl zaslán na váš e-mail. <a class="link" href="'.$resendLink.'">Odeslat znovu</a>';
 
 ?>
 <!doctype html>

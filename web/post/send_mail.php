@@ -10,7 +10,7 @@ if(!isSet($_SERVER['HTTPS'])){
 	header("Location: https://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
 }
 
-if(!isSet($_SESSION['user'])){
+if(!isSet($_SESSION['user']) || !$_SESSION['user']['verified']){
 	die('Forbidden');
 }
 
@@ -43,15 +43,19 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 	
 	if($row && !$row['mail_sent']){
 		
+		if($row['userId']!=$_SESSION['user']['id']){
+			die('Forbidden');
+		}
+		
 		$addresses = [];
 		$bccs = [];
 		
-		foreach(explode('\n', $mailAddresses) as $address){
-			if(strlen(trim($address))>0) $addresses[] = $address;
+		foreach(explode("\n", $mailAddresses) as $address){
+			if(strlen(trim($address))>0) $addresses[] = trim($address);
 		}
 		
-		foreach(explode('\n', $hiddenCopyAddresses) as $address){
-			if(strlen(trim($address))>0) $bccs[] = $address;
+		foreach(explode("\n", $hiddenCopyAddresses) as $address){
+			if(strlen(trim($address))>0) $bccs[] = trim($address);
 		}
 		
 		$mail = new PHPMailer(true);
@@ -84,7 +88,8 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 		$mail->isHtml(true);
 		$mail->Subject = "Všechno nejlepší k narozeninám!";
 		//$mail->Body = htmlspecialchars($row['sent_by']).' ti přeje všechno nejlepší k narozeninám!';
-		$mail->Body = 'Všechno nejlepší k narozeninám!';
+		//$mail->Body = 'Všechno nejlepší k narozeninám!';
+		$mail->Body = $row['preview_text'];
 		
 		$mail->send();
 		

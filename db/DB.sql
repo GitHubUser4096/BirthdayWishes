@@ -1,17 +1,33 @@
+-- Full setup (up to date)
+drop database if exists Wishes;
 create database Wishes;
+use Wishes;
+
+drop table if exists User;
+create table User(
+	id int primary key not null auto_increment,
+	username varchar(30) not null unique,
+	password varchar(255) not null,
+    email varchar(63),
+    verified bool,
+    admin bool
+);
 
 drop table if exists Wish;
 create table Wish(
 	id int primary key auto_increment,
     uid varchar(50) unique not null,
     userId int,
+    sessionId varchar(40),
     number int,
     preview_text varchar(255),
     date_created date,
+    lastEdited date,
     mail_address varchar(255),
     mail_hidden varchar(255),
     mail_date date,
     mail_sent bool,
+    deleted bool not null default 0,
     foreign key (userId) references User(id)
 );
 
@@ -32,16 +48,6 @@ create table VerifyRequests(
     foreign key (userId) references User(id)
 );
 
-drop table if exists User;
-create table User(
-	id int primary key not null auto_increment,
-	username varchar(30) not null unique,
-	password varchar(255) not null,
-    email varchar(63),
-    verified bool,
-    admin bool
-);
-
 drop table if exists NumberInfo;
 create table NumberInfo(
 	id int primary key not null auto_increment,
@@ -55,6 +61,7 @@ create table NumberInfo(
     createdBy int,
     createdTime datetime,
 	state enum('approved', 'dismissed', 'pending') default 'pending',
+    titlePage bool,
     foreign key (createdBy) references User(id)
 );
 
@@ -84,6 +91,7 @@ create table Config(
 
 insert into Config(description, name, value, type) values ('Limit přidaných zajímavostí (za daný čas)', 'infoLimit', '1', 'number');
 insert into Config(description, name, value, type) values ('Čas resetování limitu (v minutách)', 'infoLimitReset', '1', 'number');
+insert into Config(description, name, value, type) values ('Doba dostupnosti přání od poslední úpravy (dny)', 'wishAccessTime', '10', 'number');
 
 -- Update to V0.1
 
@@ -112,3 +120,10 @@ create table Wish(
     mail_sent bool,
     foreign key (userId) references User(id)
 );
+
+-- Update to V0.3
+alter table NumberInfo add column titlePage bool;
+alter table Wish add column deleted bool not null default 0;
+alter table Wish add column lastEdited date;
+insert into Config(description, name, value, type) values ('Doba dostupnosti přání od poslední úpravy (dny)', 'wishAccessTime', '10', 'number');
+alter table Wish add column sessionId varchar(40);

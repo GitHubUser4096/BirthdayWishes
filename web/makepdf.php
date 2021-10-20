@@ -31,24 +31,37 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 	if(!isSet($_GET['uid'])){
 		
 		$uid = (isSet($_SESSION['user']) ? $_SESSION['user']['username'] : session_id()) . '_' . uniqid();
+		$sessionId = session_id();
 		
-		$stmt = $db->prepare("insert into Wish(uid, number, date_created) values (?, ?, NOW())");
-		$stmt->bind_param("si", $uid, $_POST['bday']);
+		$stmt = $db->prepare("insert into Wish(uid, sessionId, number, date_created) values (?, ?, ?, NOW())");
+		$stmt->bind_param("ssi", $uid, $sessionId, $_POST['bday']);
 		$stmt->execute();
 		$stmt->close();
 		
 	} else {
 		
-		// TODO verification (user id or session id)
-		
 		$uid = $_GET['uid'];
+		
+		$stmt = $db->prepare("select userId, sessionId from Wish where uid=?");
+		$stmt->bind_param("s", $uid);
+		$stmt->execute();
+		$res = $stmt->get_result();
+		$stmt->close();
+		
+		$row = $res->fetch_assoc();
+		
+		if(!$row){
+			die('Not found');
+		} else if(!( ( isSet($_SESSION['user']) && $row['userId']==$_SESSION['user']['id'] ) || $row['sessionId']==session_id() )) {
+			die('Forbidden');
+		}
 		
 	}
 	
-	$previewText = $_POST['textMode']=='auto'?$_POST['for']:$_POST['wishText'];
-	$userId = isSet($_SESSION['user'])?$_SESSION['user']['id']:'null';
+	$previewText = $_POST['textMode']=='auto'?($_POST['for'].', '.$_POST['from'].' ti přeje všechno nejlepší k '.$_POST['bday'].'. narozeninám!'):$_POST['wishText'];
+	$userId = isSet($_SESSION['user'])?$_SESSION['user']['id']:null;
 	
-	$stmt = $db->prepare("update Wish set userId=?, preview_text=? where uid=?");
+	$stmt = $db->prepare("update Wish set userId=?, preview_text=?, lastEdited=NOW() where uid=?");
 	$stmt->bind_param("sss", $userId, $previewText, $uid);
 	$stmt->execute();
 	$stmt->close();
@@ -56,9 +69,9 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 	$json = '{'.
 			'"bday":"'.$_POST['bday'].'"'.
 			',"textMode":"'.$_POST['textMode'].'"'.
-			',"for":"'.$_POST['for'].'"'.
-			',"from":"'.$_POST['from'].'"'.
-			',"wishText":"'.$_POST['wishText'].'"'.
+			',"for":"'.urlencode($_POST['for']).'"'.
+			',"from":"'.urlencode($_POST['from']).'"'.
+			',"wishText":"'.urlencode($_POST['wishText']).'"'.
 			',"categories":"'.$_POST['categories'].'"'.
 			',"infoMode":"'.$_POST['infoMode'].'"'.
 			',"infoList":"'.$_POST['infoList'].'"'.
@@ -110,6 +123,26 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 			'</div>';
 			
 	}
+	
+	$loc = $_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
+	$loc = substr($loc, 0, strrpos($loc, '/'));
+	
+	$docbody .= '<div style="background:#f3eee3;padding:10px;height:100%;page-break-after:always;overflow:hidden;">
+					<div style="width:150px;"><img src="'.imgb64('res/cake.png').'"></img></div>
+					<p style="color: black;font-size:28px;">Přání pomohl vytvořit web Narozeninová přání.</p>
+					<p style="color: black;">
+						<br>Chcete svému blízkému udělat radost něčím netradičním?
+						<br>Popřejte mu formou přání zaslaného v den narozenin.
+						<ul>
+							<li>Přání si zde sestavíte z různých ftipných i seriózních zajímavostí.</li>
+							<li>Vybrané zajímavosti se číselně pojí s oslavencovým věkem.</li>
+							<li>Po registraci také můžete přispět do sdíleného seznamu vlastní zajímavostí.</li>
+							<li>Můžete odeslání přání naplánovat dopředu a pustit to z hlavy.</li>
+						</ul>
+						Je to opravdu jednoduché :)
+						<br><a style="text-decoration:underline;" href="http://'.$loc.'">VYTVOŘIT PŘÁNÍ</a>
+					</p>
+				</div>';
 	
 	$html = "<!doctype html><html><head>".$dochead."</head><body>".$docbody."</body></html>";
 	

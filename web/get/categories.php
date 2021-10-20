@@ -27,7 +27,7 @@ while($row = $res->fetch_assoc()){
 	foreach($row as $key=>$val){
 		if(!$firstEntry) echo ', ';
 		else $firstEntry = false;
-		echo '"'.$key.'":"'.$val.'"';
+		echo '"'.$key.'":"'.str_replace("\\", '&#92;', $val).'"';
 	}
 	echo '}';
 }

@@ -64,7 +64,7 @@ if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']) {
 			
 			.tablecont {
 				width: 100%;
-				height: calc(100% - 40px);
+				height: calc(100% - 80px);
 			}
 			
 			.tableheadcont {
@@ -123,6 +123,15 @@ if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']) {
 				background: #7be96c;
 			}
 			
+			.warn {
+				padding: 10px;
+				/*height: 40px;*/
+				font-weight: bold;
+				font-size: 18px;
+				color: white;
+				background: #EECC00;
+			}
+			
 		</style>
 		
 	</head>
@@ -132,6 +141,18 @@ if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']) {
 		<?php include('php/titlebar.php'); ?>
 		
 		<div class="content">
+			
+			<div class="warn">
+				Neodeslané přání jsou dostupné <?php
+					
+					$stmt = $db->prepare("select value from Config where name='wishAccessTime'");
+					$stmt->execute();
+					$res = $stmt->get_result();
+					echo $res->fetch_assoc()['value'];
+					$stmt->close();
+					
+				?> dnů od poslední úpravy.
+			</div>
 			
 			<div class="subtitlebar">
 				<a class="backbtn" href="index.php"><</a><span class="subtitle">Moje přání</span>
@@ -158,7 +179,7 @@ if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']) {
 						<tbody>
 							<?php
 								
-								$stmt = $db->prepare('select uid, number, preview_text, date_created, mail_date, mail_sent from Wish where userId=? and ifnull(mail_sent, 0)=0');
+								$stmt = $db->prepare('select uid, number, preview_text, date_created, mail_date, mail_sent from Wish where userId=? and ifnull(mail_sent, 0)=0 and not deleted');
 								$stmt->bind_param("i", $_SESSION['user']['id']);
 								$stmt->execute();
 								$res = $stmt->get_result();
@@ -167,10 +188,10 @@ if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']) {
 								while($row = $res->fetch_assoc()){
 									?>
 									<tr>
-										<td class="col1"><?php echo $row['number']; ?></td>
-										<td class="col2"><?php echo $row['preview_text']; ?></td>
-										<td class="col3"><?php echo $row['date_created']; ?></td>
-										<td class="col4"><?php echo $row['mail_sent']=='1'?'Odesláno':($row['mail_date']?('Bude odesláno '.$row['mail_date']):'Neodesláno'); ?></td>
+										<td class="col1"><?php echo htmlspecialchars($row['number']); ?></td>
+										<td class="col2"><?php echo htmlspecialchars($row['preview_text']); ?></td>
+										<td class="col3"><?php echo htmlspecialchars($row['date_created']); ?></td>
+										<td class="col4"><?php echo htmlspecialchars($row['mail_sent']=='1'?'Odesláno':($row['mail_date']?('Bude odesláno '.$row['mail_date']):'Neodesláno')); ?></td>
 										<td class="col5"><a class="editbtn" href="create_wish.php?uid=<?php echo $row['uid'] ?>">Zobrazit/Upravit</a></td>
 									</tr>
 									<?php

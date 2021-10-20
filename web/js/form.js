@@ -10,6 +10,27 @@ MESSAGE_INFO = 3;
 
 function createForm(){
 	
+	function esc(str){
+		
+		let map = {
+			'&': '&amp;',
+			'<': '&lt;',
+			'>': '&gt;',
+			'"': '&quot;',
+			"'": '&apos;',
+			"`": '&#96;',
+		};
+		
+		let res = str;
+		
+		for(ch in map){
+			res = res.replaceAll(ch, map[ch]);
+		}
+		
+		return res;
+		
+	}
+	
 	let form = document.createElement('div');
 	form.className = 'js_form';
 	
@@ -32,7 +53,7 @@ function createForm(){
 		else closeBtn.style.display = 'none';
 		switch(type){
 			case MESSAGE_ERROR:
-				messageBox.className = 'message error';
+				messageBox.className = 'message err';
 				break;
 			case MESSAGE_WARNING:
 				messageBox.className = 'message warning';
@@ -101,8 +122,10 @@ function createForm(){
 	}
 	
 	form.update = function(name, val){
-		form.form[name] = val;
-		if(form.onFormUpdate) form.onFormUpdate(name, val);
+		//let v = esc(val);
+		let v = val;
+		form.form[name] = v;
+		if(form.onFormUpdate) form.onFormUpdate(name, v);
 	}
 	
 	return form;
@@ -286,7 +309,10 @@ function createCheckList(form, name, titleText, selectAllText='Select all'){
 		checkBoxContainer.checkBox = checkBox;
 		checkBoxContainer.appendChild(checkBox);
 		//checkBoxContainer.innerHTML += list[i];
-		checkBoxContainer.appendChild(document.createTextNode(label));
+		let span = document.createElement('span');
+		span.innerHTML = label;
+		//checkBoxContainer.appendChild(document.createTextNode(label));
+		checkBoxContainer.appendChild(span);
 		checkBoxContainer.oninput = function(e){
 			updateSelectAll();
 			updateValue();

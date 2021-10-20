@@ -10,7 +10,7 @@ if(!isSet($_SERVER['HTTPS'])){
 	header("Location: https://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
 }
 
-if(!isSet($_SESSION['user'])){
+if(!isSet($_SESSION['user']) || !$_SESSION['user']['verified']){
 	die('Forbidden');
 }
 

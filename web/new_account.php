@@ -24,6 +24,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		$error = "Prosím zadejte uživatelské jméno!";
 	} else if($mail==""){
 		$error = "Prosím zadejte e-mail!";
+	} else if(!preg_match("/^[A-Za-z0-9\.\_\-]+@[A-Za-z0-9\_\-]+\.[A-Za-z0-9]+$/", $mail)){
+		$error = "Neplatný e-mail!";
 	} else if(strlen($username)>30) {
 		$error = "Uživatelské jméno nesmí být delší než 30 znaků!";
 	} else if(strlen($mail)>63) {
@@ -63,7 +65,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			
 			$_SESSION['user'] = $user;
 			
-			header('Location: request_verify.php');
+			header('Location: request_verify.php?'.(isSet($_GET['page'])?('page='.urlencode($_GET['page'])):''));
 			
 			//$page = isSet($_GET['page']) ? $_GET['page'] : 'index.php';
 			//header("Location: ".$page);

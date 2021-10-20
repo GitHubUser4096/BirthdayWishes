@@ -72,6 +72,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			if(getimagesize($_FILES['imageFile']['tmp_name'])!==false){ // file is a valid image
 				move_uploaded_file($_FILES['imageFile']['tmp_name'], $imageName);
 				$imgRes = processImage($imageName);
+			} else {
+				$error = 'Neplatný soubor obrázku!';
 			}
 			
 		}
@@ -90,7 +92,9 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			$error = "Odkaz nesmí být delší než 100 znaků!";
 		} else if(!isSet($_POST['cat'])) {
 			$error = "Prosím vyberte aspoň jednu kategorii!";
-		} else {
+		}
+		
+		if(!isSet($error)){
 			
 			if(isSet($imgRes)){
 				$stmt = $db->prepare("update NumberInfo set color=?, background=? where id=?");
@@ -390,13 +394,15 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 						</div>
 						
 						<div class="formrow">
-							<span class="formlbl">Zdroj obrázku: <img src="res/hint.png" onmousemove="
-								attribInfo.style.display = 'block';
-								attribInfo.style.left = event.clientX+10+'px';
-								attribInfo.style.top = event.clientY+'px';
-							" onmouseleave="
-								attribInfo.style.display = 'none';
-							"></img></span>
+							<span class="formlbl">Zdroj/autor obrázku:
+								<!--img src="res/hint.png" onmousemove="
+									attribInfo.style.display = 'block';
+									attribInfo.style.left = event.clientX+10+'px';
+									attribInfo.style.top = event.clientY+'px';
+								" onmouseleave="
+									attribInfo.style.display = 'none';
+								"></img-->
+							</span>
 							<textarea class="textarea" name="imgAttrib"><?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['imgAttrib']; else echo $row['imgAttrib']; ?></textarea>
 						</div>
 						
@@ -407,7 +413,9 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 								function addCat(){
 									var name = newCatName.value;
 									catmsgbox.innerText = "";
-									if(name.length>20) {
+									if(cats.includes(name)) {
+										catmsgbox.innerText = "Kategorie již existuje!";
+									} else if(name.length>20) {
 										catmsgbox.innerText = "Jméno kategorie nesmí být delší než 20 znaků!";
 									} else if(name.trim().length>0){
 										var inp = document.createElement('input');
@@ -438,9 +446,11 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 									$stmt->execute();
 									$res = $stmt->get_result();
 									$stmt->close();
+									$cats = [];
 									
 									while($row = $res->fetch_assoc()){
 										$name = $row['name'];
+										$cats[count($cats)] = '"'.$name.'"';
 										?><div><label><input type="checkbox" name="cat[]" <?php
 											
 											if($_SERVER['REQUEST_METHOD']==='POST') {
@@ -458,15 +468,24 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 									}
 									
 								?>
+								<script>
+									
+									<?php
+										$catnames = '['.implode(",", $cats).']';
+									?>
+									
+									cats = <?php echo $catnames; ?>;
+									
+								</script>
 							</div>
 						</div>
 						
 						<div class="formrow">
 							<input class="bigbutton" type="submit" name="save" value="Uložit"></input>
 						</div>
-						<div class="formrow">
+						<!--div class="formrow">
 							<input class="bigbutton deletebtn" type="submit" name="delete" value="Odstranit"></input>
-						</div>
+						</div-->
 						
 					</div>
 					
@@ -494,9 +513,9 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			
 		</div>
 		
-		<div id="attribInfo" class="tooltip">
+		<!--div id="attribInfo" class="tooltip">
 			[TEMP] Popis licence obrázku
-		</div>
+		</div-->
 		
     </body>
 

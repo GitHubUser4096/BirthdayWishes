@@ -81,7 +81,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 					
 					$mail->isHtml(true);
 					$mail->Subject = "Obnovení hesla";
-					$mail->Body = 'Pro obnovení hesla klikněte <a href="'.$link.'">zde</a>';
+					$mail->Body = 'Pro obnovení hesla klikněte zde: '.$link;
 					
 					$mail->send();
 					
@@ -230,14 +230,15 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 							<input class="formin" name="password" type="password"></input>
 						</div>
 						<div class="formrow"><input class="bigbutton loginbtn" value="Přihlásit se" type="submit"></input></div>
-						<div class="formrow formlbl link"><input class="link_submit" type="submit" name="forgot_pass" value="Zapomenuté heslo"></input></div>
-						<?php
+						<div class="formrow"><div class="formlbl link"><input class="link_submit" type="submit" name="forgot_pass" value="Zapomenuté heslo"></input></div></div>
+						<!--?php
 							$get = "";
 							foreach($_GET as $key=>$val) {
 								$get .= $key."=".$val."&";
 							}
 						?>
-						<div class="formrow formlbl link"><a href="new_account.php?<?php echo $get; ?>">Vytvořit nový účet</a></div>
+						<div class="formrow"><div class="formlbl link"><a href="new_account.php?<?php echo $get; ?>">Vytvořit nový účet</a></div></div-->
+						<div class="formrow"><div class="formlbl link"><a href="new_account.php?<?php if(isSet($_GET['page'])) echo 'page='.urlencode($_GET['page']); ?>">Vytvořit nový účet</a></div></div>
 						
 					</div>
 					

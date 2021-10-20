@@ -47,13 +47,16 @@
 - get/auth.php - ověří přihlášení uživatele - vrátí ID a username ve formátu JSON, pokud je uživatel přihlášen, jinak 'false'
 - get/categories.php - vrátí všechny dostupné kategorie zajímavostí ve formátu JSON
 - get/info.php - vrátí všechny zajímavosti k číslu a kategoriím (GET parametry bday a categories) ve formátu JSON
-- get/wish.php - vrátí informace o přání (GET parametr uid) ve formátu JSON
+- get/wish_json.php - vrátí data přání (GET parametr uid) ve formátu JSON
+- get/wish_mailInfo.php - vrátí informace o odeslání přání (GET parametr uid) ve formátu JSON
+- get/wish_pdf.php - vrátí vygenerovaný soubor přání (GET parametr uid) ve formátu PDF
 - post/schedule_send.php - uloží do databáze e-mailovou adresu a datum odeslání (POST parametry uid, mailAddress, mailHiddenCopy, date)
 - post/send_mail.php - odešle přání na e-mail (POST parametry uid, mailAddress, mailHiddenCopy)
 - post/cancel_send.php - zruší odeslání přání (POST parametr uid)
 
 ##### OSTATNÍ #####
 - makepdf.php - stránka, která vytvoří PDF přání a vrátí ID (pouze backend)
+- cleanup.php - mazání starých PDF souborů (pouze backend)
 - db_manager.php - dočasná stránka pro úpravu databáze (temp)
 - reset_pass.php - stránka pro obnovení hesla (dostupná přes odkaz z e-mailu)
 - request_verify.php - stránka, která odešle e-mail pro ověření účtu (zobrazí se po vytvoření účtu)

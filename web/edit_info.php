@@ -50,12 +50,15 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		$state = htmlspecialchars($_POST['state']);
 		$imageName = htmlspecialchars($_POST['imageName']);
 		$imgAttrib = htmlspecialchars($_POST['imgAttrib']);
+		$titlePage = isSet($_POST['titlePage']);
 		
 		if(isSet($_FILES['imageFile'])&&strlen(trim($_FILES['imageFile']['name']))>0&&strlen(trim($imageName))>0){ // upload image
 			
 			if(getimagesize($_FILES['imageFile']['tmp_name'])!==false){ // file is a valid image
 				move_uploaded_file($_FILES['imageFile']['tmp_name'], $imageName);
 				$imgRes = processImage($imageName);
+			} else {
+				$error = 'Neplatný soubor obrázku!';
 			}
 			
 		}
@@ -74,7 +77,9 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			$error = "Odkaz nesmí být delší než 100 znaků!";
 		} else if(!isSet($_POST['cat'])) {
 			$error = "Prosím vyberte aspoň jednu kategorii!";
-		} else {
+		}
+		
+		if(!isSet($error)){
 			
 			if(isSet($imgRes)){
 				$stmt = $db->prepare("update NumberInfo set color=?, background=? where id=?");
@@ -83,8 +88,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				$stmt->close();
 			}
 			
-			$stmt = $db->prepare('update NumberInfo set number=?, content=?, link=?, imgSrc=?, imgAttrib=?, state=? where id=?');
-			$stmt->bind_param("isssssi", $number, $content, $link, $imageName, $imgAttrib, $state, $_GET['id']);
+			$stmt = $db->prepare('update NumberInfo set number=?, content=?, link=?, imgSrc=?, imgAttrib=?, state=?, titlePage=? where id=?');
+			$stmt->bind_param("isssssii", $number, $content, $link, $imageName, $imgAttrib, $state, $titlePage, $_GET['id']);
 			$stmt->execute();
 			$stmt->close();
 			
@@ -282,7 +287,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 					
 					<?php
 						
-						$stmt = $db->prepare('select number, content, link, imgSrc, imgAttrib, state from NumberInfo where id=?');
+						$stmt = $db->prepare('select number, content, link, imgSrc, imgAttrib, state, titlePage from NumberInfo where id=?');
 						$stmt->bind_param("i", $_GET['id']);
 						$stmt->execute();
 						$res = $stmt->get_result();
@@ -357,13 +362,22 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 						</div>
 						
 						<div class="formrow">
+							<label>
+								<input name="titlePage" type="checkbox" <?php if(($_SERVER['REQUEST_METHOD']==='POST' && isSet($_POST['titlePage'])) || $row['titlePage']) echo 'checked'; ?>></input>
+								<span class="formlbl">Zobrazit na úvodní stránce</span>
+							</label>
+						</div>
+						
+						<div class="formrow">
 							<span class="formlbl">Kategorie:</span>
 							<script>
 								
 								function addCat(){
 									var name = newCatName.value;
 									catmsgbox.innerText = "";
-									if(name.length>20) {
+									if(cats.includes(name)) {
+										catmsgbox.innerText = "Kategorie již existuje!";
+									} else if(name.length>20) {
 										catmsgbox.innerText = "Jméno kategorie nesmí být delší než 20 znaků!";
 									} else if(name.trim().length>0){
 										var inp = document.createElement('input');
@@ -394,9 +408,11 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 									$stmt->execute();
 									$res = $stmt->get_result();
 									$stmt->close();
+									$cats = [];
 									
 									while($row = $res->fetch_assoc()){
 										$name = $row['name'];
+										$cats[count($cats)] = '"'.$name.'"';
 										?><div><label><input type="checkbox" name="cat[]" <?php
 											
 											if($_SERVER['REQUEST_METHOD']==='POST') {
@@ -414,15 +430,24 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 									}
 									
 								?>
+								<script>
+									
+									<?php
+										$catnames = '['.implode(",", $cats).']';
+									?>
+									
+									cats = <?php echo $catnames; ?>;
+									
+								</script>
 							</div>
 						</div>
 						
 						<div class="formrow">
 							<input class="bigbutton" type="submit" name="save" value="Uložit"></input>
 						</div>
-						<div class="formrow">
+						<!--div class="formrow">
 							<input class="bigbutton deletebtn" type="submit" name="delete" value="Odstranit"></input>
-						</div>
+						</div-->
 						
 					</div>
 					

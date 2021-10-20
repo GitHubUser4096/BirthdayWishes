@@ -18,7 +18,7 @@ require_once('lib/phpMailer/src/SMTP.php');
 
 $db = DB_CONNECT();
 
-$stmt = $db->prepare('select uid, mail_address, mail_hidden from Wish where ifnull(mail_sent, 0) = 0 and mail_date=date(now())');
+$stmt = $db->prepare('select uid, mail_address, mail_hidden, preview_text from Wish where ifnull(mail_sent, 0) = 0 and mail_date=date(now())');
 $stmt->execute();
 $res = $stmt->get_result();
 $stmt->close();
@@ -32,12 +32,12 @@ while($row = $res->fetch_assoc()) {
 		$addresses = [];
 		$bccs = [];
 		
-		foreach(explode('\n', $row['mail_address']) as $address){
-			if(strlen(trim($address))>0) $addresses[] = $address;
+		foreach(explode("\n", $row['mail_address']) as $address){
+			if(strlen(trim($address))>0) $addresses[] = trim($address);
 		}
 		
-		foreach(explode('\n', $row['mail_hidden']) as $address){
-			if(strlen(trim($address))>0) $bccs[] = $address;
+		foreach(explode("\n", $row['mail_hidden']) as $address){
+			if(strlen(trim($address))>0) $bccs[] = trim($address);
 		}
 		
 		echo "Sending to: ".implode(',', $addresses).' BCC: '.implode(',', $bccs)."<br>";
@@ -72,7 +72,8 @@ while($row = $res->fetch_assoc()) {
 		$mail->isHtml(true);
 		$mail->Subject = "Všechno nejlepší k narozeninám!";
 		//$mail->Body = htmlspecialchars($row['sent_by']).' ti přeje všechno nejlepší k narozeninám!';
-		$mail->Body = 'Všechno nejlepší k narozeninám!';
+		//$mail->Body = 'Všechno nejlepší k narozeninám!';
+		$mail->Body = $row['preview_text'];
 		
 		$mail->send();
 		

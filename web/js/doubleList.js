@@ -15,13 +15,21 @@ function createDoubleList(form, name, title){
 	
 	let dragging = document.createElement('div');
 	
-	function updateForm(){
+	listBox.getSelected = function(){
 		
 		let res = [];
 		
 		for(let field of selectedBox.children){
 			res[res.length] = field.children[0].children[1].name;
 		}
+		
+		return res;
+		
+	}
+	
+	function updateForm(){
+		
+		let res = listBox.getSelected();
 		
 		form.update(name, res.join(','));
 		

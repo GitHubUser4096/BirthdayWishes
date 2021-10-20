@@ -1,6 +1,8 @@
 
 .previewbox {
 	background: gray;
+	overflow-y: scroll;
+	height: 100%;
 }
 
 .wish_page {
@@ -37,9 +39,4 @@
 .attribution {
 	font-style: italic;
 	font-size: 14px;
-}
-
-.previewbox {
-	overflow-y: scroll;
-	height: 100%;
 }

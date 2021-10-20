@@ -43,7 +43,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		
 	} else if(isSet($_POST['change_mail'])){
 		
-		$mail = htmlspecialchars($_POST['mail']);
+		/*$mail = htmlspecialchars($_POST['mail']);
 		
 		if($mail==""){
 			$error = "Prosím zadejte e-mail!";
@@ -60,7 +60,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			
 			$info = "E-Mail úspěšně změněn!";
 			
-		}
+		}*/
 		
 	} else if(isSet($_POST['confirmDelete'])){
 		
@@ -229,9 +229,9 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 							<?php } ?>
 						</div>
 						
-						<div class="formrow">
+						<!--div class="formrow">
 							<span class="formlbl"><b>Změnit e-mail:</b></span>
-						</div>
+						</div-->
 						<div class="formrow">
 							<span class="formlbl">E-Mail:</span>
 							<input class="formin" name="mail" type="email" value="<?php
@@ -242,11 +242,11 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 								$stmt->close();
 								$row = $res->fetch_assoc();
 								echo $row['email'];
-							?>"></input>
+							?>" readonly></input>
 						</div>
-						<div class="formrow">
+						<!--div class="formrow">
 							<input class="bigbutton" type="submit" name="change_mail" value="Změnit e-mail">
-						</div>
+						</div-->
 						
 						<div class="formrow">
 							<span class="formlbl"><b>Změnit heslo:</b></span>
@@ -262,9 +262,9 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 						<div class="formrow">
 							<input class="bigbutton" type="submit" name="change_pass" value="Změnit heslo">
 						</div>
-						<div class="formrow">
+						<!--div class="formrow">
 							<input class="bigbutton deletebtn" type="submit" name="delete" value="Smazat účet">
-						</div>
+						</div-->
 						
 					</div>
 					

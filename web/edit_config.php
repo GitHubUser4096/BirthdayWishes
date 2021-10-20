@@ -22,10 +22,13 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 	
 	while($row = $res->fetch_assoc()){
 		
-		$value = $_POST[$row['name']];
+		$value = trim($_POST[$row['name']]);
 		
-		if(strlen(trim($value))==0){
+		if(strlen($value)==0){
 			$error = "Prosím vyplňte '".$row['description']."'!";
+			break;
+		} else if(strlen($value)>32){
+			$error = "'".$row['description']."' nesmí být delší než 32 znaků!";
 			break;
 		}
 		

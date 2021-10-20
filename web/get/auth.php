@@ -11,6 +11,6 @@ if(!isSet($_SERVER['HTTPS'])){
 }
 
 if(!isSet($_SESSION['user'])) echo 'false';
-else echo '{"id":"'.$_SESSION['user']['id'].'", "username":"'.$_SESSION['user']['username'].'"}';
+else echo '{"id":"'.$_SESSION['user']['id'].'", "username":"'.$_SESSION['user']['username'].'", "verified":"'.$_SESSION['user']['verified'].'"}';
 
 ?>
