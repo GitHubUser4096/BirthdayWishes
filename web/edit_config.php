@@ -11,6 +11,14 @@ if(!isSet($_SERVER['HTTPS'])){
 
 require_once('php/db.php');
 
+if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']) {
+	header('Location: login.php?page=edit_config.php');
+}
+
+if(!$_SESSION['user']['admin']) {
+	die('401 - Unauthorized');
+}
+
 $db = DB_CONNECT();
 
 if($_SERVER['REQUEST_METHOD']==='POST'){

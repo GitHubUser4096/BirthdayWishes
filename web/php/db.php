@@ -1,16 +1,11 @@
 <?php
 /*
  * Připojení k databázi
- * Popis: funkce pro připojení k databázi, konfigurace načtená ze souboru
+ * Popis: funkce pro připojení k databázi
  * Vytvořil: Michal
  */
 
-$conf = file_get_contents('db.conf', true);
-$rows = explode("\n", $conf);
-foreach($rows as $row){
-	$parts = explode(':', trim($row));
-	define(trim($parts[0]), trim($parts[1]));
-}
+require_once 'db.conf.php';
 
 function DB_CONNECT() {
 	

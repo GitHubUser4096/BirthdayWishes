@@ -17,7 +17,6 @@ $db = DB_CONNECT();
 
 if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']){
 	header('Location: login.php?page=add_info.php');
-	//die("401 - Unauthorized");
 }
 
 if($_SERVER['REQUEST_METHOD']==='POST'){
@@ -296,6 +295,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 								
 								function addCat(){
 									var name = newCatName.value;
+									name = name.charAt(0).toUpperCase()+name.substr(1);
 									catmsgbox.innerText = "";
 									if(cats.includes(name)) {
 										catmsgbox.innerText = "Kategorie již existuje!";

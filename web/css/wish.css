@@ -1,8 +1,12 @@
 
-.previewbox {
-	background: gray;
-	overflow-y: scroll;
-	height: 100%;
+/*body {
+	font-family: DejaVu Sans, sans-serif;
+	margin: 0px;
+}*/
+
+preview {
+	font-family: DejaVu Sans, sans-serif;
+	margin: 0px;
 }
 
 .wish_page {
@@ -28,7 +32,7 @@
 }
 
 .info_link {
-	font-size: 18px;
+	font-size: 12px;
 	text-decoration: underline;
 }
 

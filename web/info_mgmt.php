@@ -13,7 +13,11 @@ require_once('php/db.php');
 
 $db = DB_CONNECT();
 
-if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
+if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']) {
+	header('Location: login.php?page=info_mgmt.php');
+}
+
+if(!$_SESSION['user']['admin']) {
 	die('401 - Unauthorized');
 }
 

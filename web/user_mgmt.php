@@ -13,7 +13,11 @@ require_once('php/db.php');
 
 $db = DB_CONNECT();
 
-if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
+if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']) {
+	header('Location: login.php?page=user_mgmt.php');
+}
+
+if(!$_SESSION['user']['admin']) {
 	die('401 - Unauthorized');
 }
 
@@ -81,8 +85,9 @@ if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
 			}
 			
 			.col1 { width: auto; }
-			.col2 { width: 100px; }
+			.col2 { width: 250px; }
 			.col3 { width: 100px }
+			.col4 { width: 100px }
 			
 			.editbtn {
 				text-decoration: underline;
@@ -121,8 +126,9 @@ if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
 						<thead>
 							<tr>
 								<th class="col1">Jméno</th>
-								<th class="col2">Admin</th>
-								<th class="col3">Upravit</th>
+								<th class="col2">E-mail</th>
+								<th class="col3">Admin</th>
+								<th class="col4">Upravit</th>
 							</tr>
 						</thead>
 					</table>
@@ -132,7 +138,7 @@ if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
 						<tbody>
 							<?php
 								
-								$stmt = $db->prepare('select id, username, admin from User');
+								$stmt = $db->prepare('select id, username, email, admin from User');
 								$stmt->execute();
 								$res = $stmt->get_result();
 								$stmt->close();
@@ -141,8 +147,9 @@ if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
 									?>
 									<tr>
 										<td class="col1"><?php echo $row['username']; ?></td>
-										<td class="col2"><input type="checkbox" <?php if($row['admin']) echo 'checked'; ?> disabled></input></td>
-										<td class="col3">
+										<td class="col2"><?php echo $row['email']; ?></td>
+										<td class="col3"><input type="checkbox" <?php if($row['admin']) echo 'checked'; ?> disabled></input></td>
+										<td class="col4">
 											<?php if($row['id']==$_SESSION['user']['id']) { ?>
 												<a class="editbtn" href="acc_mgmt.php">Spravovat účet</a>
 											<?php } else { ?>

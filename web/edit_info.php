@@ -18,12 +18,12 @@ if(!isset($_GET['id'])) {
 	die('400 - Bad request');
 }
 
-if(!isSet($_SESSION['user']) || !$_SESSION['user']['admin']) {
-	die('401 - Unauthorized');
+if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']) {
+	header('Location: login.php?page=edit_info.php');
 }
 
-if(!$row) {
-	die('400 - Bad request');
+if(!$_SESSION['user']['admin']) {
+	die('401 - Unauthorized');
 }
 
 if($_SERVER['REQUEST_METHOD']==='POST'){
@@ -267,6 +267,14 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				font-size: 18px;
 			}
 			
+			.discardbtn {
+				background: gray;
+			}
+			
+			.discardbtn:hover {
+				background: darkgray;
+			}
+			
 		</style>
 		
 	</head>
@@ -374,6 +382,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 								
 								function addCat(){
 									var name = newCatName.value;
+									name = name.charAt(0).toUpperCase()+name.substr(1);
 									catmsgbox.innerText = "";
 									if(cats.includes(name)) {
 										catmsgbox.innerText = "Kategorie již existuje!";
@@ -394,6 +403,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 										div.appendChild(label);
 										catField.appendChild(div);
 										newCatName.value = "";
+										cats[cats.length] = name;
 									}
 								}
 								
@@ -444,6 +454,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 						
 						<div class="formrow">
 							<input class="bigbutton" type="submit" name="save" value="Uložit"></input>
+							<a href="info_mgmt.php"><button type="button" class="bigbutton discardbtn">Zrušit</button></a>
 						</div>
 						<!--div class="formrow">
 							<input class="bigbutton deletebtn" type="submit" name="delete" value="Odstranit"></input>

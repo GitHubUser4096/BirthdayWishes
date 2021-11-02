@@ -20,25 +20,6 @@ if(isSet($_GET['id'])){
 	$stmt->execute();
 	$res = $stmt->get_result();
 	$stmt->close();
-
-	echo '[';
-	$firstRow = true;
-	while($row = $res->fetch_assoc()){
-		if(!$firstRow) echo ', ';
-		else $firstRow = false;
-		echo '{';
-		$firstEntry = true;
-		foreach($row as $key=>$val){
-			if(!$firstEntry) echo ', ';
-			else $firstEntry = false;
-			$v = str_replace("\n", " ", $val);
-			$v = str_replace("\r", "", $v);
-			$v = str_replace("\\", "&#92;", $v);
-			echo '"'.$key.'":"'.$v.'"';
-		}
-		echo '}';
-	}
-	echo ']';
 	
 } else {
 	
@@ -61,27 +42,28 @@ if(isSet($_GET['id'])){
 	$stmt->execute();
 	$res = $stmt->get_result();
 	$stmt->close();
-
-	echo '[';
-	$firstRow = true;
-	while($row = $res->fetch_assoc()){
-		if(!$firstRow) echo ', ';
-		else $firstRow = false;
-		echo '{';
-		$firstEntry = true;
-		foreach($row as $key=>$val){
-			if(!$firstEntry) echo ', ';
-			else $firstEntry = false;
-			$v = str_replace("\n", " ", $val);
-			$v = str_replace("\r", "", $v);
-			$v = str_replace("\\", "&#92;", $v);
-			echo '"'.$key.'":"'.$v.'"';
-		}
-		echo '}';
-	}
-	echo ']';
 	
 }
+
+echo '[';
+$firstRow = true;
+while($row = $res->fetch_assoc()){
+	if(!$firstRow) echo ', ';
+	else $firstRow = false;
+	echo '{';
+	$firstEntry = true;
+	foreach($row as $key=>$val){
+		if(!$firstEntry) echo ', ';
+		else $firstEntry = false;
+		$val = str_replace("\\", "\\\\", $val);
+		$val = str_replace("\n", "\\n", $val);
+		$val = str_replace("\r", "", $val);
+		// $val = str_replace(" ", "&nbsp;", $val);
+		echo '"'.$key.'":"'.$val.'"';
+	}
+	echo '}';
+}
+echo ']';
 
 $db->close();
 

@@ -14,7 +14,8 @@ require_once('php/db.php');
 $db = DB_CONNECT();
 
 if(!isSet($_SESSION['user'])){
-	die("401 - Unauthorized");
+	header('Location: login.php?page=acc_mgmt.php');
+	//die("401 - Unauthorized");
 }
 
 if($_SERVER['REQUEST_METHOD']==='POST'){

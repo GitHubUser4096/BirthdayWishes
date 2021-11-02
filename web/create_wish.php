@@ -34,11 +34,36 @@ if(!isSet($_SERVER['HTTPS'])){
 		<script src="js/form.js"></script>
 		<script src="js/doubleList.js"></script>
 		<script src="js/bagList.js"></script>
-
+		
+		<!--script src="https://github.com/devongovett/pdfkit/releases/download/v0.10.0/pdfkit.standalone.js"></script-->
+		<!--script src="https://github.com/devongovett/blob-stream/releases/download/v0.1.3/blob-stream.js"></script-->
+		
 		<style>
 			
-			.pageBody {
+			.previewbox {
+				background: gray;
+				position: relative;
+				/*overflow: hidden;*/
+				height: 100%;
+			}
+			
+			.preview {
 				
+			}
+			
+			#previewEmbed {
+				width: 100%;
+				height: 100%;
+			}
+			
+			.previewFrame {
+				width: 100%;
+				height: 100%;
+			}
+			
+			.previewCanvas {
+				margin: 10px;
+				width: calc(100% - 20px);
 			}
 			
 			@media only screen and (max-width: 600px) {
@@ -75,6 +100,30 @@ if(!isSet($_SERVER['HTTPS'])){
 					"'": '&apos;',
 					"`": '&#96;',
 					'\\': '&#92;',
+					//' ': '&nbsp',
+					'\n': '<br>',
+				};
+				
+				let res = str;
+				
+				for(ch in map){
+					res = res.replaceAll(ch, map[ch]);
+				}
+				
+				return res;
+				
+			}
+			
+			function deesc(str){
+				
+				let map = {
+					'&amp;': '&',
+					'&lt;': '<',
+					'&gt;': '>',
+					'&quot': '"',
+					'&apos;': "'",
+					'&#96;': "`",
+					'&#92;': '\\',
 				};
 				
 				let res = str;
@@ -125,31 +174,221 @@ if(!isSet($_SERVER['HTTPS'])){
 				
 			}
 			
+			let usedPages = [];
+			let freePages = [];
+			
+			function returnPages(){
+				freePages = freePages.concat(usedPages);
+				usedPages = [];
+			}
+			
+			function newPage(){
+				
+				if(freePages.length>0){
+					let page = freePages[0];
+					freePages.splice(0, 1);
+					usedPages[usedPages.length] = page;
+					return page;
+				}
+				
+				let canvas = document.createElement('canvas');
+				
+				canvas.className = 'previewCanvas';
+				
+				// A4 at 96 DPI (calculated using https://www.a4-size.com/a4-size-in-pixels)
+				canvas.width = 794;
+				canvas.height = 1123;
+				
+				let ctx = canvas.getContext('2d');
+				canvas.ctx = ctx;
+				
+				usedPages[usedPages.length] = canvas;
+				
+				return canvas;
+				
+			}
+			
+			let images = {};
+			
+			async function getImage(imgSrc){
+				
+				if(!images[imgSrc]){
+					
+					let img = new Image();
+					img.src = imgSrc;
+					
+					images[imgSrc] = img;
+					
+					return new Promise(function(resolve){
+						img.onload = function(){
+							resolve(img);
+						}
+						img.onerror = function(){
+							resolve(null);
+						}
+					});
+					
+				}
+				
+				return images[imgSrc];
+				
+			}
+			
+			function getTextHeight(ctx, text, x, y, width){
+				
+				let lineNum = 0;
+				let generalMetrics = ctx.measureText(' ');
+				let lineHeight = generalMetrics.fontBoundingBoxAscent+generalMetrics.fontBoundingBoxDescent;
+				let lines = text.split('\n');
+				
+				for(let line of lines){
+					
+					let words = line.split(' ');
+					let lineWidth = 0;
+					
+					for(let word of words){
+						
+						let metrics = ctx.measureText(word);
+						
+						if(lineWidth+metrics.width>width){
+							lineWidth = 0;
+							lineNum++;
+						}
+						
+						lineWidth += metrics.width+generalMetrics.width;
+						
+					}
+					
+					lineNum++;
+					
+				}
+				
+				return lineNum*lineHeight;
+				
+			}
+			
+			function drawWrappedText(ctx, text, x, y, width){
+				
+				let lineNum = 0;
+				let generalMetrics = ctx.measureText(' ');
+				let lineHeight = generalMetrics.fontBoundingBoxAscent+generalMetrics.fontBoundingBoxDescent;
+				let lineAscent = generalMetrics.fontBoundingBoxAscent;
+				let lines = text.split('\n');
+				
+				for(let line of lines){
+					
+					let words = line.split(' ');
+					let lineWidth = 0;
+					
+					for(let word of words){
+						
+						let metrics = ctx.measureText(word);
+						
+						if(lineWidth+metrics.width>width){
+							lineWidth = 0;
+							lineNum++;
+						}
+						
+						ctx.fillText(word, x+lineWidth, y+lineNum*lineHeight+lineAscent);
+						
+						lineWidth += metrics.width+generalMetrics.width;
+						
+					}
+					
+					lineNum++;
+					
+				}
+				
+				return lineNum*lineHeight;
+				
+			}
+			
+			let updating = false;
+			let links = [];
+			
 			async function updateWish(){
 				
-				let previewHTML = '';
+				if(updating) return;
 				
-				let wish_for = esc(wish['for']??'Milá Alice');
-				let wish_from = esc(wish['from']??'Bob');
-				let bday = esc(wish['bday']??'42');
-				let wishText = esc(wish['wishText']??'Všechno nejlepší!');
+				updating = true;
 				
-				let width = preview.getBoundingClientRect().width-40;
-				let height = width*Math.sqrt(2);
+				let wish_for = wish['for']||'Milá Alice';
+				let wish_from = wish['from']||'Bob';
+				let bday = wish['bday']||'42';
+				// let wishText = esc(wish['wishText']??'Všechno nejlepší!');
+				let wishText = wish['wishText']||'Všechno nejlepší!';
 				
-				/* Title page */
-				previewHTML += '<div class="wish_page" style="width:'+width+'px;height:'+height+'px;background:#f3eee3">';
-				previewHTML += '	<div class="wish_image"><img src="res/cake.png"></img></div>';
-				previewHTML += '	<div class="wish_body">';
+				/*let doc = new PDFDocument();
+				let stream = doc.pipe(blobStream());
+				
+				doc.font('fonts/OpenSans-Regular.ttf');
+				doc.fontSize(25);
+				doc.text(wish_for+', '+wish_from+' ti přeje všechno nejlepší k '+bday+'. narozeninám!', 20, 20);
+				
+				*//*doc.image('res/cake.png', {
+					fit: [100, 100],
+					align: 'center',
+					valign: 'center',
+				});*//*
+				
+				doc.end();
+				stream.on('finish', function(){
+					let url = stream.toBlobURL('application/pdf');
+					previewEmbed.src = url;
+				});
+				
+				return;*/
+				
+				/*let html = document.createElement('div');
+				
+				let canvas1 = document.createElement('canvas');
+				canvas1.width = 210;
+				canvas1.height = 297;
+				
+				html.appendChild(canvas1);
+				
+				preview.appendChild(html);
+				
+				return;*/
+				
+				//previewEmbed.src = "pdftest.php?wish_for="+encodeURIComponent(wish_for)+"&wish_from="+encodeURIComponent(wish_from);
+				
+				returnPages();
+				previewBox.innerHTML = '';
+				links = [];
+				
+				let page1Wrapper = document.createElement('a');
+				let page1 = newPage();
+				
+				links[links.length] = '';
+				
+				page1.ctx.fillStyle = '#f3eee3';
+				page1.ctx.fillRect(0, 0, page1.width, page1.height);
+				
+				page1.ctx.fillStyle = "black";
+				// page1.ctx.fillText(wish_from+' ti přeje všechno nejlepší k '+bday+'. narozeninám!', 20, 340);
+				let textPos = 296;
 				if(wish.textMode=='auto'){
-					previewHTML += '		<div class="wish_for">'+wish_for+',</div>';
-					previewHTML += '		<div class="wish_text">'+wish_from+' ti přeje všechno nejlepší k <b>'+bday+'.</b> narozeninám!</div>';
+					page1.ctx.font = "60px Calibri";
+					page1.ctx.fillText(wish_for+',', 290, 200);
+					page1.ctx.font = "40px Calibri";
+					textPos += drawWrappedText(page1.ctx, wish_from+' ti přeje všechno nejlepší k '+bday+'. narozeninám!', 20, textPos, page1.width-40)+20;
+					// previewHTML += '		<div class="wish_for">'+wish_for+',</div>';
+					// previewHTML += '		<div class="wish_text">'+wish_from+' ti přeje všechno nejlepší k <b>'+bday+'.</b> narozeninám!</div>';
 				} else if(wish.textMode=='custom'){
-					previewHTML += '		<div class="wish_text">'+wishText+'</div>';
+					// previewHTML += '		<div class="wish_text">'+wishText+'</div>';
+					page1.ctx.font = "40px Calibri";
+					textPos += drawWrappedText(page1.ctx, wishText, 20, textPos, page1.width-40)+20;
 				}
-				previewHTML += '		<div class="wish_text">Na dalších stranách najdeš zajímavosti k číslu tvých narozenin!</div>';
-				previewHTML += '	</div>';
-				previewHTML += '</div>';
+				
+				page1.ctx.font = "30px Calibri";
+				textPos += drawWrappedText(page1.ctx, 'Na dalších stranách najdeš zajímavosti k číslu tvých narozenin!', 20, textPos, page1.width-40);
+				
+				// drawImage(page1.ctx, 'res/cake256.png', 20, 20);
+				page1.ctx.drawImage(await getImage('res/cake256.png'), 20, 20);
+				
+				page1Wrapper.appendChild(page1);
+				previewBox.appendChild(page1Wrapper);
 				
 				let infos = [];
 				if(wish.infoMode=='list' && wish.infoList){
@@ -158,49 +397,203 @@ if(!isSet($_SERVER['HTTPS'])){
 					infos = wish.randomInfoList.split(',');
 				}
 				
-				/* Info pages */
 				for(let infoId of infos){
-					
 					let info = await getInfo(infoId);
 					if(info){
+						
 						let background = esc(info.background?info.background:'white');
 						let color = esc(info.color?info.color:'black');
-						previewHTML += '<div id="page_'+esc(info.id)+'" class="wish_page" style="width:'+width+'px;height:'+height+'px;background:'+background+'">';
-						previewHTML += '	<p class="info_text" style="color:'+color+'">'+esc(info.content)+'</p>';
-						previewHTML += '	<a target="_blank" class="info_link" href="'+esc(info.link)+'" style="color:'+color+'">'+esc(info.link)+'</a>';
-						previewHTML += '	<img class="info_img" src="'+esc(info.imgSrc)+'"></img>';
-						previewHTML += '	<div class="attribution" style="color:'+color+'">'+esc(info.imgAttrib)+'</div>';
-						previewHTML += '</div>';
+						
+						// previewHTML += '<div id="page_'+info.id+'" class="wish_page" style="width:'+width+'px;height:'+height+'px;background:'+background+'">';
+						// previewHTML += '	<div class="info_text" style="color:'+color+'">'+info.content+'</div>';
+						// previewHTML += '	<div><a target="_blank" class="info_link" href="'+info.link+'" style="color:'+color+'">'+info.link+'</a></div>';
+						// previewHTML += '	<img class="info_img" src="'+info.imgSrc+'"></img>';
+						// previewHTML += '	<div class="attribution" style="color:'+color+'">'+info.imgAttrib+'</div>';
+						// previewHTML += '</div>';
+						
+						let pageWrapper = document.createElement('a');
+						pageWrapper.href = info.link;
+						pageWrapper.target = '_blank';
+						links[links.length] = info.link;
+						let page = newPage();
+						
+						page.ctx.fillStyle = background;
+						page.ctx.fillRect(0, 0, page.width, page.height);
+						
+						page.ctx.fillStyle = color;
+						page.ctx.font = "32px Calibri";
+						let textPos = 20;
+						textPos += drawWrappedText(page.ctx, deesc(info.content), 20, textPos, page.width-40)+20;
+						page.ctx.fillStyle = "blue";
+						page.ctx.font = "28px Calibri";
+						textPos += drawWrappedText(page.ctx, info.link, 20, textPos, page.width-40)+20;
+						
+						let img = await getImage(info.imgSrc);
+						
+						if(img){
+							
+							let imgRatio = img.width/img.height;
+							let fullWidthHeight = (page.width-40)/imgRatio;
+							let attribHeight = getTextHeight(page.ctx, info.imgAttrib, 20, textPos, page.width-40);
+							
+							page.ctx.fillStyle = color;
+							page.ctx.font = "italic 22px Calibri";
+							
+							if(textPos+fullWidthHeight+20+attribHeight+20>page.height){
+								
+								let imgHeight = page.height-textPos-20-attribHeight-20;
+								let imgWidth = imgHeight*imgRatio;
+								let imgPos = page.width/2-imgWidth/2;
+								
+								page.ctx.drawImage(img, imgPos, textPos, imgWidth, imgHeight);
+								textPos += imgHeight+20;
+								drawWrappedText(page.ctx, info.imgAttrib, 20, textPos, page.width-40);
+								
+							} else {
+								page.ctx.drawImage(img, 20, textPos, page.width-40, fullWidthHeight);
+								textPos += fullWidthHeight+20;
+								drawWrappedText(page.ctx, info.imgAttrib, 20, textPos, page.width-40);
+							}
+							
+						}
+						
+						// drawImage(page.ctx, info.imgSrc, 20, textPos);
+						// page.ctx.drawImage(img, 20, textPos);
+						
+						pageWrapper.appendChild(page);
+						previewBox.appendChild(pageWrapper);
+						
 					} else {
 						form.setMessage('Některé z použitých zajímavosti nejsou momentálně dostupné.', MESSAGE_WARNING);
 					}
-					
 				}
 				
-				/* End page */
-				previewHTML += '<div class="wish_page" style="width:'+width+'px;height:'+height+'px;background:#f3eee3">';
-				previewHTML += '	<div class="wish_image"><img src="res/cake.png"></img></div>';
-				previewHTML += '	<div class="wish_body">';
-				previewHTML += '		<div class="wish_text">Přání pomohl vytvořit web Narozeninová přání.</div>';
-				previewHTML += `		<div>
-											<br>Chcete svému blízkému udělat radost něčím netradičním?
-											<br>Popřejte mu formou přání zaslaného v den narozenin.
-											<ul>
-												<li>Přání si zde sestavíte z různých ftipných i seriózních zajímavostí.</li>
-												<li>Vybrané zajímavosti se číselně pojí s oslavencovým věkem.</li>
-												<li>Po registraci také můžete přispět do sdíleného seznamu vlastní zajímavostí.</li>
-												<li>Můžete odeslání přání naplánovat dopředu a pustit to z hlavy.</li>
-											</ul>
-											Je to opravdu jednoduché :)
-											<br><a target="_blank" style="text-decoration:underline;" href="`+loc+`">VYTVOŘIT PŘÁNÍ</a>
-										</div>`;
-				previewHTML += '	</div>';
-				previewHTML += '</div>';
+				let endPageWrapper = document.createElement('a');
+				endPageWrapper.href = loc;
+				endPageWrapper.target = '_blank';
+				let endPage = newPage();
 				
-				preview.innerHTML = previewHTML;
+				links[links.length] = loc;
 				
-				let pages = document.querySelectorAll('.wish_page');
+				endPage.ctx.fillStyle = '#f3eee3';
+				endPage.ctx.fillRect(0, 0, endPage.width, endPage.height);
+				
+				endPage.ctx.drawImage(await getImage('res/cake256.png'), 20, 20);
+				
+				textPos = 296;
+				
+				endPage.ctx.fillStyle = "black";
+				endPage.ctx.font = "36px Calibri";
+				textPos += drawWrappedText(endPage.ctx, 'Přání pomohl vytvořit web Narozeninová přání.', 20, textPos, endPage.width-40)+20;
+				endPage.ctx.font = "28px Calibri";
+				textPos += drawWrappedText(endPage.ctx, 'Chcete svému blízkému udělat radost něčím netradičním?\nPopřejte mu formou přání zaslaného v den narozenin.', 20, textPos, endPage.width-40)+20;
+				let list = ['Přání si zde sestavíte z různých ftipných i seriózních zajímavostí.',
+						'Vybrané zajímavosti se číselně pojí s oslavencovým věkem.',
+						'Po registraci také můžete přispět do sdíleného seznamu vlastní zajímavostí.',
+						'Můžete odeslání přání naplánovat dopředu a pustit to z hlavy.'];
+				for(item of list){
+					endPage.ctx.beginPath();
+					endPage.ctx.arc(50, textPos+25, 5, 0, Math.PI*2);
+					endPage.ctx.fill();
+					textPos += drawWrappedText(endPage.ctx, item, 80, textPos, endPage.width-100)+20;
+				}
+				textPos += drawWrappedText(endPage.ctx, 'Je to opravdu jednoduché :)', 20, textPos, endPage.width-40)+20;
+				endPage.ctx.font = "36px Calibri";
+				textPos += drawWrappedText(endPage.ctx, 'Vytvořte přání na '+loc, 20, textPos, endPage.width-40)+20;
+				
+				endPageWrapper.appendChild(endPage);
+				previewBox.appendChild(endPageWrapper);
+				
+				updating = false;
+				
+				// return;
+				
+				// let previewHead = '';
+				
+				// previewHead += '<link rel="stylesheet" href="css/wish.css">';
+				
+				// let previewHTML = '';
+				
+				// // let width = preview.getBoundingClientRect().width-40;
+				// // let height = width*Math.sqrt(2);
+				
+				// let width = 210;
+				// let height = 297;
+				
+				// // let width = 2480;
+				// // let height = 3508;
+				
+				// // preview.style.transform = 'scale(.1)';
+				// // preview.style.transformOrigin = '0 0';
+				
+				// /* Title page */
+				// previewHTML += '<div class="wish_page" style="width:'+width+'px;height:'+height+'px;background:#f3eee3">';
+				// previewHTML += '	<div class="wish_image"><img src="res/cake.png"></img></div>';
+				// previewHTML += '	<div class="wish_body">';
+				// if(wish.textMode=='auto'){
+					// previewHTML += '		<div class="wish_for">'+wish_for+',</div>';
+					// previewHTML += '		<div class="wish_text">'+wish_from+' ti přeje všechno nejlepší k <b>'+bday+'.</b> narozeninám!</div>';
+				// } else if(wish.textMode=='custom'){
+					// previewHTML += '		<div class="wish_text">'+wishText+'</div>';
+				// }
+				// previewHTML += '		<div class="wish_text">Na dalších stranách najdeš zajímavosti k číslu tvých narozenin!</div>';
+				// previewHTML += '	</div>';
+				// previewHTML += '</div>';
+				
+				// // let infos = [];
+				// if(wish.infoMode=='list' && wish.infoList){
+					// infos = wish.infoList.split(',');
+				// } else if(wish.infoMode=='random' && wish.randomInfoList){
+					// infos = wish.randomInfoList.split(',');
+				// }
+				
+				// /* Info pages */
+				// for(let infoId of infos){
+					
+					// let info = await getInfo(infoId);
+					// if(info){
+						// let background = esc(info.background?info.background:'white');
+						// let color = esc(info.color?info.color:'black');
+						// previewHTML += '<div id="page_'+info.id+'" class="wish_page" style="width:'+width+'px;height:'+height+'px;background:'+background+'">';
+						// previewHTML += '	<div class="info_text" style="color:'+color+'">'+info.content+'</div>';
+						// previewHTML += '	<div><a target="_blank" class="info_link" href="'+info.link+'" style="color:'+color+'">'+info.link+'</a></div>';
+						// previewHTML += '	<img class="info_img" src="'+info.imgSrc+'"></img>';
+						// previewHTML += '	<div class="attribution" style="color:'+color+'">'+info.imgAttrib+'</div>';
+						// previewHTML += '</div>';
+					// } else {
+						// form.setMessage('Některé z použitých zajímavosti nejsou momentálně dostupné.', MESSAGE_WARNING);
+					// }
+					
+				// }
+				
+				// /* End page */
+				// previewHTML += '<div class="wish_page" style="width:'+width+'px;height:'+height+'px;background:#f3eee3">';
+				// previewHTML += '	<div class="wish_image"><img src="res/cake.png"></img></div>';
+				// previewHTML += '	<div class="wish_body">';
+				// previewHTML += '		<div class="wish_text">Přání pomohl vytvořit web Narozeninová přání.</div>';
+				// previewHTML += `		<div>
+											// <div>Chcete svému blízkému udělat radost něčím netradičním?</div>
+											// <div>Popřejte mu formou přání zaslaného v den narozenin.</div>
+											// <ul>
+												// <li>Přání si zde sestavíte z různých ftipných i seriózních zajímavostí.</li>
+												// <li>Vybrané zajímavosti se číselně pojí s oslavencovým věkem.</li>
+												// <li>Po registraci také můžete přispět do sdíleného seznamu vlastní zajímavostí.</li>
+												// <li>Můžete odeslání přání naplánovat dopředu a pustit to z hlavy.</li>
+											// </ul>
+											// <div>Je to opravdu jednoduché :)</div>
+											// <div><a target="_blank" style="text-decoration:underline;" href="`+loc+`">VYTVOŘIT PŘÁNÍ</a></div>
+										// </div>`;
+				// previewHTML += '	</div>';
+				// previewHTML += '</div>';
+				
+				// preview.innerHTML = previewHTML;
+				// // previewFrame.contentWindow.document.head.innerHTML = previewHead;
+				// // previewFrame.contentWindow.document.body.innerHTML = previewHTML;
+				
+				// let pages = document.querySelectorAll('.wish_page');
+				let pages = document.querySelectorAll('.previewCanvas');
 				if(highlight) {
+					// console.log(highlight, pages[highlight], pages[highlight].offsetTop);
 					previewBox.scrollTo(0, pages[highlight].offsetTop-5);
 					highlight = null;
 				}
@@ -284,14 +677,14 @@ if(!isSet($_SERVER['HTTPS'])){
 					
 					let randomInfoTab = createTab();
 					
-					randomInfoTab.add(createNumberInput(form, 'infoCount', 'Počet zajímavostí:'));
+					randomInfoTab.add(createNumberInput(form, 'infoCount', 'Počet zajímavostí:', 1, 1, 100, 1));
 					
 					let randomList = createBagList(form, 'randomInfoList', 'Zajímavosti', 'Vybrat jinou zajímavost');
 					
 					randomInfoTab.add(createButton('Vybrat náhodně', function(){
 						let infos = [];
 						for(let i in infoCache){
-							if(infoCache[i].number==wish['bday']) infos[infos.length] = {name:infoCache[i].id, label:infoCache[i].content};
+							if(infoCache[i].number==wish['bday']) infos[infos.length] = {name:infoCache[i].id, label:deesc(infoCache[i].content)};
 						}
 						randomList.set(infos, wish.infoCount);
 						//let pages = document.querySelectorAll('.wish_page');
@@ -334,7 +727,7 @@ if(!isSet($_SERVER['HTTPS'])){
 								form.setMessage('Nenalezeny žádné zajímavosti. <a style="color:white" class="link" href="add_info.php">Přidat zajímavost</a>', MESSAGE_WARNING);
 							}
 							for(let row of json){
-								infoList.addItem(row.id, row.content);
+								infoList.addItem(row.id, deesc(row.content));
 								infoCache[row.id] = row;
 							}
 						});
@@ -346,14 +739,13 @@ if(!isSet($_SERVER['HTTPS'])){
 						if((wish['infoMode']=='random' && !wish['randomInfoList']) || (wish['infoMode']=='list' && !wish['infoList'])) {
 							form.setMessage('Prosím vyberte aspoň jednu zajímavost!');
 						} else {
-							form.setMessage('Vytváření přání...', MESSAGE_STATUS, false);
+							form.setMessage('Vytváření přání (může trvat několik vteřin)', MESSAGE_STATUS, false);
 							let get = '';
 							let uid = getSearchObj().uid;
 							if(uid){
 								get = '?uid='+uid;
 							}
-							post(loc+'/makepdf.php'+get,
-									'bday='+encodeURIComponent(wish['bday']??'')+
+							let postData = 'bday='+encodeURIComponent(wish['bday']??'')+
 									'&textMode='+encodeURIComponent(wish['textMode'])+
 									'&for='+encodeURIComponent(wish['for']??'')+
 									'&from='+encodeURIComponent(wish['from']??'')+
@@ -362,13 +754,32 @@ if(!isSet($_SERVER['HTTPS'])){
 									'&infoMode='+encodeURIComponent(wish['infoMode'])+
 									'&infoList='+encodeURIComponent(wish['infoList']??'')+
 									'&infoCount='+encodeURIComponent(wish['infoCount']??'')+
-									'&randomInfoList='+encodeURIComponent(wish['randomInfoList']??''),
+									'&randomInfoList='+encodeURIComponent(wish['randomInfoList']??'')+
+									'&numPages='+usedPages.length;
+							for(let i in usedPages){
+								postData += '&page'+i+'='+encodeURIComponent(usedPages[i].toDataURL('image/png'));
+								postData += '&link'+i+'='+encodeURIComponent(links[i]);
+							}
+							post(loc+'/makepdf.php'+get,
+									postData,
 									function(res){
-										let json = JSON.parse(res);
-										setSearchText('uid='+json.uid);
-										form.setPage(2);
+										try {
+											let json = JSON.parse(res);
+											setSearchText('uid='+json.uid);
+											form.setPage(2);
+										} catch(e){
+											console.error('Failed to create wish:', e);
+											form.setMessage('Nelze vytvořit přání (chyba serveru)');
+										}
+									}, function(error, message){
+										console.error('Server responded with error: ', error, message);
+										form.setMessage('Nelze vytvořit přání (chyba serveru nebo sítě)');
 									});
 						}
+						/*post(loc+'/pdftest.php', 'imgData='+encodeURIComponent(previewBox.children[0].toDataURL('image/png')), function(res){
+							
+						});*/
+						//window.open('pdftest.php?imgData='+previewBox.children[0].toDataURL('image/png'));
 					});
 					
 				}));
@@ -394,8 +805,8 @@ if(!isSet($_SERVER['HTTPS'])){
 							dlbox.innerHTML = '<a href="'+loc+'/get/wish_pdf.php?uid='+getSearchObj().uid+'" download="Přání.pdf"><button class="formrow action">Stáhnout přání</button></a>';
 							
 							if(json.mail_sent=='1'){
-								//dlbox.appendChild(document.createTextNode('Přání již bylo odelsáno.'));
-								dlbox.innerHTML += '<div class="formrow"><span class="formlbl">Přání bylo odelsáno.</span></div>';
+								//dlbox.appendChild(document.createTextNode('Přání již bylo odesláno.'));
+								dlbox.innerHTML += '<div class="formrow"><span class="formlbl">Přání bylo odesláno.</span></div>';
 							} else {
 								
 								wish['mailAddress'] = decodeURIComponent(json['mail_address']);
@@ -460,9 +871,9 @@ if(!isSet($_SERVER['HTTPS'])){
 						let nextYear = new Date(new Date().setDate(new Date().getDate()+365));
 						if(!wish['mailAddress']){
 							form.setMessage('Prosím vyplňte E-mail!');
-						} else if(wish['mailAddress'].length>255){
+						} else if(wish['mailAddress'].length>100){
 							form.setMessage('E-mail je příliš dlouhý!');
-						} else if(wish['mailHiddenCopy'].length>255){
+						} else if(wish['mailHiddenCopy'].length>100){
 							form.setMessage('Skrytá kopie je příliš dlouhá!');
 						} else if(!checkAddresses(wish['mailAddress'])){
 							form.setMessage('Neplatný e-mail!');
@@ -493,9 +904,9 @@ if(!isSet($_SERVER['HTTPS'])){
 					tab2.add(createButton('Odeslat', function(){
 						if(!wish['mailAddress']){
 							form.setMessage('Prosím vyplňte E-mail!');
-						} else if(wish['mailAddress'].length>255){
+						} else if(wish['mailAddress'].length>100){
 							form.setMessage('E-mail je příliš dlouhý!');
-						} else if(wish['mailHiddenCopy'].length>255){
+						} else if(wish['mailHiddenCopy'].length>100){
 							form.setMessage('Skrytá kopie je příliš dlouhá!');
 						} else if(!checkAddresses(wish['mailAddress'])){
 							form.setMessage('Neplatný e-mail!');
@@ -622,7 +1033,11 @@ if(!isSet($_SERVER['HTTPS'])){
 				
 				<div id="previewBox" class="rightcol previewbox">
 					
-					<div id="preview"></div>
+					<!--Fuck you, you are not getting a preview, because fuck this-->
+					
+					<!--embed id="previewEmbed" type="application/pdf"></embed-->
+					<!--div id="preview"></div-->
+					<!--iframe id="previewFrame" frameborder="0" class="previewFrame"></iframe-->
 					
 				</div>
 				

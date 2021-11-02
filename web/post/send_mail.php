@@ -33,6 +33,10 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 	$mailAddresses = htmlspecialchars($_POST['mailAddress']);
 	$hiddenCopyAddresses = htmlspecialchars($_POST['mailHiddenCopy']);
 	
+	if(strlen($mailAddresses)>100||strlen($hiddenCopyAddresses)>100) {
+		die('400 - Bad request');
+	}
+	
 	$stmt = $db->prepare('select * from Wish where uid=?');
 	$stmt->bind_param('s', $uid);
 	$stmt->execute();

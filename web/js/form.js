@@ -181,15 +181,21 @@ function createFormPage(form, init){
 function createTabBox(form, name, titleText){
 	
 	let box = document.createElement('div');
-	box.className = 'formrow';
+	box.className = 'formrow tabBox';
+	
+	let bar = document.createElement('div');
+	bar.className = 'tabBar';
 	
 	let title = document.createElement('span');
 	title.innerText = titleText;
 	title.className = 'formlbl';
-	box.appendChild(title);
+	bar.appendChild(title);
 	
 	let tabButtons = document.createElement('span');
-	box.appendChild(tabButtons);
+	tabButtons.className = 'tabButtons';
+	bar.appendChild(tabButtons);
+	
+	box.appendChild(bar);
 	
 	let tabContainer = document.createElement('div');
 	box.appendChild(tabContainer);
@@ -230,6 +236,7 @@ function createTabBox(form, name, titleText){
 function createTab(){
 	
 	let tab = document.createElement('div');
+	tab.className = 'tabBody';
 	
 	tab.add = function(element){
 		tab.appendChild(element);
@@ -335,7 +342,7 @@ function createCheckList(form, name, titleText, selectAllText='Select all'){
 	
 }
 
-function createNumberInput(form, name, labelText, placeholder, min, max){
+function createNumberInput(form, name, labelText, placeholder, min, max, def){
 	
 	let label = document.createElement('div');
 	label.className = 'formrow';
@@ -349,6 +356,10 @@ function createNumberInput(form, name, labelText, placeholder, min, max){
 	input.type = 'number';
 	if(min) input.min = min;
 	if(max) input.max = max;
+	if(def) {
+		input.value = def;
+		form.update(name, def);
+	}
 	if(placeholder) input.placeholder = placeholder;
 	input.oninput = function(e){
 		form.update(name, input.value);

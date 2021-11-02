@@ -21,7 +21,7 @@
 
 ##### SDÍLENÉ SOUBORY #####
 === php ===
-- php/db.conf - konfigurace připojení k databázi
+- php/db.conf.php - konfigurace připojení k databázi
 - php/db.php - skript připojení k databázi
 - php/mail.php - konfigurace připojení k e-mailovému serveru
 - php/titlebar.php - záhlaví všech stránek (ikona, název, menu)

@@ -8,7 +8,7 @@ create table User(
 	id int primary key not null auto_increment,
 	username varchar(30) not null unique,
 	password varchar(255) not null,
-    email varchar(63),
+    email varchar(63) not null unique,
     verified bool,
     admin bool
 );
@@ -125,5 +125,9 @@ create table Wish(
 alter table NumberInfo add column titlePage bool;
 alter table Wish add column deleted bool not null default 0;
 alter table Wish add column lastEdited date;
-insert into Config(description, name, value, type) values ('Doba dostupnosti přání od poslední úpravy (dny)', 'wishAccessTime', '10', 'number');
 alter table Wish add column sessionId varchar(40);
+
+insert into Config(description, name, value, type) values ('Doba dostupnosti přání od poslední úpravy (dny)', 'wishAccessTime', '10', 'number');
+
+-- Patch
+alter table User modify column email varchar(63) not null unique;

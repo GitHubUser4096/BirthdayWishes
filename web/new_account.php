@@ -24,6 +24,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		$error = "Prosím zadejte uživatelské jméno!";
 	} else if($mail==""){
 		$error = "Prosím zadejte e-mail!";
+	} else if(!preg_match("/^[A-Za-z0-9\-\_\.\ ]+$/", $username)){
+		$error = "Uživatelské jméno může obsahovat pouze písmena, číslice, mezery a znaky '-', '_', a '.'";
 	} else if(!preg_match("/^[A-Za-z0-9\.\_\-]+@[A-Za-z0-9\_\-]+\.[A-Za-z0-9]+$/", $mail)){
 		$error = "Neplatný e-mail!";
 	} else if(strlen($username)>30) {
@@ -42,8 +44,16 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		$res = $stmt->get_result();
 		$stmt->close();
 		
+		$stmt = $db->prepare("select * from User where email=?");
+		$stmt->bind_param("s", $mail);
+		$stmt->execute();
+		$res2 = $stmt->get_result();
+		$stmt->close();
+		
 		if($res->num_rows>0) {
 			$error = "Uživatelské jméno již existuje!";
+		} else if($res2->num_rows>0) {
+			$error = "E-mail již byl použit!";
 		} else {
 			
 			$hashedPass = password_hash($_POST['password'], PASSWORD_DEFAULT);

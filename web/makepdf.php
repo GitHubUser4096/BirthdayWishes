@@ -69,6 +69,7 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 	function esc($txt){
 		$txt = str_replace("\\", "\\\\", $txt);
 		$txt = str_replace("\"", "\\\"", $txt);
+		$txt = str_replace("\n", "\\n", $txt);
 		return $txt;
 	}
 	
@@ -87,21 +88,69 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 	
 	file_put_contents('generated/json/'.$uid.'.json', $json);
 	
-	function imgb64($src){
+	/*function imgb64($src){
 		return 'data:image/png;base64,'.base64_encode(file_get_contents($src));
 	}
 
-	$dochead = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><style>@page {margin: 0px;} body { margin: 0px; font-family: DejaVu Sans, sans-serif; }</style>';
+	$dochead = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+			<style>
+				@page {
+					margin: 0px;
+				}
+				
+				body {
+					margin: 0px;
+					font-family: DejaVu Sans, sans-serif;
+				}
+				
+				.wish_page {
+					overflow: hidden;
+					font-family: DejaVu Sans, sans-serif;
+				}
 
-	$docbody = '<div style="padding-left:20px;background: #f3eee3; height: 100%;page-break-after: always;">';
-	$docbody .= '	<div style="width:150px;"><img src="'.imgb64('res/cake.png').'"></img></div>';
+				.wish_image {
+					width: 150px;
+				}
+
+				.wish_for {
+					font-size: 32px;
+				}
+
+				.wish_text {
+					font-size: 22px;
+				}
+
+				.info_text {
+					font-size: 22px;
+				}
+
+				.info_link {
+					font-size: 12px;
+					text-decoration: underline;
+				}
+
+				.info_img {
+					max-width: 100%;
+				}
+
+				.attribution {
+					font-style: italic;
+					font-size: 14px;
+				}
+				
+			</style>';
+
+	$docbody = '<div class="wish_page" style="background:#f3eee3;height:100%;page-break-after:always;overflow:hidden;">';
+	$docbody .= '	<div class="wish_image"><img src="'.imgb64('res/cake.png').'"></img></div>';
+	$docbody .= '	<div class="wish_body">';
 	if($_POST['textMode']=='auto') {
-		$docbody .= '	<div style="font-size:36px;font-weight:bold;">'.htmlspecialchars($_POST['for']).',</div>
-				<div style="font-size:28px;">'.htmlspecialchars($_POST['from']).' ti přeje všechno nejlepší k <b>'.htmlspecialchars($_POST['bday']).'</b>. narozeninám!</div>';
+		$docbody .= '		<div class="wish_for">'.htmlspecialchars($_POST['for']).',</div>
+				<div class="wish_text">'.htmlspecialchars($_POST['from']).' ti přeje všechno nejlepší k <b>'.htmlspecialchars($_POST['bday']).'</b>. narozeninám!</div>';
 	} else if($_POST['textMode']=='custom'){
-		$docbody .= '	<div style="font-size:28px;">'.htmlspecialchars($_POST['wishText']).'</div>';
+		$docbody .= '		<div class="wish_text">'.htmlspecialchars($_POST['wishText']).'</div>';
 	}
-	$docbody .= '	<div style="font-size:28px;">Na dalších stranách najdeš zajímavosti k číslu tvých narozenin!</div>';
+	$docbody .= '		<div class="wish_text">Na dalších stranách najdeš zajímavosti k číslu tvých narozenin!</div>';
+	$docbody .= '	</div>';
 	$docbody .= '</div>';
 	
 	$idList = '';
@@ -120,12 +169,12 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 		
 		$img_src = $row['imgSrc'];
 		
-		$docbody .= '<div style="background: '.($row['background']??'white').'; padding: 10px;height:100%;page-break-after: always;overflow:hidden;">
-				<p style="color: '.($row['color']??'black').';font-size:28px;">'.$row['content'].'</p>
-				<a style="color: '.($row['color']??'black').';font-size:24px;" href="'.$row['link'].'">'.$row['link'].'</a>
+		$docbody .= '<div class="wish_page" style="background:'.($row['background']??'white').';height:100%;page-break-after:always;">
+				<div class="info_text" style="color: '.($row['color']??'black').';">'.$row['content'].'</div>
+				<div><a class="info_link" style="color: '.($row['color']??'black').';" href="'.$row['link'].'">'.$row['link'].'</a></div>
 				<br>'.
-				(($img_src&&strlen(trim($img_src))>0) ? '<img src="'.imgb64($img_src).'" style="width: 100%;"></img>' : '').
-				'<p style="color: '.($row['color']??'black').';font-style:italic;font-size:16px;">'.$row['imgAttrib'].'</p>'.
+				(($img_src&&strlen(trim($img_src))>0) ? '<img class="info_img" src="'.imgb64($img_src).'"></img>' : '').
+				'<div class="attribution" style="color:'.($row['color']??'black').';">'.$row['imgAttrib'].'</div>'.
 			'</div>';
 			
 	}
@@ -133,27 +182,66 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 	$loc = $_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
 	$loc = substr($loc, 0, strrpos($loc, '/'));
 	
-	$docbody .= '<div style="background:#f3eee3;padding:10px;height:100%;page-break-after:always;overflow:hidden;">
-					<div style="width:150px;"><img src="'.imgb64('res/cake.png').'"></img></div>
-					<p style="color: black;font-size:28px;">Přání pomohl vytvořit web Narozeninová přání.</p>
-					<p style="color: black;">
-						<br>Chcete svému blízkému udělat radost něčím netradičním?
-						<br>Popřejte mu formou přání zaslaného v den narozenin.
-						<ul>
-							<li>Přání si zde sestavíte z různých ftipných i seriózních zajímavostí.</li>
-							<li>Vybrané zajímavosti se číselně pojí s oslavencovým věkem.</li>
-							<li>Po registraci také můžete přispět do sdíleného seznamu vlastní zajímavostí.</li>
-							<li>Můžete odeslání přání naplánovat dopředu a pustit to z hlavy.</li>
-						</ul>
-						Je to opravdu jednoduché :)
-						<br><a style="text-decoration:underline;" href="http://'.$loc.'">VYTVOŘIT PŘÁNÍ</a>
-					</p>
+	$docbody .= '<div class="wish_page" style="background:#f3eee3;height:100%;page-break-after:always;overflow:hidden;">
+					<div class="wish_image"><img src="'.imgb64('res/cake.png').'"></img></div>
+					<div class="wish_body">
+						<div class="wish_text">Přání pomohl vytvořit web Narozeninová přání.</div>
+						<div>
+							<div>Chcete svému blízkému udělat radost něčím netradičním?</div>
+							<div>Popřejte mu formou přání zaslaného v den narozenin.</div>
+							<ul>
+								<li>Přání si zde sestavíte z různých ftipných i seriózních zajímavostí.</li>
+								<li>Vybrané zajímavosti se číselně pojí s oslavencovým věkem.</li>
+								<li>Po registraci také můžete přispět do sdíleného seznamu vlastní zajímavostí.</li>
+								<li>Můžete odeslání přání naplánovat dopředu a pustit to z hlavy.</li>
+							</ul>
+							<div>Je to opravdu jednoduché :)</div>
+							<div><a style="text-decoration:underline;" href="http://'.$loc.'">VYTVOŘIT PŘÁNÍ</a></div>
+						</div>
+					</div>
 				</div>';
 	
 	$html = "<!doctype html><html><head>".$dochead."</head><body>".$docbody."</body></html>";
 	
 	$pdf = new Dompdf();
 	$pdf->loadHtml($html);
+	$pdf->setPaper('A4', 'portrait');
+	$pdf->render();*/
+	
+	$html = '<!doctype html><html>
+			<head><style>
+				@page {
+					margin: 0px;
+				}
+				body {
+					margin: 0px;
+					font-family: DejaVu Sans, sans-serif;
+				}
+				.wrapper {
+					position: absolute;
+					display: block;
+					top: 0px;
+					left: 0px;
+					right: 0px;
+					bottom: 0px;
+					overflow: hidden;
+					margin: 0px;
+					padding: 0px;
+					page-break-after:always;
+				}
+			</style></head>
+			<body>';
+	
+	for($i = 0; $i<$_POST['numPages']; $i++){
+		$html .= '<div class="wrapper"><a target="_blank" href='.$_POST['link'.$i].'><img style="width:100%;" src="'.$_POST['page'.$i].'"></img></a></div>';
+	}
+	
+	$html .= '</body>
+			</html>';
+	
+	$pdf = new Dompdf();
+	$pdf->loadHtml($html);
+	$pdf->setPaper('A4', 'portrait');
 	$pdf->render();
 	
 	$docname = 'generated/pdf/'.$uid.'.pdf';
