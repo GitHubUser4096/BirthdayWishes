@@ -412,7 +412,7 @@ if(!isSet($_SERVER['HTTPS'])){
 						// previewHTML += '</div>';
 						
 						let pageWrapper = document.createElement('a');
-						pageWrapper.href = info.link;
+						if(info.link) pageWrapper.href = info.link;
 						pageWrapper.target = '_blank';
 						links[links.length] = info.link;
 						let page = newPage();
