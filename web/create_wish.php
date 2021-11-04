@@ -1033,8 +1033,6 @@ if(!isSet($_SERVER['HTTPS'])){
 				
 				<div id="previewBox" class="rightcol previewbox">
 					
-					<!--Fuck you, you are not getting a preview, because fuck this-->
-					
 					<!--embed id="previewEmbed" type="application/pdf"></embed-->
 					<!--div id="preview"></div-->
 					<!--iframe id="previewFrame" frameborder="0" class="previewFrame"></iframe-->
