@@ -983,6 +983,7 @@ if(!isSet($_SERVER['HTTPS'])){
 					page.onOpen = function(){
 						get(loc+'/get/auth.php', function(res){
 							if(res=='false') {
+								window.onbeforeunload = null;
 								location.href = loc+"/login.php?page="+encodeURIComponent(location.href);
 							} else {
 								let json = JSON.parse(res);
