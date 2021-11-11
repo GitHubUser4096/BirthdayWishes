@@ -63,8 +63,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			
 		}
 		
-		if(strlen($imageName)>80) {
-			$error = "Název obrázku nesmí být delší než 80 znaků!";
+		if(strlen($imageName)>255) {
+			$error = "Název obrázku nesmí být delší než 255 znaků!";
 		} else if(!($_POST['number']>0)){
 			$error = "Číslo musí být větší než 0!";
 		} else if($number>999){
@@ -77,7 +77,21 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			$error = "Odkaz nesmí být delší než 100 znaků!";
 		} else if(!isSet($_POST['cat'])) {
 			$error = "Prosím vyberte aspoň jednu kategorii!";
+		} else {
+			for($i = 0; $i<count($_POST['cat']); $i++){
+				$cat = htmlspecialchars($_POST['cat'][$i]);
+				if(strlen($cat)>20) $error = "Neplatný název kategorie";
+				$_POST['cat'][$i] = $cat;
+			}
 		}
+		
+		// foreach($_POST['cat'] as $cat) {
+			// $cat = htmlspecialchars($cat);
+			// $_POST['cat'] = $cat;
+			// if(strlen($cat)>20){
+				// $error = "Neplatný název kategorie!";
+			// }
+		// }
 		
 		if(!isSet($error)){
 			
@@ -99,8 +113,6 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			$stmt->close();
 			
 			foreach($_POST['cat'] as $cat) {
-				
-				$cat = htmlspecialchars($cat);
 				
 				$stmt = $db->prepare('select * from Category where name=?');
 				$stmt->bind_param("s", $cat);
@@ -277,6 +289,18 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			
 		</style>
 		
+		<script>
+			
+			window.onbeforeunload = function(){
+				return "Změny nebudou uloženy. Opravdu chcete opustit stránku?";
+			}
+			
+			function allowExit(){
+				window.onbeforeunload = null;
+			}
+			
+		</script>
+		
 	</head>
 
     <body>
@@ -291,7 +315,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			
 			<div class="form">
 				
-				<form method="POST" enctype="multipart/form-data">
+				<form method="POST" enctype="multipart/form-data" onsubmit="allowExit();">
 					
 					<?php
 						
@@ -382,7 +406,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 								
 								function addCat(){
 									var name = newCatName.value;
-									name = name.charAt(0).toUpperCase()+name.substr(1);
+									name = name.charAt(0).toUpperCase()+name.substr(1).toLowerCase();
 									catmsgbox.innerText = "";
 									if(cats.includes(name)) {
 										catmsgbox.innerText = "Kategorie již existuje!";
@@ -448,13 +472,17 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 									
 									cats = <?php echo $catnames; ?>;
 									
+									for(let i in cats){
+										cats[i] = cats[i].charAt(0).toUpperCase()+cats[i].substr(1).toLowerCase();
+									}
+									
 								</script>
 							</div>
 						</div>
 						
 						<div class="formrow">
 							<input class="bigbutton" type="submit" name="save" value="Uložit"></input>
-							<a href="info_mgmt.php"><button type="button" class="bigbutton discardbtn">Zrušit</button></a>
+							<a href="info_mgmt.php"><button onclick="allowExit();" type="button" class="bigbutton discardbtn">Zrušit</button></a>
 						</div>
 						<!--div class="formrow">
 							<input class="bigbutton deletebtn" type="submit" name="delete" value="Odstranit"></input>

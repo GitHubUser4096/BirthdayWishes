@@ -65,7 +65,7 @@ $mail->send();
 $resendLink = 'request_verify.php?';
 if(isSet($_GET['page'])) $resendLink .= 'page='.urlencode($_GET['page']);
 
-$info = 'Prosím ověřte účet kliknutím na odkaz, který byl zaslán na váš e-mail. <a class="link" href="'.$resendLink.'">Odeslat znovu</a>';
+$info = 'Všechny možnosti budou dostupné až po ověření účtu. Účet ověříte kliknutím na odkaz, který byl zaslán na váš e-mail. (<a class="link" href="'.$resendLink.'">Odeslat znovu</a>)';
 
 ?>
 <!doctype html>

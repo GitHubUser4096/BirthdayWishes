@@ -16,13 +16,16 @@ $db = DB_CONNECT();
 
 ?>
 <!doctype html>
-<html>
+<html lang="en">
 
 	<head>
 		
 		<title>Narozeninová Přání</title>
 		
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta charset="UTF-8">
+		<meta name="description" content="Narozeninová přání">
+		<meta name="keywords" content="Narozeniny, Přání, Zajímavosti">
 		
 		<link rel="icon" href="res/cake.png">
 		<link rel="stylesheet" href="css/page.css">

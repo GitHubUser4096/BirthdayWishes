@@ -40,11 +40,21 @@ if(!isSet($_SERVER['HTTPS'])){
 		
 		<style>
 			
+			.formcontainer {
+				width: 50%;
+				left: 0;
+				position: absolute;
+				height: 100%;
+				/*overflow-y: auto;*/
+			}
+			
 			.previewbox {
 				background: gray;
-				position: relative;
-				/*overflow: hidden;*/
+				position: absolute;
+				right: 0;
+				width: 50%;
 				height: 100%;
+				overflow-y: auto;
 			}
 			
 			.preview {
@@ -73,15 +83,31 @@ if(!isSet($_SERVER['HTTPS'])){
 					height: calc(50% - 40px);
 				}
 				
-				.pageControls {
-					bottom: 50%;
-					height: 40px;
-				}
-				
 				.previewbox {
-					position: absolute;
 					top: 50%;
 					height: 50%;
+					width: 100%;
+				}
+				
+				.formcontainer {
+					height: 50%;
+					width: 100%;
+				}
+				
+			}
+			
+			@media only screen and (max-height: 450px) {
+				
+				.previewbox {
+					top: 50%;
+					height: 50%;
+					width: 100%;
+					display: none;
+				}
+				
+				.formcontainer {
+					height: 100%;
+					width: 100%;
 				}
 				
 			}
@@ -615,11 +641,13 @@ if(!isSet($_SERVER['HTTPS'])){
 				
 				window.addEventListener('resize', function(e){
 					updateWish();
-				})
+				});
 				
 				/* Page 0 */
 				
 				form.addPage(0, createFormPage(form, function(page){
+					
+					page.critical = true;
 					
 					page.add(createNumberInput(form, 'bday', 'Číslo narozenin:', '42', 1, 199));
 					
@@ -640,6 +668,18 @@ if(!isSet($_SERVER['HTTPS'])){
 					
 					let catList = createCheckList(form, 'categories', 'Zájmy:', 'Vybrat všechny')
 					page.add(catList);
+					
+					let cancelEditBtn = createButton('Zrušit úpravy ×', function(){
+						//form.setPage(2);
+						window.onbeforeunload = null;
+						location.reload();
+					});
+					
+					page.onOpen = function(){
+						cancelEditBtn.style.display = (getSearchObj().uid!=null)?'inline-block':'none';
+					}
+					
+					page.addControlB(cancelEditBtn);
 					
 					page.addControlF('Další >', function(){
 						if(!wish['bday']){
@@ -672,6 +712,8 @@ if(!isSet($_SERVER['HTTPS'])){
 				/* Page 1 */
 				
 				form.addPage(1, createFormPage(form, function(page){
+					
+					page.critical = true;
 					
 					let infosTabBox = createTabBox(form, 'infoMode', 'Vybrat zajímavosti:');
 					
@@ -725,6 +767,9 @@ if(!isSet($_SERVER['HTTPS'])){
 							let json = JSON.parse(res);
 							if(json.length==0){
 								form.setMessage('Nenalezeny žádné zajímavosti. <a style="color:white" class="link" href="add_info.php">Přidat zajímavost</a>', MESSAGE_WARNING);
+							}
+							if(wish['bday']=='20'){ // TODO delete this after my birthday!
+								form.setMessage('Děkuji, že děláš přání pro mě! Nezapomeň vybrat všechny zájmy!', MESSAGE_STATUS);
 							}
 							for(let row of json){
 								infoList.addItem(row.id, deesc(row.content));
@@ -802,7 +847,7 @@ if(!isSet($_SERVER['HTTPS'])){
 							
 							let json = JSON.parse(res);
 							
-							dlbox.innerHTML = '<a href="'+loc+'/get/wish_pdf.php?uid='+getSearchObj().uid+'" download="Přání.pdf"><button class="formrow action">Stáhnout přání</button></a>';
+							dlbox.innerHTML = '<button class="formrow action"><a href="'+loc+'/get/wish_pdf.php?uid='+getSearchObj().uid+'" download="Přání.pdf" style="color:white;">Stáhnout přání</a></button>';
 							
 							if(json.mail_sent=='1'){
 								//dlbox.appendChild(document.createTextNode('Přání již bylo odesláno.'));
@@ -854,6 +899,8 @@ if(!isSet($_SERVER['HTTPS'])){
 				/* Mail Page */
 				
 				form.addPage('mail', createFormPage(form, function(page){
+					
+					page.critical = true;
 					
 					let ta = createTextArea(form, 'mailAddress', 'E-mail:');
 					ta.setHint('Můžete zadat více adres, každou na vlastní řádek');
@@ -1006,6 +1053,7 @@ if(!isSet($_SERVER['HTTPS'])){
 				}
 				
 				formContainer.appendChild(form);
+				form.init();
 				
 			}
 			
@@ -1025,13 +1073,11 @@ if(!isSet($_SERVER['HTTPS'])){
 
 			<div class="form">
 				
-				<div class="leftcol">
-					
-					<div id="formContainer"></div>
+				<div id="formContainer" class="formcontainer">
 					
 				</div>
 				
-				<div id="previewBox" class="rightcol previewbox">
+				<div id="previewBox" class="previewbox">
 					
 					<!--embed id="previewEmbed" type="application/pdf"></embed-->
 					<!--div id="preview"></div-->

@@ -38,8 +38,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		
 	}
 	
-	if(strlen($imageName)>80) {
-		$error = "Název obrázku nesmí být delší než 80 znaků!";
+	if(strlen($imageName)>255) {
+		$error = "Název obrázku nesmí být delší než 255 znaků!";
 	} else if(!($_POST['number']>0)){
 		$error = "Číslo musí být větší než 0!";
 	} else if($_POST['number']>999){
@@ -52,6 +52,12 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		$error = "Odkaz nesmí být delší než 100 znaků!";
 	} else if(!isset($_POST['cat'])) {
 		$error = "Prosím vyberte aspoň jednu kategorii!";
+	} else {
+		for($i = 0; $i<count($_POST['cat']); $i++){
+			$cat = htmlspecialchars($_POST['cat'][$i]);
+			if(strlen($cat)>20) $error = "Neplatný název kategorie";
+			$_POST['cat'][$i] = $cat;
+		}
 	}
 	
 	if(!isSet($error)){
@@ -81,7 +87,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			
 			foreach($_POST['cat'] as $cat){
 				
-				$cat = htmlspecialchars($cat);
+				// $cat = htmlspecialchars($cat);
 				
 				$stmt = $db->prepare('select * from Category where name=?');
 				if($stmt) {
@@ -114,7 +120,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			
 			foreach($_POST['cat'] as $cat){
 				
-				$cat = htmlspecialchars($cat);
+				// $cat = htmlspecialchars($cat);
 				
 				$stmt = $db->prepare('insert into InfoCat(infoId, catId) values (?, (select id from Category where name=?))');
 				$stmt->bind_param("ss", $id, $cat);
@@ -206,6 +212,18 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			}
 			
 		</style>
+		
+		<script>
+			
+			window.onbeforeunload = function(e){
+				return "Změny nebudou uloženy. Opravdu chcete opustit stránku?";
+			}
+			
+			function formSubmit(){
+				window.onbeforeunload = null;
+			}
+			
+		</script>
 
 	</head>
 
@@ -221,7 +239,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			
 			<div class="form">
 				
-				<form method="POST" enctype="multipart/form-data">
+				<form method="POST" enctype="multipart/form-data" onsubmit="formSubmit();">
 					
 					<div class="fullwidcol">
 						
@@ -295,7 +313,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 								
 								function addCat(){
 									var name = newCatName.value;
-									name = name.charAt(0).toUpperCase()+name.substr(1);
+									name = name.charAt(0).toUpperCase()+name.substr(1).toLowerCase();
 									catmsgbox.innerText = "";
 									if(cats.includes(name)) {
 										catmsgbox.innerText = "Kategorie již existuje!";
@@ -350,6 +368,10 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 									?>
 									
 									cats = <?php echo $catnames; ?>;
+									
+									for(let i in cats){
+										cats[i] = cats[i].charAt(0).toUpperCase()+cats[i].substr(1).toLowerCase();
+									}
 									
 								</script>
 							</div>

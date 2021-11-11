@@ -12,21 +12,30 @@ form {
 	background: #f3eee3;
 }
 
+.js_form {
+	width: 100%;
+	height: 100%;
+}
+
 .formPage {
 	width: 100%;
+	height: 100%;
+	/* overflow: hidden; */
 }
 
 .pageBody {
-	position: absolute;
-	max-height: calc(100% - 40px);
-	width: 50%;
+	/* position: absolute; */
+	/* max-height: calc(100% - 40px); */
+	height: auto;
+	width: 100%;
 	overflow-y: auto;
 }
 
 .pageControls {
-	height: 40px;
-	position: absolute;
-	bottom: 0px;
+	height: fit-content;
+	/* position: absolute; */
+	width: 100%;
+	/* bottom: 0px; */
 }
 
 .tooltip {
@@ -51,6 +60,7 @@ form {
 	font-weight: bold;
 	font-size: 18px;
 	color: white;
+	z-index: 99;
 }
 
 .message.err {
@@ -71,6 +81,8 @@ form {
 
 .leftcol {
 	width: 50%;
+	height: 100%;
+	position: absolute;
 	float: left;
 	max-height: 100%;
 	overflow-y: auto;
@@ -85,7 +97,9 @@ form {
 
 .rightcol {
 	width: 50%;
+	height: 100%;
 	float: right;
+	position: absolute;
 	max-height: 100%;
 	overflow-y: auto;
 }
@@ -264,6 +278,15 @@ form {
 		margin-left: 0%;
 		max-height: 100%;
 		overflow-y: auto;
+	}
+	
+}
+
+@media only screen and (max-width: 1000px) {
+	
+	.form {
+		left: 0;
+		width: 100%;
 	}
 	
 }

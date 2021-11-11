@@ -40,7 +40,7 @@ function createForm(){
 	closeBtn.style.cursor = 'pointer';
 	closeBtn.innerText = '×';
 	closeBtn.onclick = function(e){
-		messageBox.style.display = 'none';
+		form.clearMessage();
 	}
 	let message = document.createElement('span');
 	messageBox.style.display = 'none';
@@ -67,10 +67,12 @@ function createForm(){
 		}
 		message.innerHTML = text;
 		messageBox.style.display = 'block';
+		pages[page].resize();
 	}
 	
 	form.clearMessage = function(){
 		messageBox.style.display = 'none';
+		pages[page].resize();
 	}
 	
 	let tooltip = document.createElement('div');
@@ -80,6 +82,17 @@ function createForm(){
 	tooltip.style.background = 'white';*/
 	
 	form.appendChild(tooltip);
+	
+	form.getHeight = function(){
+		if(messageBox.style.display=='block'){
+			return form.offsetHeight-messageBox.offsetHeight;
+		}
+		return form.offsetHeight;
+	}
+	
+	form.getWidth = function(){
+		return form.offsetWidth;
+	}
 	
 	document.addEventListener('mousemove', function(e){
 		if(tooltip.style.display=='block'){
@@ -110,6 +123,18 @@ function createForm(){
 		pages[id] = page;
 	}
 	
+	window.onbeforeunload = function(e){
+		if(pages[page].critical) return "Do you really want to leave the page?";
+	}
+	
+	window.addEventListener('resize', function(e){
+		if(pages[page]) pages[page].resize();
+	});
+	
+	form.init = function(){
+		if(pages[page]) pages[page].resize();
+	}
+	
 	form.setPage = function(id){
 		if(page!=null) {
 			form.removeChild(pages[page]);
@@ -118,6 +143,7 @@ function createForm(){
 		page = id;
 		form.appendChild(pages[page]);
 		if(pages[page].onOpen) pages[page].onOpen();
+		pages[page].resize();
 		form.clearMessage();
 	}
 	
@@ -136,6 +162,7 @@ function createFormPage(form, init){
 	
 	let page = document.createElement('div');
 	page.className = 'formPage';
+	page.critical = false;
 	
 	page.onOpen = null;
 	page.onSubmit = null;
@@ -150,7 +177,19 @@ function createFormPage(form, init){
 	page.appendChild(pageBody);
 	
 	let pageControls = document.createElement('div');
-	pageControls.className = 'formrow pageControls';
+	pageControls.className = 'pageControls';
+	
+	page.resize = function(){
+		
+		let controlsHeight = pageControls.offsetHeight;
+		
+		pageControls.style.position = 'absolute';
+		pageControls.style.bottom = '0';
+		
+		pageBody.style.position = 'absolute';
+		pageBody.style.height = (form.getHeight()-controlsHeight)+'px';
+		
+	}
 	
 	page.addControl = function(text, pg){
 		let btn = document.createElement('button');
@@ -167,6 +206,11 @@ function createFormPage(form, init){
 		btn.className = 'action';
 		btn.innerText = text;
 		btn.onclick = func;
+		pageControls.appendChild(btn);
+	}
+	
+	page.addControlB = function(btn){
+		btn.className = 'action';
 		pageControls.appendChild(btn);
 	}
 	
