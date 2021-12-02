@@ -8,6 +8,7 @@ session_start();
 
 if(!isSet($_SERVER['HTTPS'])){
 	header("Location: https://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
+	exit;
 }
 
 if(!isSet($_SESSION['user'])) echo 'false';

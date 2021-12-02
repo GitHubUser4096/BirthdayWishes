@@ -7,6 +7,7 @@ session_start();
 
 if(!isSet($_SERVER['HTTPS'])){
 	header("Location: https://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
+	exit;
 }
 
 require_once('php/db.php');
@@ -18,9 +19,13 @@ if(!isset($_GET['id'])) {
 	die('400 - Bad request');
 }
 
-if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']) {
+if(!isSet($_SESSION['user'])) {
 	header('Location: login.php?page='.urlencode("edit_user_info.php?id=".$_GET['id']));
-	//die('401 - Unauthorized');
+	exit;
+}
+
+if(!$_SESSION['user']['verified']){
+	die('Účet není ověřen!');
 }
 
 $stmt = $db->prepare('select * from NumberInfo where id=?');
@@ -45,40 +50,52 @@ if($row['createdBy']!=$_SESSION['user']['id']) {
 }
 
 if($_SERVER['REQUEST_METHOD']==='POST'){
-	
+
 	if(isset($_POST['confirmDelete'])) {
-		
+
 		$stmt = $db->prepare('delete from InfoCat where infoid=?');
 		$stmt->bind_param("i", $_GET['id']);
 		$stmt->execute();
 		$stmt->close();
-		
+
 		$stmt = $db->prepare('delete from NumberInfo where id=?');
 		$stmt->bind_param("i", $_GET['id']);
 		$stmt->execute();
 		$stmt->close();
-		
+
 		header('Location: user_info_mgmt.php');
-		
+
 	} else if(isSet($_POST['save'])) {
-		
+
 		$number = $_POST['number'];
 		$content = htmlspecialchars($_POST['content']);
 		$link = htmlspecialchars($_POST['link']);
 		$imageName = htmlspecialchars($_POST['imageName']);
 		$imgAttrib = htmlspecialchars($_POST['imgAttrib']);
-		
+
 		if(isSet($_FILES['imageFile'])&&strlen(trim($_FILES['imageFile']['name']))>0&&strlen(trim($imageName))>0){ // upload image
-			
-			if(getimagesize($_FILES['imageFile']['tmp_name'])!==false){ // file is a valid image
-				move_uploaded_file($_FILES['imageFile']['tmp_name'], $imageName);
-				$imgRes = processImage($imageName);
+
+			$dotPos = strpos($imageName, '.');
+
+			if(!$dotPos || $dotPos==strlen($imageName)-1){
+				$error = "Neplatný název obrázku!";
 			} else {
-				$error = 'Neplatný soubor obrázku!';
+
+				$ext = substr($imageName, $dotPos+1);
+
+				if(!in_array($ext, ['png', 'gif', 'jpg', 'jpeg', 'jpe', 'jif', 'jfif', 'bmp', 'webp', 'tif', 'tiff', 'heif', 'heic', 'svg'])){
+					$error = "Neplatný typ souboru obrázku!";
+				} else if(getimagesize($_FILES['imageFile']['tmp_name'])!==false){ // file is a valid image
+					move_uploaded_file($_FILES['imageFile']['tmp_name'], $imageName);
+					$imgRes = processImage($imageName);
+				} else {
+					$error = 'Neplatný soubor obrázku!';
+				}
+
 			}
-			
+
 		}
-		
+
 		if(strlen($imageName)>255) {
 			$error = "Název obrázku nesmí být delší než 255 znaků!";
 		} else if(!($_POST['number']>0)){
@@ -89,8 +106,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			$error = "Prosím vyplňte popis!";
 		} else if(strlen($_POST['content'])>1023) {
 			$error = "Popis nesmí být delší než 1023 znaků!";
-		} else if(strlen($_POST['link'])>100) {
-			$error = "Odkaz nesmí být delší než 100 znaků!";
+		} else if(strlen($_POST['link'])>255) {
+			$error = "Odkaz nesmí být delší než 255 znaků!";
 		} else if(!isSet($_POST['cat'])) {
 			$error = "Prosím vyberte aspoň jednu kategorii!";
 		} else {
@@ -100,90 +117,88 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				$_POST['cat'][$i] = $cat;
 			}
 		}
-		
+
 		if(!isSet($error)){
-			
+
 			if(isSet($imgRes)){
 				$stmt = $db->prepare("update NumberInfo set color=?, background=? where id=?");
 				$stmt->bind_param("ssi", $imgRes['color'], $imgRes['background'], $_GET['id']);
 				$stmt->execute();
 				$stmt->close();
 			}
-			
+
 			$stmt = $db->prepare("update NumberInfo set number=?, content=?, link=?, imgSrc=?, imgAttrib=?, state='pending' where id=?");
 			$stmt->bind_param("issssi", $number, $content, $link, $imageName, $imgAttrib, $_GET['id']);
 			$stmt->execute();
 			$stmt->close();
-			
+
 			$stmt = $db->prepare('delete from InfoCat where infoid=?');
 			$stmt->bind_param("i", $_GET['id']);
 			$stmt->execute();
 			$stmt->close();
-			
+
 			foreach($_POST['cat'] as $cat) {
-				
-				// $cat = htmlspecialchars($cat);
-				
+
 				$stmt = $db->prepare('select * from Category where name=?');
 				$stmt->bind_param("s", $cat);
 				$stmt->execute();
 				$res = $stmt->get_result();
 				$stmt->close();
-				
+
 				if(!$res->fetch_assoc()){
-					
+
 					$stmt = $db->prepare('insert into Category(name) values (?)');
 					$stmt->bind_param("s", $cat);
 					$stmt->execute();
 					$stmt->close();
-					
+
 				}
-				
+
 				$stmt = $db->prepare('insert into InfoCat(infoid, catid) values (?, (select id from Category where name=?))');
 				$stmt->bind_param("is", $_GET['id'], $cat);
 				$stmt->execute();
 				$stmt->close();
-				
+
 			}
-			
+
 			header('Location: user_info_mgmt.php');
-			
+
 		}
-		
+
 	}
-	
+
 }
 
 ?>
 <!doctype html>
-<html>
+<html lang="cs">
 
 	<head>
-		
+
 		<title>Upravit zajímavost</title>
-		
+
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		
+
 		<link rel="icon" href="res/cake.png">
 		<link rel="stylesheet" href="css/page.css">
 		<link rel="stylesheet" href="css/controls.css">
 		<link rel="stylesheet" href="css/titlebar.css">
 		<script src="js/titlebar.js"></script>
-		
+
 		<link rel="stylesheet" href="css/form_page.css">
 		<link rel="stylesheet" href="css/form.css">
-		
+
 		<style>
-			
+
 			.check {
 				width: 24px;
 				height: 24px;
 			}
-			
+
 			.filein {
 				display: none;
 			}
-			
+
 			.filebtn {
 				width: 150px;
 				text-align: center;
@@ -195,7 +210,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				font-size: 18px;
 				cursor: pointer;
 			}
-			
+
 			.newcat {
 				font-size: 20px;
 				border: none;
@@ -203,11 +218,11 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				color: black;
 				padding: 5px;
 			}
-			
+
 			.newcat:focus {
 				outline: none;
 			}
-			
+
 			.newcatbtn {
 				border: none;
 				background: #2edc15;
@@ -217,15 +232,15 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				padding: 5px;
 				width: 35px;
 			}
-			
+
 			.deletebtn {
 				background: red;
 			}
-			
+
 			.deletebtn:hover {
 				background: #F55;
 			}
-			
+
 			.blackout {
 				position: fixed;
 				left: 0px;
@@ -234,7 +249,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				height: 100%;
 				background: #00000055;
 			}
-			
+
 			.confirmdialog {
 				background: gray;
 				position: fixed;
@@ -244,7 +259,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				top: calc(50% - 150px);
 				padding: 10px;
 			}
-			
+
 			@media only screen and (max-width: 600px) {
 				.confirmdialog {
 					width: 100%;
@@ -253,22 +268,22 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 					top: 25%;
 				}
 			}
-			
+
 			.dialogtitle {
 				color: white;
 				font-size: 28px;
 			}
-			
+
 			.dialoginfo {
 				color: white;
 				font-weight: bold;
 				font-size: 32px;
 			}
-			
+
 			.btnwrapper {
 				padding: 10px;
 			}
-			
+
 			.confirmbtn {
 				text-align: center;
 				width: 200px;
@@ -278,7 +293,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				padding: 10px;
 				font-size: 18px;
 			}
-			
+
 			.cancelbtn {
 				text-align: center;
 				width: 200px;
@@ -288,7 +303,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				padding: 10px;
 				font-size: 18px;
 			}
-			
+
 			.warn {
 				padding: 10px;
 				background: #EECC00;
@@ -296,7 +311,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				font-size: 18px;
 				color: white;
 			}
-			
+
 			.info {
 				padding: 10px;
 				background: #2edc15;
@@ -304,63 +319,63 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				font-size: 18px;
 				color: white;
 			}
-			
+
 			.link {
 				color: white;
 			}
-			
+
 			.discardbtn {
 				background: gray;
 			}
-			
+
 			.discardbtn:hover {
 				background: darkgray;
 			}
-			
+
 		</style>
-		
+
 		<script>
-			
+
 			window.onbeforeunload = function(){
 				return "Změny nebudou uloženy. Opravdu chcete opustit stránku?";
 			}
-			
+
 			function allowExit(){
 				window.onbeforeunload = null;
 			}
-			
+
 		</script>
-		
+
 	</head>
 
     <body>
-		
+
 		<?php include('php/titlebar.php'); ?>
-		
+
 		<div class="content">
-			
+
 			<div class="subtitlebar">
 				<div class="backbtn"><a href="user_info_mgmt.php"><</a></div><div class="subtitle">Upravit zajímavost</div>
 			</div>
-			
+
 			<div class="form">
-				
+
 				<form method="POST" enctype="multipart/form-data" onsubmit="allowExit();">
-					
+
 					<?php
-						
+
 						$stmt = $db->prepare('select number, content, link, imgSrc, imgAttrib, state from NumberInfo where id=?');
 						$stmt->bind_param("i", $_GET['id']);
 						$stmt->execute();
 						$res = $stmt->get_result();
 						$stmt->close();
-						
+
 						$row = $res->fetch_assoc();
-						
+
 					?>
-					
+
 					<div class="fullwidcol">
-						
+
 						<?php
 							if(isSet($error)) {
 								?><div class="error"><?php
@@ -368,7 +383,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 								?></div><?php
 							}
 						?>
-						
+
 						<?php
 							if(isSet($warn)) {
 								?><div class="warn"><?php
@@ -376,7 +391,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 								?></div><?php
 							}
 						?>
-						
+
 						<?php
 							if(isSet($info)) {
 								?><div class="info"><?php
@@ -384,7 +399,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 								?></div><?php
 							}
 						?>
-						
+
 						<div class="formrow">
 							<span class="formlbl">Číslo:</span>
 							<input class="formin" type="text" name="number" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['number']; else echo $row['number']; ?>"></input>
@@ -397,46 +412,38 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 							<span class="formlbl">Odkaz:</span>
 							<input class="formin" type="text" name="link" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['link']; else echo $row['link']; ?>"></input>
 						</div>
-						
+
 						<script>
-							
+
 							function chooseFile(){
 								let val = filein.value.split('\\');
 								val = val[val.length-1];
 								imageName.value = "images/<?php echo $_SESSION['user']['username'] ?>_"+new Date().getTime()+"_"+val;
 							}
-							
+
 							function cancelFile(){
 								imageName.value = "";
 							}
-							
+
 						</script>
-						
+
 						<div class="formrow">
 							<span class="formlbl">Obrázek:</span>
 							<input class="input" style="width:400px;" id="imageName" name="imageName" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['imageName']; else echo $row['imgSrc']; ?>" readonly></input>
-							<label><input id="filein" onchange="chooseFile();" class="filein" type="file" name="imageFile" accept=".png,.jpg,.jpeg,.gif"></input>
+							<label><input id="filein" onchange="chooseFile();" class="filein" type="file" name="imageFile" accept="image/*"></input>
 							<br><br><div class="filebtn">Vybrat soubor</div></label>
 							<div type="button" onclick="cancelFile();" class="filebtn">Zrušit</div>
 						</div>
-						
+
 						<div class="formrow">
-							<span class="formlbl">Zdroj/autor obrázku:
-								<!--img src="res/hint.png" onmousemove="
-									attribInfo.style.display = 'block';
-									attribInfo.style.left = event.clientX+10+'px';
-									attribInfo.style.top = event.clientY+'px';
-								" onmouseleave="
-									attribInfo.style.display = 'none';
-								"></img-->
-							</span>
+							<span class="formlbl">Zdroj/autor obrázku:</span>
 							<textarea class="textarea" name="imgAttrib"><?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['imgAttrib']; else echo $row['imgAttrib']; ?></textarea>
 						</div>
-						
+
 						<div class="formrow">
 							<span class="formlbl">Kategorie:</span>
 							<script>
-								
+
 								function addCat(){
 									var name = newCatName.value;
 									name = name.charAt(0).toUpperCase()+name.substr(1).toLowerCase();
@@ -463,25 +470,25 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 										cats[cats.length] = name;
 									}
 								}
-								
+
 							</script>
 							<br><input class="newcat" id="newCatName"></input><button class="newcatbtn" type="button" onclick="addCat();">+</button>
 							<span style="color:red;" id="catmsgbox"></span>
 							<br>
 							<br><div class="catfield" id="catField">
 								<?php
-									
+
 									$stmt = $db->prepare('select name from Category');
 									$stmt->execute();
 									$res = $stmt->get_result();
 									$stmt->close();
 									$cats = [];
-									
+
 									while($row = $res->fetch_assoc()){
 										$name = $row['name'];
 										$cats[count($cats)] = '"'.$name.'"';
 										?><div><label><input type="checkbox" name="cat[]" <?php
-											
+
 											if($_SERVER['REQUEST_METHOD']==='POST') {
 												if(isSet($_POST['cat'])&&in_array($name, $_POST['cat'])) echo 'checked';
 											} else {
@@ -492,42 +499,43 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 												$stmt->close();
 												if($res2->fetch_assoc()) echo 'checked';
 											}
-											
+
 										?> value="<?php echo $name ?>"></input><?php echo $name ?></label></div><?php
 									}
-									
+
 								?>
 								<script>
-									
+
 									<?php
 										$catnames = '['.implode(",", $cats).']';
 									?>
-									
+
 									cats = <?php echo $catnames; ?>;
-									
+
 									for(let i in cats){
 										cats[i] = cats[i].charAt(0).toUpperCase()+cats[i].substr(1).toLowerCase();
 									}
-									
+
 								</script>
 							</div>
 						</div>
-						
+
 						<div class="formrow">
 							<input class="bigbutton" type="submit" name="save" value="Uložit"></input>
 							<a href="user_info_mgmt.php"><button onclick="allowExit();" type="button" class="bigbutton discardbtn">Zrušit</button></a>
 						</div>
+						<!-- TODO deleting infos currently disabled due to dependencies, Implement later -->
 						<!--div class="formrow">
 							<input class="bigbutton deletebtn" type="submit" name="delete" value="Odstranit"></input>
 						</div-->
-						
+
 					</div>
-					
+
 					<?php
-						
+
 						if(isSet($_POST['delete'])){
 							?>
-							
+
 							<div class="blackout"></div>
 							<div class="confirmdialog">
 								<div class="dialogtitle">Odstranit zajímavost</div>
@@ -535,22 +543,18 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 								<div class="btnwrapper"><input class="confirmbtn" type="submit" name="confirmDelete" value="Potvrdit"></input></div>
 								<div class="btnwrapper"><input class="cancelbtn" type="submit" name="cancelDelete" value="Zrušit"></input></div>
 							</div>
-							
+
 							<?php
 						}
-						
+
 					?>
-					
+
 				</form>
-				
+
 			</div>
-			
+
 		</div>
-		
-		<!--div id="attribInfo" class="tooltip">
-			[TEMP] Popis licence obrázku
-		</div-->
-		
+
     </body>
 
 </html>

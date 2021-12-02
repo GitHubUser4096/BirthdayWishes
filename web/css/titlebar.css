@@ -37,14 +37,14 @@
 .menu {
 	float: right;
 	color: black;
-	margin-top: 28px;
+	margin-top: 26px;
 	margin-right: 10px;
-	overflow-x: auto;
-	font-size: 22px;
+	overflow-x: hidden;
+	font-size: 24px;
 }
 
 .menuItem {
-	display: inline;
+	display: inline-block;
 	cursor: pointer;
 	padding-right: 5px;
 	padding-left: 5px;
@@ -56,7 +56,8 @@
 }
 
 .menuTextMode {
-	display: inline;
+	display: inline-block;
+	max-width: 200px;
 }
 
 .menuImgMode {
@@ -70,7 +71,8 @@
 	background: white;
 	display: none;
 	position: fixed;
-	width: 200px;
+	width: 250px;
+	overflow: hidden;
 	line-height: 1.2;
 	box-shadow: 0 0 5px 0 gray;
 	top: 60px;
@@ -79,8 +81,8 @@
 }
 
 .popupMenuItem {
-	margin: 5px;
-	font-size: 18px;
+	margin: 8px;
+	font-size: 20px;
 }
 
 .menuItemIcon {
@@ -129,33 +131,41 @@ a {
 	z-index: 99;
 }
 
+.userMenuBtn {
+	max-width: 100px;
+}
+
+@media only screen and (max-width: 700px) {
+
+	.menuTextMode {
+		display: none;
+	}
+
+	.menuImgMode {
+		display: inline;
+	}
+
+}
+
 @media only screen and (max-width: 600px) {
-	
+
 	.menu {
 		margin-top: 18px;
 		margin-right: 5px;
 	}
-	
+
 	.menuImg {
-		
+
 	}
-	
-	.menuTextMode {
-		display: none;
-	}
-	
-	.menuImgMode {
-		display: inline;
-	}
-	
-	.popupMenu {
+
+	/* .popupMenu {
 		width: 80%;
-	}
-	
+	} */
+
 	.popupMenuItem {
 		font-size: 22px;
 	}
-	
+
 	.mobilemenu {
 		background: #f3eee3;
 		top: 60px;
@@ -164,7 +174,7 @@ a {
 		position: absolute;
 		z-index: 99;
 	}
-	
+
 	.title {
 		width: auto;
 		height: 60px;
@@ -174,7 +184,7 @@ a {
 		font-size: 28px;
 		padding-top: 16px;
 	}
-	
+
 	.icon {
 		width: 60px;
 		height: 60px;
@@ -182,20 +192,53 @@ a {
 		display: block;
 		float: left;
 	}
-	
+
 	.titlebar {
 		width: 100%;
 		height: 60px;
 		background: #f3eee3;
 		overflow: hidden;
 	}
-	
+
 }
 
-@media only screen and (max-width: 380px) {
-	
+@media only screen and (max-width: 500px) {
+
+	.popupMenu {
+		right: 10px;
+		width: calc(100% - 20px);
+	}
+
+}
+
+@media only screen and (max-height: 500px) {
+
+	.menu {
+		margin-top: 18px;
+		margin-right: 5px;
+	}
+
+	.title {
+		height: 60px;
+		font-size: 28px;
+		padding-top: 16px;
+	}
+
+	.icon {
+		width: 60px;
+		height: 60px;
+	}
+
+	.titlebar {
+		height: 60px;
+	}
+
+}
+
+@media only screen and (max-width: 400px) {
+
 	.title {
 		display: none;
 	}
-	
+
 }

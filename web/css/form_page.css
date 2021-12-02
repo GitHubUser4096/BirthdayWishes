@@ -36,3 +36,11 @@
 	}
 	
 }
+
+@media only screen and (max-height: 500px) {
+	
+	.content {
+		height: calc(100% - 60px);
+	}
+	
+}

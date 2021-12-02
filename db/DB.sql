@@ -55,8 +55,8 @@ create table NumberInfo(
 	content varchar(1023),
     background varchar(23),
     color varchar(23),
-    link varchar(100),
-	imgSrc varchar(80),
+    link varchar(255),
+	imgSrc varchar(255),
     imgAttrib varchar(255),
     createdBy int,
     createdTime datetime,
@@ -131,3 +131,6 @@ insert into Config(description, name, value, type) values ('Doba dostupnosti př
 
 -- Patch
 alter table User modify column email varchar(63) not null unique;
+
+-- Patch 2
+alter table NumberInfo modify column link varchar(255);

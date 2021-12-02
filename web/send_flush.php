@@ -25,25 +25,25 @@ $stmt->close();
 
 echo "Sending mails...<br>";
 
+$i = 0;
+
 while($row = $res->fetch_assoc()) {
-	
+
 	try {
-		
+
 		$addresses = [];
 		$bccs = [];
-		
+
 		foreach(explode("\n", $row['mail_address']) as $address){
 			if(strlen(trim($address))>0) $addresses[] = trim($address);
 		}
-		
+
 		foreach(explode("\n", $row['mail_hidden']) as $address){
 			if(strlen(trim($address))>0) $bccs[] = trim($address);
 		}
-		
-		echo "Sending to: ".implode(',', $addresses).' BCC: '.implode(',', $bccs)."<br>";
-		
+
 		$mail = new PHPMailer(true);
-		
+
 		$mail->CharSet = "UTF-8";
 		//$mail->SMTPDebug = SMTP::DEBUG_SERVER;
 		$mail->isSmtp();
@@ -53,47 +53,41 @@ while($row = $res->fetch_assoc()) {
 		$mail->Password = MAIL_PASSWORD;
 		$mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
 		$mail->Port = 12345;
-		
+
 		$mail->setFrom(MAIL_FROM, 'Narozeninová přání');
-		
-		//$mail->addAddress($row['email']);
-		
+
 		foreach($addresses as $address){
 			$mail->addAddress($address);
 		}
-		
+
 		foreach($bccs as $address){
 			$mail->addBCC($address);
 		}
-		
-		//$mail->addAttachment('generated/'.$row['document'].'.pdf', 'Přání.pdf');
+
 		$mail->addAttachment('generated/pdf/'.$row['uid'].'.pdf', 'Přání.pdf');
-		
+
 		$mail->isHtml(true);
 		$mail->Subject = "Všechno nejlepší k narozeninám!";
-		//$mail->Body = htmlspecialchars($row['sent_by']).' ti přeje všechno nejlepší k narozeninám!';
-		//$mail->Body = 'Všechno nejlepší k narozeninám!';
 		$mail->Body = $row['preview_text'];
-		
+
 		$mail->send();
-		
+
 		$stmt = $db->prepare('update Wish set mail_sent=true where uid=?');
 		$stmt->bind_param('s', $row['uid']);
 		$stmt->execute();
 		$stmt->close();
-		
-		/*$stmt = $db->prepare('delete from Scheduled where id=?');
-		$stmt->bind_param("i", $row['id']);
-		$stmt->execute();
-		$stmt->close();*/
-		
+
+		$i++;
+
 	} catch(Exception $e) {
-		
+
 		echo 'Failed sending: '.$e.'<br>';
-		
+
 	}
-	
+
 }
+
+echo 'Sent '.$i.' mails';
 
 $db->close();
 

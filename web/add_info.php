@@ -8,6 +8,7 @@ session_start();
 
 if(!isSet($_SERVER['HTTPS'])){
 	header("Location: https://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
+	exit;
 }
 
 require_once('php/db.php');
@@ -15,29 +16,46 @@ require_once('php/process_image.php');
 
 $db = DB_CONNECT();
 
-if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']){
+if(!isSet($_SESSION['user'])){
 	header('Location: login.php?page=add_info.php');
+	exit;
+}
+
+if(!$_SESSION['user']['verified']){
+	die('Účet není ověřen!');
 }
 
 if($_SERVER['REQUEST_METHOD']==='POST'){
-	
+
 	$number = $_POST['number'];
 	$content = htmlspecialchars($_POST['content']);
 	$link = htmlspecialchars($_POST['link']);
 	$imageName = htmlspecialchars($_POST['imageName']);
 	$imgAttrib = htmlspecialchars($_POST['imgAttrib']);
-	
-	if(isSet($_FILES['imageFile'])&&strlen(trim($_FILES['imageFile']['name']))>0&&strlen(trim($imageName))>0){ // upload image
-		
-		if(getimagesize($_FILES['imageFile']['tmp_name'])!==false){ // file is a valid image
-			move_uploaded_file($_FILES['imageFile']['tmp_name'], $imageName);
-			$imgRes = processImage($imageName);
+
+	if(isSet($_FILES['imageFile'])&&strlen(trim($_FILES['imageFile']['name']))>0&&strlen(trim($imageName))>0){ // check whether an image was uploaded
+
+		$dotPos = strpos($imageName, '.');
+
+		if(!$dotPos || $dotPos==strlen($imageName)-1){
+			$error = "Neplatný název obrázku!";
 		} else {
-			$error = 'Neplatný soubor obrázku!';
+
+			$ext = substr($imageName, $dotPos+1);
+
+			if(!in_array($ext, ['png', 'gif', 'jpg', 'jpeg', 'jpe', 'jif', 'jfif', 'bmp', 'webp', 'tif', 'tiff', 'heif', 'heic', 'svg'])){
+				$error = "Neplatný typ souboru obrázku!";
+			} else if(getimagesize($_FILES['imageFile']['tmp_name'])!==false){ // file is a valid image
+				move_uploaded_file($_FILES['imageFile']['tmp_name'], $imageName);
+				$imgRes = processImage($imageName);
+			} else {
+				$error = 'Neplatný soubor obrázku!';
+			}
+
 		}
-		
+
 	}
-	
+
 	if(strlen($imageName)>255) {
 		$error = "Název obrázku nesmí být delší než 255 znaků!";
 	} else if(!($_POST['number']>0)){
@@ -48,8 +66,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		$error = "Prosím vyplňte popis!";
 	} else if(strlen($_POST['content'])>1023) {
 		$error = "Popis nesmí být delší než 1023 znaků!";
-	} else if(strlen($_POST['link'])>100) {
-		$error = "Odkaz nesmí být delší než 100 znaků!";
+	} else if(strlen($_POST['link'])>255) {
+		$error = "Odkaz nesmí být delší než 255 znaků!";
 	} else if(!isset($_POST['cat'])) {
 		$error = "Prosím vyberte aspoň jednu kategorii!";
 	} else {
@@ -59,36 +77,34 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			$_POST['cat'][$i] = $cat;
 		}
 	}
-	
+
 	if(!isSet($error)){
-		
+
 		$stmt = $db->prepare("select value from Config where name='infoLimit'");
 		$stmt->execute();
 		$res = $stmt->get_result();
 		$stmt->close();
 		$infoLimit = $res->fetch_assoc()['value'];
-		
+
 		$stmt = $db->prepare("select value from Config where name='infoLimitReset'");
 		$stmt->execute();
 		$res = $stmt->get_result();
 		$stmt->close();
 		$infoLimitReset = $res->fetch_assoc()['value'];
-		
+
 		$stmt = $db->prepare('select * from NumberInfo where createdBy=? and createdTime>DATE_SUB(NOW(), INTERVAL ? MINUTE)');
 		$stmt->bind_param("si", $_SESSION['user']['id'], $infoLimitReset);
 		$stmt->execute();
 		$res = $stmt->get_result();
 		$count = mysqli_num_rows($res);
 		$stmt->close();
-		
+
 		if($count>=$infoLimit) {
 			$error = "Limit prekročen!";
 		} else {
-			
+
 			foreach($_POST['cat'] as $cat){
-				
-				// $cat = htmlspecialchars($cat);
-				
+
 				$stmt = $db->prepare('select * from Category where name=?');
 				if($stmt) {
 					$stmt->bind_param("s", $cat);
@@ -96,75 +112,70 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 					$res = $stmt->get_result();
 					$stmt->close();
 				}
-				
+
 				if(!isSet($res)||!$res->fetch_assoc()){
-					
+
 					$stmt = $db->prepare('insert into Category(name) values (?)');
 					$stmt->bind_param("s", $cat);
 					$stmt->execute();
 					$stmt->close();
-					
+
 				}
-				
+
 			}
-			
+
 			$background = isSet($imgRes)?$imgRes['background']:null;
 			$color = isSet($imgRes)?$imgRes['color']:null;
-			
+
 			$stmt = $db->prepare('insert into NumberInfo(number, content, link, imgSrc, imgAttrib, background, color, createdBy, createdTime) values (?, ?, ?, ?, ?, ?, ?, ?, now())');
 			$stmt->bind_param("issssssi", $number, $content, $link, $imageName, $imgAttrib, $background, $color, $_SESSION['user']['id']);
 			$stmt->execute();
 			$stmt->close();
-			
+
 			$id = $db->insert_id;
-			
+
 			foreach($_POST['cat'] as $cat){
-				
-				// $cat = htmlspecialchars($cat);
-				
+
 				$stmt = $db->prepare('insert into InfoCat(infoId, catId) values (?, (select id from Category where name=?))');
 				$stmt->bind_param("ss", $id, $cat);
 				$stmt->execute();
 				$stmt->close();
-				
+
 			}
-			
-			//$info = 'Vaše zajímavost byla přidána, bude dostupná po potvrzení administrátorem. <a class="link" href="user_info_mgmt.php">Zobrazit/Upravit moje zajímavosti</a>';
-			//header('Location: index.php');
-			
+
 			header('Location: edit_user_info.php?id='.$id.'&justAdded');
-			
+
 		}
-		
+
 	}
-	
+
 }
 
 ?>
 <!doctype html>
-<html>
+<html lang="cs">
 
 	<head>
 
 		<title>Přidat zajímavost</title>
-		
+
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		
+
 		<link rel="icon" href="res/cake.png">
 		<link rel="stylesheet" href="css/page.css">
 		<link rel="stylesheet" href="css/controls.css">
 		<link rel="stylesheet" href="css/titlebar.css">
 		<script src="js/titlebar.js"></script>
-		
+
 		<link rel="stylesheet" href="css/form_page.css">
 		<link rel="stylesheet" href="css/form.css">
-		
+
 		<style>
-			
+
 			.filein {
 				display: none;
 			}
-			
+
 			.filebtn {
 				width: 150px;
 				text-align: center;
@@ -176,7 +187,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				font-size: 18px;
 				cursor: pointer;
 			}
-			
+
 			.newcat {
 				font-size: 20px;
 				border: none;
@@ -184,11 +195,11 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				color: black;
 				padding: 5px;
 			}
-			
+
 			.newcat:focus {
 				outline: none;
 			}
-			
+
 			.newcatbtn {
 				border: none;
 				background: #2edc15;
@@ -198,7 +209,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				padding: 5px;
 				width: 35px;
 			}
-			
+
 			.info {
 				padding: 10px;
 				background: #2edc15;
@@ -206,43 +217,43 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				font-size: 18px;
 				color: white;
 			}
-			
+
 			.link {
 				color: white;
 			}
-			
+
 		</style>
-		
+
 		<script>
-			
+
 			window.onbeforeunload = function(e){
 				return "Změny nebudou uloženy. Opravdu chcete opustit stránku?";
 			}
-			
+
 			function formSubmit(){
 				window.onbeforeunload = null;
 			}
-			
+
 		</script>
 
 	</head>
 
     <body>
-		
+
 		<?php include('php/titlebar.php'); ?>
-		
+
 		<div class="content">
-			
+
 			<div class="subtitlebar">
 				<div class="backbtn"><a href="index.php"><</a></div><div class="subtitle">Přidat zajímavost</div>
 			</div>
-			
+
 			<div class="form">
-				
+
 				<form method="POST" enctype="multipart/form-data" onsubmit="formSubmit();">
-					
+
 					<div class="fullwidcol">
-						
+
 						<?php
 							if(isSet($error)) {
 								?><div class="error"><?php
@@ -250,7 +261,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 								?></div><?php
 							}
 						?>
-						
+
 						<?php
 							if(isSet($info)) {
 								?><div class="info"><?php
@@ -258,7 +269,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 								?></div><?php
 							}
 						?>
-						
+
 						<div class="formrow">
 							<span class="formlbl">Číslo:</span>
 							<input class="formin" type="number" name="number" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['number'] ?>"></input>
@@ -271,46 +282,38 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 							<span class="formlbl">Odkaz:</span>
 							<input class="formin" type="text" name="link" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['link'] ?>"></input>
 						</div>
-						
+
 						<script>
-							
+
 							function chooseFile(){
 								let val = filein.value.split('\\');
 								val = val[val.length-1];
 								imageName.value = "images/<?php echo $_SESSION['user']['username'] ?>_"+new Date().getTime()+"_"+val;
 							}
-							
+
 							function cancelFile(){
 								imageName.value = "";
 							}
-							
+
 						</script>
-						
+
 						<div class="formrow">
 							<span class="formlbl">Obrázek:</span>
 							<input class="input" style="width:400px;" id="imageName" name="imageName" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['imageName']; ?>" readonly></input>
-							<label><input id="filein" onchange="chooseFile();" class="filein" type="file" name="imageFile" accept=".png,.jpg,.jpeg,.gif"></input>
+							<label><input id="filein" onchange="chooseFile();" class="filein" type="file" name="imageFile" accept="image/*"></input>
 							<br><br><div class="filebtn">Vybrat soubor</div></label>
 							<div type="button" onclick="cancelFile();" class="filebtn">Zrušit</div>
 						</div>
-						
+
 						<div class="formrow">
-							<span class="formlbl">Zdroj/autor obrázku:
-								<!--img src="res/hint.png" onmousemove="
-									attribInfo.style.display = 'block';
-									attribInfo.style.left = event.clientX+10+'px';
-									attribInfo.style.top = event.clientY+'px';
-								" onmouseleave="
-									attribInfo.style.display = 'none';
-								"></img-->
-							</span>
+							<span class="formlbl">Zdroj/autor obrázku</span>
 							<textarea class="textarea" name="imgAttrib"><?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['imgAttrib'] ?></textarea>
 						</div>
-						
+
 						<div class="formrow">
 							<span class="formlbl">Kategorie:</span>
 							<script>
-								
+
 								function addCat(){
 									var name = newCatName.value;
 									name = name.charAt(0).toUpperCase()+name.substr(1).toLowerCase();
@@ -337,21 +340,21 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 										cats[cats.length] = name;
 									}
 								}
-								
+
 							</script>
 							<br><input class="newcat" id="newCatName"></input><button class="newcatbtn" type="button" onclick="addCat();">+</button>
 							<span style="color:red;" id="catmsgbox"></span>
 							<br>
 							<br><div class="catfield" id="catField">
 								<?php
-									
+
 									$stmt = $db->prepare('select name from Category');
 									if($stmt) {
 										$stmt->execute();
 										$res = $stmt->get_result();
 										$stmt->close();
 										$cats = [];
-										
+
 										while($row = $res->fetch_assoc()){
 											$name = $row['name'];
 											$cats[count($cats)] = '"'.$name.'"';
@@ -359,38 +362,34 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 												<?php if($_SERVER['REQUEST_METHOD']==='POST'&&isSet($_POST['cat'])) if(in_array($name, $_POST['cat'])) echo 'checked' ?>></input><?php echo $name ?></label></div><?php
 										}
 									}
-									
+
 								?>
 								<script>
-									
+
 									<?php
 										$catnames = '['.implode(",", $cats).']';
 									?>
-									
+
 									cats = <?php echo $catnames; ?>;
-									
+
 									for(let i in cats){
 										cats[i] = cats[i].charAt(0).toUpperCase()+cats[i].substr(1).toLowerCase();
 									}
-									
+
 								</script>
 							</div>
 						</div>
-						
+
 						<div class="formrow"><input class="bigbutton" value="Přidat" type="submit"></input></div>
-						
+
 					</div>
-					
+
 				</form>
-				
+
 			</div>
-			
+
 		</div>
-		
-		<!--div id="attribInfo" class="tooltip">
-			[TEMP] Popis licence obrázku
-		</div-->
-		
+
     </body>
 
 </html>

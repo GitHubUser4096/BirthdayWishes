@@ -12,6 +12,7 @@ session_start();
 
 if(!isSet($_SERVER['HTTPS'])){
 	header("Location: https://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
+	exit;
 }
 
 require_once('php/db.php');
@@ -69,25 +70,25 @@ $info = 'Všechny možnosti budou dostupné až po ověření účtu. Účet ov�
 
 ?>
 <!doctype html>
-<html>
+<html lang="cs">
 
 	<head>
-		
+
 		<title>Vytvořit účet</title>
-		
+
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		
+
 		<link rel="icon" href="res/cake.png">
 		<link rel="stylesheet" href="css/page.css">
 		<link rel="stylesheet" href="css/controls.css">
 		<link rel="stylesheet" href="css/titlebar.css">
 		<script src="js/titlebar.js"></script>
-		
+
 		<link rel="stylesheet" href="css/form_page.css">
 		<link rel="stylesheet" href="css/form.css">
-		
+
 		<style>
-			
+
 			.info {
 				padding: 10px;
 				background: #2edc15;
@@ -95,27 +96,27 @@ $info = 'Všechny možnosti budou dostupné až po ověření účtu. Účet ov�
 				font-size: 18px;
 				color: white;
 			}
-			
+
 			.link {
 				color: white;
 			}
-			
+
 		</style>
-		
+
 	</head>
 
     <body>
-		
+
 		<?php include('php/titlebar.php'); ?>
-		
+
 		<div class="content">
-			
+
 			<div class="subtitlebar">
 				<div class="backbtn"><a href="index.php"><</a></div><div class="subtitle">Vytvořit účet</div>
 			</div>
-			
+
 			<div class="form">
-					
+
 				<?php
 					if(isSet($info)) {
 						?><div class="info"><?php
@@ -123,13 +124,13 @@ $info = 'Všechny možnosti budou dostupné až po ověření účtu. Účet ov�
 						?></div><?php
 					}
 				?>
-				
+
 			</div>
-			
+
 		</div>
-		
+
     </body>
-	
+
 </html>
 <?php
 $db->close();

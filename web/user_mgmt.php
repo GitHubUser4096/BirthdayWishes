@@ -7,14 +7,20 @@ session_start();
 
 if(!isSet($_SERVER['HTTPS'])){
 	header("Location: https://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
+	exit;
 }
 
 require_once('php/db.php');
 
 $db = DB_CONNECT();
 
-if(!isSet($_SESSION['user'])||!$_SESSION['user']['verified']) {
+if(!isSet($_SESSION['user'])) {
 	header('Location: login.php?page=user_mgmt.php');
+	exit;
+}
+
+if(!$_SESSION['user']['verified']){
+	die('Účet není ověřen!');
 }
 
 if(!$_SESSION['user']['admin']) {
@@ -23,33 +29,33 @@ if(!$_SESSION['user']['admin']) {
 
 ?>
 <!doctype html>
-<html>
+<html lang="cs">
 
 	<head>
-		
+
 		<title>Spravovat uživatele</title>
-		
+
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		
+
 		<link rel="icon" href="res/cake.png">
 		<link rel="stylesheet" href="css/page.css">
 		<link rel="stylesheet" href="css/titlebar.css">
 		<script src="js/titlebar.js"></script>
-		
+
 		<style>
-			
+
 			table {
 				border-collapse: collapse;
 			}
-			
+
 			th, td {
 				border: solid 1px;
 			}
-			
+
 			img {
 				max-width: 100px;
 			}
-			
+
 			.content {
 				position: absolute;
 				width: 100%;
@@ -57,71 +63,103 @@ if(!$_SESSION['user']['admin']) {
 				background: #e6e2d7;
 				overflow: hidden;
 			}
-			
+
 			.subtitlebar {
 				width: 100%;
 				height: 40px;
 			}
-			
+
 			.tablecont {
 				width: 100%;
 				height: calc(100% - 40px);
 			}
-			
+
 			.tableheadcont {
 				width: 100%;
 				height: 30px;
 			}
-			
+
 			.tablebodycont {
 				width: 100%;
 				height: calc(100% - 40px);
 				overflow-y: overlay;
 			}
-			
+
 			table {
 				width: 100%;
-				height: 100%;
 			}
-			
+
 			.col1 { width: auto; }
 			.col2 { width: 250px; }
 			.col3 { width: 100px }
 			.col4 { width: 100px }
-			
+
 			.editbtn {
 				text-decoration: underline;
 			}
-			
+
 			.subtitlebar {
 				font-size: 24px;
 			}
-			
+
 			.subtitle {
 				padding: 10px;
 			}
-			
+
 			.backbtn {
 				padding: 10px;
 			}
-			
+
+			.tableDiv {
+				width: 100%;
+				height: calc(100vh - 80px - 41px);
+				overflow: auto;
+			}
+
+			td, th {
+				padding: 5px;
+			}
+
+			@media only screen and (max-width: 600px) {
+
+				.content {
+					height: calc(100% - 60px);
+				}
+
+				.tableDiv {
+					height: calc(100vh - 60px - 41px);
+				}
+
+			}
+
+			@media only screen and (max-height: 500px) {
+
+				.content {
+					height: calc(100% - 60px);
+				}
+
+				.tableDiv {
+					height: calc(100vh - 60px - 41px);
+				}
+
+			}
+
 		</style>
-		
+
 	</head>
 
     <body>
-		
+
 		<?php include('php/titlebar.php'); ?>
-		
+
 		<div class="content">
-			
+
 			<div class="subtitlebar">
 				<a class="backbtn" href="index.php"><</a><span class="subtitle">Spravovat uživatele</span>
 			</div>
-			
-			<div class="tablecont">
-				
-				<div class="tableheadcont">
+
+			<div class="tableDiv">
+
 					<table>
 						<thead>
 							<tr>
@@ -131,18 +169,14 @@ if(!$_SESSION['user']['admin']) {
 								<th class="col4">Upravit</th>
 							</tr>
 						</thead>
-					</table>
-				</div>
-				<div class="tablebodycont">
-					<table>
 						<tbody>
 							<?php
-								
+
 								$stmt = $db->prepare('select id, username, email, admin from User');
 								$stmt->execute();
 								$res = $stmt->get_result();
 								$stmt->close();
-								
+
 								while($row = $res->fetch_assoc()){
 									?>
 									<tr>
@@ -159,16 +193,15 @@ if(!$_SESSION['user']['admin']) {
 									</tr>
 									<?php
 								}
-								
+
 							?>
 						</tbody>
 					</table>
-				</div>
-				
+
 			</div>
-			
+
 		</div>
-		
+
     </body>
 
 </html>

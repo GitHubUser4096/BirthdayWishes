@@ -7,6 +7,7 @@ session_start();
 
 if(!isSet($_SERVER['HTTPS'])){
 	header("Location: https://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
+	exit;
 }
 
 require_once('php/db.php');
@@ -15,88 +16,92 @@ $db = DB_CONNECT();
 
 if(!isSet($_SESSION['user'])){
 	header('Location: login.php?page=acc_mgmt.php');
+	exit;
 	//die("401 - Unauthorized");
 }
 
 if($_SERVER['REQUEST_METHOD']==='POST'){
-	
+
 	if(isSet($_POST['change_pass'])){
-		
+
 		$password = $_POST['password'];
 		$verifyPass = $_POST['verify_password'];
-		
+
 		if($password==""){
 			$error = "Prosím zadejte heslo!";
 		} else if($password!=$verifyPass){
 			$error = "Hesla se neshodují!";
 		} else {
-			
+
 			$hashedPass = password_hash($_POST['password'], PASSWORD_DEFAULT);
-			
+
 			$stmt = $db->prepare('update User set password=? where id=?');
 			$stmt->bind_param("si", $hashedPass, $_SESSION['user']['id']);
 			$stmt->execute();
 			$stmt->close();
-			
+
 			$info = "Heslo úspěšně změněno!";
-			
+
 		}
-		
+
 	} else if(isSet($_POST['change_mail'])){
-		
+
+		// TODO changing emails is currently disabled because of possible problems with verification
+		// decide whether we want the option to change mails and possibly implement it
+
 		/*$mail = htmlspecialchars($_POST['mail']);
-		
+
 		if($mail==""){
 			$error = "Prosím zadejte e-mail!";
 		} else if(strlen($mail)>63) {
 			$error = "E-Mail nesmí být delší než 63 znaků!";
 		} else {
-			
+
 			$stmt = $db->prepare('update User set email=? where id=?');
 			$stmt->bind_param("si", $mail, $_SESSION['user']['id']);
 			$stmt->execute();
 			$stmt->close();
-			
+
 			$_SESSION['user']['email'] = $mail;
-			
+
 			$info = "E-Mail úspěšně změněn!";
-			
+
 		}*/
-		
+
 	} else if(isSet($_POST['confirmDelete'])){
-		
+
 		$stmt = $db->prepare('delete from User where id=?');
 		$stmt->bind_param("i", $_SESSION['user']['id']);
 		$stmt->execute();
 		$stmt->close();
-		
+
 		header('Location: logout.php');
-		
+
 	}
-	
+
 }
 
 ?>
 <!doctype html>
-<html>
+<html lang="cs">
 
 	<head>
-		
-		<title>Spravovat účet</title>
-		
+
+		<title>Můj účet</title>
+
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		
+
 		<link rel="icon" href="res/cake.png">
 		<link rel="stylesheet" href="css/page.css">
 		<link rel="stylesheet" href="css/controls.css">
 		<link rel="stylesheet" href="css/titlebar.css">
 		<script src="js/titlebar.js"></script>
-		
+
 		<link rel="stylesheet" href="css/form_page.css">
 		<link rel="stylesheet" href="css/form.css">
-		
+
 		<style>
-			
+
 			.info {
 				padding: 10px;
 				background: #2edc15;
@@ -104,15 +109,15 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				font-size: 18px;
 				color: white;
 			}
-			
+
 			.deletebtn {
 				background: red;
 			}
-			
+
 			.deletebtn:hover {
 				background: #F55;
 			}
-			
+
 			.blackout {
 				position: fixed;
 				left: 0px;
@@ -121,7 +126,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				height: 100%;
 				background: #00000055;
 			}
-			
+
 			.confirmdialog {
 				background: gray;
 				position: fixed;
@@ -131,7 +136,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				top: calc(50% - 150px);
 				padding: 10px;
 			}
-			
+
 			@media only screen and (max-width: 600px) {
 				.confirmdialog {
 					width: 100%;
@@ -140,22 +145,22 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 					top: 25%;
 				}
 			}
-			
+
 			.dialogtitle {
 				color: white;
 				font-size: 28px;
 			}
-			
+
 			.dialoginfo {
 				color: white;
 				font-weight: bold;
 				font-size: 32px;
 			}
-			
+
 			.btnwrapper {
 				padding: 10px;
 			}
-			
+
 			.confirmbtn {
 				text-align: center;
 				width: 200px;
@@ -165,7 +170,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				padding: 10px;
 				font-size: 18px;
 			}
-			
+
 			.cancelbtn {
 				text-align: center;
 				width: 200px;
@@ -175,30 +180,30 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				padding: 10px;
 				font-size: 18px;
 			}
-			
+
 			.check {
 				width: 24px;
 				height: 24px;
 			}
-			
+
 		</style>
-		
+
 	</head>
 
     <body>
-		
+
 		<?php include('php/titlebar.php'); ?>
-		
+
 		<div class="content">
-			
+
 			<div class="subtitlebar">
-				<div class="backbtn"><a href="index.php"><</a></div><div class="subtitle">Spravovat účet</div>
+				<div class="backbtn"><a href="index.php"><</a></div><div class="subtitle">Můj účet</div>
 			</div>
-			
+
 			<div class="form">
-				
+
 				<form method="post">
-					
+
 					<?php
 						if(isSet($error)) {
 							?><div class="error"><?php
@@ -206,7 +211,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 							?></div><?php
 						}
 					?>
-					
+
 					<?php
 						if(isSet($info)) {
 							?><div class="info"><?php
@@ -214,22 +219,14 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 							?></div><?php
 						}
 					?>
-					
+
 					<div class="midcol">
-						
+
 						<div class="formrow">
 							<span class="formlbl">Uživatelské jméno:</span>
 							<input class="formin" value="<?php echo $_SESSION['user']['username']; ?>" type="text" disabled></input>
 						</div>
-						
-						<div class="formrow">
-							<span class="formlbl">Ověřený účet:</span>
-							<input class="check" type="checkbox" <?php if($_SESSION['user']['verified']) echo 'checked'; ?> disabled></input>
-							<?php if(!$_SESSION['user']['verified']) { ?>
-								<a href="request_verify.php"><button type="button" class="bigbutton">Ověřit</button></a>
-							<?php } ?>
-						</div>
-						
+
 						<!--div class="formrow">
 							<span class="formlbl"><b>Změnit e-mail:</b></span>
 						</div-->
@@ -248,7 +245,15 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 						<!--div class="formrow">
 							<input class="bigbutton" type="submit" name="change_mail" value="Změnit e-mail">
 						</div-->
-						
+
+						<div class="formrow">
+							<span class="formlbl">Ověřený účet:</span>
+							<input class="check" type="checkbox" <?php if($_SESSION['user']['verified']) echo 'checked'; ?> disabled></input>
+							<?php if(!$_SESSION['user']['verified']) { ?>
+								<a href="request_verify.php"><button type="button" class="bigbutton">Ověřit</button></a>
+							<?php } ?>
+						</div>
+
 						<div class="formrow">
 							<span class="formlbl"><b>Změnit heslo:</b></span>
 						</div>
@@ -263,17 +268,18 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 						<div class="formrow">
 							<input class="bigbutton" type="submit" name="change_pass" value="Změnit heslo">
 						</div>
+						<!-- TODO deleting accounts is currently disabled due to DB dependencies (wishes and infos) Implement this later -->
 						<!--div class="formrow">
 							<input class="bigbutton deletebtn" type="submit" name="delete" value="Smazat účet">
 						</div-->
-						
+
 					</div>
-					
+
 					<?php
-						
+
 						if(isSet($_POST['delete'])){
 							?>
-							
+
 							<div class="blackout"></div>
 							<div class="confirmdialog">
 								<div class="dialogtitle">Odstranit účet</div>
@@ -281,20 +287,20 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 								<div class="btnwrapper"><input class="confirmbtn" type="submit" name="confirmDelete" value="Potvrdit"></input></div>
 								<div class="btnwrapper"><input class="cancelbtn" type="submit" name="cancelDelete" value="Zrušit"></input></div>
 							</div>
-							
+
 							<?php
 						}
-						
+
 					?>
-					
+
 				</form>
-				
+
 			</div>
-			
+
 		</div>
-		
+
     </body>
-	
+
 </html>
 <?php
 $db->close();

@@ -45,6 +45,7 @@ form {
 	color: white;
 	padding: 5px;
 	display: none;
+	box-shadow: 0 0 5px 0 gray;
 }
 
 .error {
@@ -129,6 +130,7 @@ form {
 	color: black;
 	padding: 5px;
 	display: inline-block;
+	margin-top: -5px;
 }
 
 .input {
@@ -168,26 +170,36 @@ form {
 }
 
 .tabBox {
-	
+
 }
 
 .tabBar {
-	background: #e6e2d7;
+	padding-left: 5px;
+	/* background: #e6e2d7; */
+	border: solid gray 1px;
+	/* border-bottom: none; */
 }
 
 .tabBody {
 	background: #f3eee3;
+	border: solid gray 1px;
+	border-top: none;
 }
 
 .tabButtons {
 	margin: 10px;
 }
 
+.tabboxlbl {
+	display: block;
+}
+
 .tabbtn {
 	box-sizing: border-box;
 	border: none;
 	color: gray;
-	background: #e6e2d7;
+	/* background: #e6e2d7; */
+	background: #f3eee3;
 	font-size: 16px;
 	margin: 0px;
 	padding: 10px;
@@ -195,8 +207,78 @@ form {
 
 .tabbtn.selected {
 	color: #2edc15;
-	border-top: solid #2edc15 3px;
-	background: #f3eee3;
+	/* border-top: solid #2edc15 3px; */
+	/* background: #f3eee3; */
+}
+
+.radioOff {
+	display: inline-block;
+	margin-bottom: -3px;
+	margin-right: 3px;
+}
+
+.radioOn {
+	display: none;
+	margin-bottom: -3px;
+	margin-right: 3px;
+}
+
+.tabbtn.selected .radioOff {
+	display: none;
+}
+
+.tabbtn.selected .radioOn {
+	display: inline-block;
+}
+
+.checkboxOff {
+	display: inline-block;
+	margin-bottom: -4px;
+	margin-right: 3px;
+}
+
+.checkboxOn {
+	display: none;
+	margin-bottom: -4px;
+	margin-right: 3px;
+}
+
+.checkItem.selected .checkboxOff {
+	display: none;
+}
+
+.checkItem.selected .checkboxOn {
+	display: inline-block;
+}
+
+.selectItem {
+	display: inline-block;
+	margin-bottom: -4px;
+	margin-right: 3px;
+}
+
+.deselectItem {
+	display: none;
+	margin-bottom: -4px;
+	margin-right: 3px;
+}
+
+.doubleListItem.selected .selectItem {
+	display: none;
+}
+
+.doubleListItem.selected .deselectItem {
+	display: inline-block;
+}
+
+.checklist {
+	margin: 10px;
+	border: 1px solid gray;
+}
+
+.hintButton {
+	width: 14px;
+	margin-left: 5px;
 }
 
 /*.tabbtn:hover {
@@ -233,7 +315,7 @@ form {
 }
 
 @media only screen and (max-width: 600px) {
-	
+
 	.formlbl {
 		font-size: 20px;
 		width: 100%;
@@ -249,21 +331,21 @@ form {
 		color: black;
 		padding: 5px;
 	}
-	
+
 	.leftcol {
 		width: 100%;
 		float: left;
 		max-height: 100%;
 		overflow-y: auto;
 	}
-	
+
 	.rightcol {
 		width: 100%;
 		float: right;
 		max-height: 100%;
 		overflow-y: auto;
 	}
-	
+
 	.form {
 		position: absolute;
 		left: 0;
@@ -272,27 +354,27 @@ form {
 		background: #f3eee3;
 		overflow-y: auto;
 	}
-	
+
 	.midcol {
 		width: 100%;
 		margin-left: 0%;
 		max-height: 100%;
 		overflow-y: auto;
 	}
-	
+
 }
 
 @media only screen and (max-width: 1000px) {
-	
+
 	.form {
 		left: 0;
 		width: 100%;
 	}
-	
+
 }
 
 @media only screen and (max-width: 1440px) {
-	
+
 	.formlbl {
 		width: 100%;
 	}
@@ -302,5 +384,5 @@ form {
 		display: block;
 		float: none;
 	}
-	
+
 }

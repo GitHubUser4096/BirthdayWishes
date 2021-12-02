@@ -11,7 +11,7 @@ const XHR_DEBUG = NONE;
 
 function get(request, handler, errorHandler){
 	return new Promise(resolve=>{
-		
+
 		let xhr = new XMLHttpRequest();
 		xhr.onreadystatechange = function(){
 			if(this.readyState==4){
@@ -28,13 +28,13 @@ function get(request, handler, errorHandler){
 		}
 		xhr.open('GET', request, true);
 		xhr.send();
-		
+
 	});
 }
 
 function post(request, data, handler, errorHandler){
 	return new Promise(resolve=>{
-		
+
 		let xhr = new XMLHttpRequest();
 		xhr.onreadystatechange = function(){
 			if(this.readyState==4){
@@ -54,6 +54,6 @@ function post(request, data, handler, errorHandler){
 		xhr.open('POST', request, true);
 		xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 		xhr.send(data);
-		
+
 	});
 }
