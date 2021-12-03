@@ -3,6 +3,8 @@
  * Vytvořil: Michal
  */
 
+
+
 document.addEventListener('mouseup', function(e){
 	if(typeof popupMenu === 'undefined') return; // menu does not exist when not signed in
 	if(typeof popupMenuBtn === 'undefined') return; // menu does not exist when not signed in
@@ -32,5 +34,17 @@ function togglePopupMenu(){
 		popupMenu.style.display = 'none';
 	} else {
 		popupMenu.style.display = 'block';
+	}
+}
+
+function initTitlebar(){
+	let text = usernameText.innerText;
+	let btnWidth = usernameBtn.offsetWidth;
+	if(usernameText.offsetWidth<=btnWidth) return;
+	usernameText.innerText = '';
+	let i = 0;
+	while(usernameText.offsetWidth<btnWidth){
+		usernameText.innerText = text.substr(0, i)+'...';
+		i++;
 	}
 }

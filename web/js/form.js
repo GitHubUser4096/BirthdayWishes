@@ -47,6 +47,14 @@ function createForm(){
 	messageBox.appendChild(message);
 	messageBox.appendChild(closeBtn);
 	form.appendChild(messageBox);
+	let blackout = document.createElement('span');
+	blackout.style.display = 'none';
+	blackout.style.backgroundColor = '#00000030';
+	blackout.style.position = 'absolute';
+	blackout.style.width = '100%';
+	blackout.style.height = '100%';
+	blackout.style.zIndex = 9999;
+	form.appendChild(blackout);
 
 	form.setMessage = function(text, type=MESSAGE_ERROR, closeable=true){
 		if(closeable) closeBtn.style.display = 'block';
@@ -75,6 +83,14 @@ function createForm(){
 		pages[page].resize();
 	}
 
+	form.blackout = function(){
+		blackout.style.display = 'block';
+	}
+
+	form.noblackout = function(){
+		blackout.style.display = 'none';
+	}
+
 	let tooltip = document.createElement('div');
 	tooltip.className = 'tooltip';
 	/*tooltip.style.position = 'fixed';
@@ -96,14 +112,27 @@ function createForm(){
 
 	document.addEventListener('mousemove', function(e){
 		if(tooltip.style.display=='block'){
-			tooltip.style.left = (e.clientX+10)+'px';
-			tooltip.style.top = (e.clientY)+'px';
+			if(window.innerWidth-e.clientX<tooltip.width){
+				if(e.clientX<tooltip.width){
+					tooltip.style.left = '0px';
+					tooltip.style.top = (e.clientY+10)+'px';
+				} else {
+					tooltip.style.left = (e.clientX-tooltip.width-10)+'px';
+					tooltip.style.top = (e.clientY)+'px';
+				}
+			} else {
+				tooltip.style.left = (e.clientX+10)+'px';
+				tooltip.style.top = (e.clientY)+'px';
+			}
 		}
 	});
 
 	form.showTooltip = function(text){
 		tooltip.innerText = text;
+		tooltip.style.left = '0px';
+		tooltip.style.top = '0px';
 		tooltip.style.display = 'block';
+		tooltip.width = tooltip.offsetWidth;
 	}
 
 	form.hideTooltip = function(){

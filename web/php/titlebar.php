@@ -12,7 +12,7 @@
 	<div class="menu" id="menu">
 		<div class="menuItem"><a href="create_wish.php"><span class="menuTextMode">Vytvořit přání</span><img width=20 height=20 alt="Vytvořit přání" class="menuImgMode" src="res/create_wish.png"></img></a></div>
 		<?php if(isSet($_SESSION['user'])) { ?>
-			| <div class="menuItem" id="popupMenuBtn" onclick="togglePopupMenu();"><a><span class="menuTextMode userMenuBtn"><?php echo $_SESSION['user']['username'] ?></span><img class="menuImgMode" width=24 height=24 alt="Menu" class="menuImg" src="res/user.png"></img></a></div>
+			| <div class="menuItem" id="popupMenuBtn" onclick="togglePopupMenu();"><a><span class="menuTextMode userMenuBtn" id="usernameBtn"><span id="usernameText"><?php echo $_SESSION['user']['username'] ?></span></span><img class="menuImgMode" width=24 height=24 alt="Menu" class="menuImg" src="res/user.png"></img></a></div>
 		<?php } else { ?>
 			| <div class="menuItem"><a href="login.php"><span class="menuTextMode">Přihlásit se</span><img width=24 height=24 alt="Přihlásit se" class="menuImgMode" src="res/user.png"></img></a></div>
 		<?php } ?>
@@ -50,4 +50,7 @@
 			<a href="logout.php">Odhlásit se<img width=20 height=20 alt="Odhlásit se" src="res/exit.png" class="menuItemIcon"></img></a>
 		</div>
 	</div>
+	<script>
+		initTitlebar();
+	</script>
 </div>

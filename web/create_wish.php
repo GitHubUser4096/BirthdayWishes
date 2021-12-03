@@ -673,6 +673,7 @@ if(!isSet($_SERVER['HTTPS'])){
 							form.setMessage('Prosím vyberte alespoň jednu zajímavost!');
 						} else {
 							form.setMessage('Vytváření přání (může trvat několik vteřin)', MESSAGE_STATUS, false);
+							form.blackout();
 							let get = '';
 							let uid = getSearchObj().uid;
 							if(uid){
@@ -700,13 +701,16 @@ if(!isSet($_SERVER['HTTPS'])){
 											let json = JSON.parse(res);
 											setSearchText('uid='+json.uid);
 											form.setPage(2);
+											form.noblackout();
 										} catch(e){
 											console.error('Failed to create wish:', e);
-											form.setMessage('Nelze vytvořit přání (chyba serveru)');
+											form.setMessage('Nelze vytvořit přání (chyba webu)');
+											form.noblackout();
 										}
 									}, function(error, message){
 										console.error('Server responded with error: ', error, message);
 										form.setMessage('Nelze vytvořit přání (chyba serveru nebo sítě)');
+										form.noblackout();
 									});
 						}
 					});
