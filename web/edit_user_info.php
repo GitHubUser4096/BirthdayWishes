@@ -79,17 +79,20 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 
 			if(!$dotPos || $dotPos==strlen($imageName)-1){
 				$error = "Neplatný název obrázku!";
+				$imageName = '';
 			} else {
 
 				$ext = substr($imageName, $dotPos+1);
 
-				if(!in_array($ext, ['png', 'gif', 'jpg', 'jpeg', 'jpe', 'jif', 'jfif', 'bmp', 'webp', 'tif', 'tiff', 'heif', 'heic', 'svg'])){
+				if(!in_array($ext, ['png', 'gif', 'jpg', 'jpeg', 'jpe', 'jif', 'jfif', 'jfi', 'bmp', 'webp'])){
 					$error = "Neplatný typ souboru obrázku!";
+					$imageName = '';
 				} else if(getimagesize($_FILES['imageFile']['tmp_name'])!==false){ // file is a valid image
 					move_uploaded_file($_FILES['imageFile']['tmp_name'], $imageName);
 					$imgRes = processImage($imageName);
 				} else {
 					$error = 'Neplatný soubor obrázku!';
+					$imageName = '';
 				}
 
 			}
@@ -429,7 +432,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 
 						<div class="formrow">
 							<span class="formlbl">Obrázek:</span>
-							<input class="input" style="width:400px;" id="imageName" name="imageName" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['imageName']; else echo $row['imgSrc']; ?>" readonly></input>
+							<input class="input" style="width:400px;" id="imageName" name="imageName" value="<?php if($_SERVER['REQUEST_METHOD']==='POST' && $imageName) echo $imageName; else echo $row['imgSrc']; ?>" readonly></input>
 							<label><input id="filein" onchange="chooseFile();" class="filein" type="file" name="imageFile" accept="image/*"></input>
 							<br><br><div class="filebtn">Vybrat soubor</div></label>
 							<div type="button" onclick="cancelFile();" class="filebtn">Zrušit</div>
