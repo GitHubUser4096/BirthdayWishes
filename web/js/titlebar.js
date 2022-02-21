@@ -38,13 +38,16 @@ function togglePopupMenu(){
 }
 
 function initTitlebar(){
-	let text = usernameText.innerText;
-	let btnWidth = usernameBtn.offsetWidth;
-	if(usernameText.offsetWidth<=btnWidth) return;
-	usernameText.innerText = '';
-	let i = 0;
-	while(usernameText.offsetWidth<btnWidth){
-		usernameText.innerText = text.substr(0, i)+'...';
-		i++;
+	let usernameText = document.querySelector('#usernameText');
+	if(usernameText){
+		let text = usernameText.innerText;
+		let btnWidth = usernameBtn.offsetWidth;
+		if(usernameText.offsetWidth<=btnWidth) return;
+		usernameText.innerText = '';
+		let i = 0;
+		while(usernameText.offsetWidth<btnWidth){
+			usernameText.innerText = text.substr(0, i)+'...';
+			i++;
+		}
 	}
 }

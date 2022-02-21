@@ -36,7 +36,9 @@ $stmt->close();
 $row = $res->fetch_assoc();
 
 if(isSet($_GET['justAdded'])){
-	$info = 'Vaše zajímavost byla přidána, bude dostupná po potvrzení administrátorem. <a class="link" href="user_info_mgmt.php">Zobrazit/Upravit moje zajímavosti</a>';
+	$info = 'Vaše zajímavost byla přidána, bude dostupná po potvrzení administrátorem.'.
+			'<br><a class="link" href="user_info_mgmt.php">Moje zajímavosti</a>'.
+			' | <a class="link" href="add_info.php">Nová zajímavost</a>';
 } else if($row['state']=='approved') {
 	$warn = 'Po úpravě musí být zajímavost znovu schválena.';
 }
@@ -73,51 +75,65 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 		$imageName = htmlspecialchars($_POST['imageName']);
 		$imgAttrib = htmlspecialchars($_POST['imgAttrib']);
 
-		if(isSet($_FILES['imageFile'])&&strlen(trim($_FILES['imageFile']['name']))>0&&strlen(trim($imageName))>0){ // upload image
+		if(isSet($_FILES['imageFile'])&&strlen(trim($_FILES['imageFile']['name']))>0&&strlen(trim($imageName))>0){ // upload
 
-			$dotPos = strpos($imageName, '.');
-
-			if(!$dotPos || $dotPos==strlen($imageName)-1){
-				$error = "Neplatný název obrázku!";
+			if($_FILES['imageFile']['size']>3000000){
+				$error = 'Obrázek nesmí být větší než 3 MB';
+				$imageName = '';
+			} else if($_FILES['imageFile']['error']>0){
+				$error = 'Nelze nahrát obrázek!';
 				$imageName = '';
 			} else {
 
-				$ext = substr($imageName, $dotPos+1);
+				$dotPos = strrpos($imageName, '.');
 
-				if(!in_array($ext, ['png', 'gif', 'jpg', 'jpeg', 'jpe', 'jif', 'jfif', 'jfi', 'bmp', 'webp'])){
-					$error = "Neplatný typ souboru obrázku!";
+				if(!$dotPos || $dotPos==strlen($imageName)-1){
+					$error = "Neplatný název obrázku!";
 					$imageName = '';
-				} else if(getimagesize($_FILES['imageFile']['tmp_name'])!==false){ // file is a valid image
-					move_uploaded_file($_FILES['imageFile']['tmp_name'], $imageName);
-					$imgRes = processImage($imageName);
 				} else {
-					$error = 'Neplatný soubor obrázku!';
-					$imageName = '';
+
+					$ext = substr($imageName, $dotPos+1);
+
+					if(!in_array(strtolower($ext), ['png', 'gif', 'jpg', 'jpeg', 'jpe', 'jif', 'jfif', 'jfi', 'bmp', 'webp'])){
+						$error = "Neplatný typ souboru obrázku!";
+						$imageName = '';
+					} else if(getimagesize($_FILES['imageFile']['tmp_name'])!==false){ // file is a valid image
+						move_uploaded_file($_FILES['imageFile']['tmp_name'], $imageName);
+						$imgRes = processImage($imageName);
+					} else {
+						$error = 'Neplatný soubor obrázku!';
+						$imageName = '';
+					}
+
 				}
 
 			}
 
 		}
 
-		if(strlen($imageName)>255) {
-			$error = "Název obrázku nesmí být delší než 255 znaků!";
-		} else if(!($_POST['number']>0)){
-			$error = "Číslo musí být větší než 0!";
-		} else if($_POST['number']>999){
-			$error = "Číslo musí být menší než 1000!";
-		} else if(strlen(trim($_POST['content']))==0) {
-			$error = "Prosím vyplňte popis!";
-		} else if(strlen($_POST['content'])>1023) {
-			$error = "Popis nesmí být delší než 1023 znaků!";
-		} else if(strlen($_POST['link'])>255) {
-			$error = "Odkaz nesmí být delší než 255 znaků!";
-		} else if(!isSet($_POST['cat'])) {
-			$error = "Prosím vyberte aspoň jednu kategorii!";
-		} else {
-			for($i = 0; $i<count($_POST['cat']); $i++){
-				$cat = htmlspecialchars($_POST['cat'][$i]);
-				if(strlen($cat)>20) $error = "Neplatný název kategorie";
-				$_POST['cat'][$i] = $cat;
+		if(!isSet($error)){
+			if(strlen($imageName)>255) {
+				$error = "Název obrázku nesmí být delší než 255 znaků!";
+			} else if(strlen($imgAttrib)>255) {
+				$error = "Zdroj obrázku nesmí být delší než 255 znaků!";
+			} else if(!($_POST['number']>0)){
+				$error = "Číslo musí být větší než 0!";
+			} else if($_POST['number']>999){
+				$error = "Číslo musí být menší než 1000!";
+			} else if(strlen(trim($_POST['content']))==0) {
+				$error = "Prosím vyplňte popis!";
+			} else if(strlen($_POST['content'])>1023) {
+				$error = "Popis nesmí být delší než 1023 znaků!";
+			} else if(strlen($_POST['link'])>255) {
+				$error = "Odkaz nesmí být delší než 255 znaků!";
+			} else if(!isSet($_POST['cat'])) {
+				$error = "Prosím vyberte aspoň jednu kategorii!";
+			} else {
+				for($i = 0; $i<count($_POST['cat']); $i++){
+					$cat = htmlspecialchars($_POST['cat'][$i]);
+					if(strlen($cat)>20) $error = "Neplatný název kategorie";
+					$_POST['cat'][$i] = $cat;
+				}
 			}
 		}
 
@@ -130,8 +146,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				$stmt->close();
 			}
 
-			$stmt = $db->prepare("update NumberInfo set number=?, content=?, link=?, imgSrc=?, imgAttrib=?, state='pending' where id=?");
-			$stmt->bind_param("issssi", $number, $content, $link, $imageName, $imgAttrib, $_GET['id']);
+			$stmt = $db->prepare("update NumberInfo set number=?, content=?, link=?, imgSrc=?, imgAttrib=?, state='pending', modifiedBy=?, modifiedTime=now() where id=?");
+			$stmt->bind_param("issssii", $number, $content, $link, $imageName, $imgAttrib, $_SESSION['user']['id'], $_GET['id']);
 			$stmt->execute();
 			$stmt->close();
 
@@ -167,6 +183,11 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 			header('Location: user_info_mgmt.php');
 
 		}
+
+	} else {
+
+		$_SERVER['REQUEST_METHOD'] = 'GET';
+		$error = 'Data nelze uložit! Zkuste nahrát menší obrázek.';
 
 	}
 
@@ -418,7 +439,15 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 
 						<script>
 
+							// let origVal = '<?php if($_SERVER['REQUEST_METHOD']==='POST' && $imageName) echo $imageName; else echo $row['imgSrc']; ?>';
+
 							function chooseFile(){
+								// if(filein.files[0].size>5000000){
+								// 	alert('Prosím vyberte obrázek menší než 5MB');
+								// 	filein.value = null;
+								// 	imageName.value = origVal;
+								// 	return;
+								// }
 								let val = filein.value.split('\\');
 								val = val[val.length-1];
 								imageName.value = "images/<?php echo $_SESSION['user']['username'] ?>_"+new Date().getTime()+"_"+val;

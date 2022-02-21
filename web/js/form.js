@@ -164,16 +164,31 @@ function createForm(){
 		if(pages[page]) pages[page].resize();
 	}
 
-	form.setPage = function(id){
+	// window.onpopstate = function(e){
+	// 	console.log('state popped', e);
+	// 	setPageInternal(e.state.page);
+	// }
+
+	function setPageInternal(id){
 		if(page!=null) {
 			form.removeChild(pages[page]);
 			if(pages[page].onSubmit) pages[page].onSubmit();
 		}
 		page = id;
 		form.appendChild(pages[page]);
+		form.clearMessage();
 		if(pages[page].onOpen) pages[page].onOpen();
 		pages[page].resize();
-		form.clearMessage();
+	}
+
+	form.setPage = function(id){
+		// console.log('pusing state ', id);
+		// if(page==null){
+		// 	history.replaceState({isPage: true, page: id}, 'Page '+id, '');
+		// } else {
+		// 	history.pushState({isPage: true, page: id}, 'Page '+id, '');
+		// }
+		setPageInternal(id);
 	}
 
 	form.update = function(name, val){
@@ -553,6 +568,11 @@ function createNumberInput(form, name, labelText, placeholder, min, max, def, hi
 	}
 	if(placeholder) input.placeholder = placeholder;
 	input.oninput = function(e){
+
+	}
+	input.onchange = function(e){
+		if(+input.value<+input.min) input.value = input.min;
+		if(+input.value>+input.max) input.value = input.max;
 		form.update(name, input.value);
 	}
 

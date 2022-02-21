@@ -28,6 +28,35 @@ function createDoubleList(form, name, title){
 
 	}
 
+	listBox.setSelectedItems = function(items){
+
+		// for(let item of deselectedBox.children){
+		// for(let i = 0; i<deselectedBox.children.length; i++){
+		// 	let item = deselectedBox.children[i];
+		// 	let innerItem = item.children[0];
+		// 	if(items.indexOf(innerItem.name.toString())>=0){
+		// 		innerItem.children[0].checked = true;
+		// 		deselectedBox.removeChild(item);
+		// 		selectedBox.appendChild(createMoveField(innerItem));
+		// 		innerItem.classList.add('selected');
+		// 		i--;
+		// 	}
+		// }
+
+		for(let id of items){
+			for(let field of deselectedBox.children){
+				let innerItem = field.children[0];
+				if(innerItem.name.toString()==id){
+					innerItem.children[0].checked = true;
+					deselectedBox.removeChild(field);
+					selectedBox.appendChild(createMoveField(innerItem));
+					innerItem.classList.add('selected');
+				}
+			}
+		}
+
+	}
+
 	function updateForm(){
 
 		let res = listBox.getSelected();

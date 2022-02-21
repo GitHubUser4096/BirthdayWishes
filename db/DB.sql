@@ -60,6 +60,8 @@ create table NumberInfo(
     imgAttrib varchar(255),
     createdBy int,
     createdTime datetime,
+		modifiedBy int,
+		modifiedTime datetime,
 	state enum('approved', 'dismissed', 'pending') default 'pending',
     titlePage bool,
     foreign key (createdBy) references User(id)
@@ -134,3 +136,7 @@ alter table User modify column email varchar(63) not null unique;
 
 -- Patch 2
 alter table NumberInfo modify column link varchar(255);
+
+-- Update to V0.7
+alter table NumberInfo add column modifiedBy int;
+alter table NumberInfo add column modifiedTime datetime;

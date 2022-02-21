@@ -27,128 +27,156 @@ if(!$_SESSION['user']['verified']){
 
 if($_SERVER['REQUEST_METHOD']==='POST'){
 
-	$number = $_POST['number'];
-	$content = htmlspecialchars($_POST['content']);
-	$link = htmlspecialchars($_POST['link']);
-	$imageName = htmlspecialchars($_POST['imageName']);
-	$imgAttrib = htmlspecialchars($_POST['imgAttrib']);
+	if(isSet($_POST['save'])){
 
-	if(isSet($_FILES['imageFile'])&&strlen(trim($_FILES['imageFile']['name']))>0&&strlen(trim($imageName))>0){ // check whether an image was uploaded
+		$number = $_POST['number'];
+		$content = htmlspecialchars($_POST['content']);
+		$link = htmlspecialchars($_POST['link']);
+		$imageName = htmlspecialchars($_POST['imageName']);
+		$imgAttrib = htmlspecialchars($_POST['imgAttrib']);
 
-		$dotPos = strpos($imageName, '.');
+		if(isSet($_FILES['imageFile'])&&strlen(trim($_FILES['imageFile']['name']))>0&&strlen(trim($imageName))>0){ // check whether an image was uploaded
 
-		if(!$dotPos || $dotPos==strlen($imageName)-1){
-			$error = "Neplatný název obrázku!";
-			$imageName = '';
-		} else {
-
-			$ext = substr($imageName, $dotPos+1);
-
-			if(!in_array($ext, ['png', 'gif', 'jpg', 'jpeg', 'jpe', 'jif', 'jfif', 'jfi', 'bmp', 'webp'])){
-				$error = "Neplatný typ souboru obrázku!";
+			if($_FILES['imageFile']['size']>3000000){
+				$error = 'Obrázek nesmí být větší než 3 MB';
 				$imageName = '';
-			} else if(getimagesize($_FILES['imageFile']['tmp_name'])!==false){ // file is a valid image
-				move_uploaded_file($_FILES['imageFile']['tmp_name'], $imageName);
-				$imgRes = processImage($imageName);
+			} else if($_FILES['imageFile']['error']>0){
+				$error = 'Nelze nahrát obrázek!';
+				$imageName = '';
 			} else {
-				$error = 'Neplatný soubor obrázku!';
-				$imageName = '';
-			}
 
-		}
+				$dotPos = strrpos($imageName, '.');
 
-	}
+				if(!$dotPos || $dotPos==strlen($imageName)-1){
+					$error = "Neplatný název obrázku!";
+					$imageName = '';
+				} else {
 
-	if(strlen($imageName)>255) {
-		$error = "Název obrázku nesmí být delší než 255 znaků!";
-	} else if(!($_POST['number']>0)){
-		$error = "Číslo musí být větší než 0!";
-	} else if($_POST['number']>999){
-		$error = "Číslo musí být menší než 1000!";
-	} else if(strlen(trim($_POST['content']))==0) {
-		$error = "Prosím vyplňte popis!";
-	} else if(strlen($_POST['content'])>1023) {
-		$error = "Popis nesmí být delší než 1023 znaků!";
-	} else if(strlen($_POST['link'])>255) {
-		$error = "Odkaz nesmí být delší než 255 znaků!";
-	} else if(!isset($_POST['cat'])) {
-		$error = "Prosím vyberte aspoň jednu kategorii!";
-	} else {
-		for($i = 0; $i<count($_POST['cat']); $i++){
-			$cat = htmlspecialchars($_POST['cat'][$i]);
-			if(strlen($cat)>20) $error = "Neplatný název kategorie";
-			$_POST['cat'][$i] = $cat;
-		}
-	}
+					$ext = substr($imageName, $dotPos+1);
 
-	if(!isSet($error)){
-
-		$stmt = $db->prepare("select value from Config where name='infoLimit'");
-		$stmt->execute();
-		$res = $stmt->get_result();
-		$stmt->close();
-		$infoLimit = $res->fetch_assoc()['value'];
-
-		$stmt = $db->prepare("select value from Config where name='infoLimitReset'");
-		$stmt->execute();
-		$res = $stmt->get_result();
-		$stmt->close();
-		$infoLimitReset = $res->fetch_assoc()['value'];
-
-		$stmt = $db->prepare('select * from NumberInfo where createdBy=? and createdTime>DATE_SUB(NOW(), INTERVAL ? MINUTE)');
-		$stmt->bind_param("si", $_SESSION['user']['id'], $infoLimitReset);
-		$stmt->execute();
-		$res = $stmt->get_result();
-		$count = mysqli_num_rows($res);
-		$stmt->close();
-
-		if($count>=$infoLimit) {
-			$error = "Limit prekročen!";
-		} else {
-
-			foreach($_POST['cat'] as $cat){
-
-				$stmt = $db->prepare('select * from Category where name=?');
-				if($stmt) {
-					$stmt->bind_param("s", $cat);
-					$stmt->execute();
-					$res = $stmt->get_result();
-					$stmt->close();
-				}
-
-				if(!isSet($res)||!$res->fetch_assoc()){
-
-					$stmt = $db->prepare('insert into Category(name) values (?)');
-					$stmt->bind_param("s", $cat);
-					$stmt->execute();
-					$stmt->close();
+					if(!in_array(strtolower($ext), ['png', 'gif', 'jpg', 'jpeg', 'jpe', 'jif', 'jfif', 'jfi', 'bmp', 'webp'])){
+						$error = "Neplatný typ souboru obrázku!";
+						$imageName = '';
+					} else if(getimagesize($_FILES['imageFile']['tmp_name'])!==false){ // file is a valid image
+						move_uploaded_file($_FILES['imageFile']['tmp_name'], $imageName);
+						try {
+							$imgRes = processImage($imageName);
+						} catch(Exception $e){
+							$error = 'Nelze zpracovat obrázek. Zkuste nahrát menší obrázek.';
+							$imageName = '';
+						}
+					} else {
+						$error = 'Neplatný soubor obrázku!';
+						$imageName = '';
+					}
 
 				}
 
 			}
 
-			$background = isSet($imgRes)?$imgRes['background']:null;
-			$color = isSet($imgRes)?$imgRes['color']:null;
+		}
 
-			$stmt = $db->prepare('insert into NumberInfo(number, content, link, imgSrc, imgAttrib, background, color, createdBy, createdTime) values (?, ?, ?, ?, ?, ?, ?, ?, now())');
-			$stmt->bind_param("issssssi", $number, $content, $link, $imageName, $imgAttrib, $background, $color, $_SESSION['user']['id']);
+		if(!isSet($error)){
+			if(strlen($imageName)>255) {
+				$error = "Název obrázku nesmí být delší než 255 znaků!";
+			} else if(strlen($imgAttrib)>255) {
+				$error = "Zdroj obrázku nesmí být delší než 255 znaků!";
+			} else if(!($_POST['number']>0)){
+				$error = "Číslo musí být větší než 0!";
+			} else if($_POST['number']>999){
+				$error = "Číslo musí být menší než 1000!";
+			} else if(strlen(trim($_POST['content']))==0) {
+				$error = "Prosím vyplňte popis!";
+			} else if(strlen($_POST['content'])>1023) {
+				$error = "Popis nesmí být delší než 1023 znaků!";
+			} else if(strlen($_POST['link'])>255) {
+				$error = "Odkaz nesmí být delší než 255 znaků!";
+			} else if(!isset($_POST['cat'])) {
+				$error = "Prosím vyberte aspoň jednu kategorii!";
+			} else {
+				for($i = 0; $i<count($_POST['cat']); $i++){
+					$cat = htmlspecialchars($_POST['cat'][$i]);
+					if(strlen($cat)>20) $error = "Neplatný název kategorie";
+					$_POST['cat'][$i] = $cat;
+				}
+			}
+		}
+
+		if(!isSet($error)){
+
+			$stmt = $db->prepare("select value from Config where name='infoLimit'");
 			$stmt->execute();
+			$res = $stmt->get_result();
+			$stmt->close();
+			$infoLimit = $res->fetch_assoc()['value'];
+
+			$stmt = $db->prepare("select value from Config where name='infoLimitReset'");
+			$stmt->execute();
+			$res = $stmt->get_result();
+			$stmt->close();
+			$infoLimitReset = $res->fetch_assoc()['value'];
+
+			$stmt = $db->prepare('select * from NumberInfo where createdBy=? and createdTime>DATE_SUB(NOW(), INTERVAL ? MINUTE)');
+			$stmt->bind_param("si", $_SESSION['user']['id'], $infoLimitReset);
+			$stmt->execute();
+			$res = $stmt->get_result();
+			$count = mysqli_num_rows($res);
 			$stmt->close();
 
-			$id = $db->insert_id;
+			if($count>=$infoLimit) {
+				$error = "Limit prekročen!";
+			} else {
 
-			foreach($_POST['cat'] as $cat){
+				foreach($_POST['cat'] as $cat){
 
-				$stmt = $db->prepare('insert into InfoCat(infoId, catId) values (?, (select id from Category where name=?))');
-				$stmt->bind_param("ss", $id, $cat);
+					$stmt = $db->prepare('select * from Category where name=?');
+					if($stmt) {
+						$stmt->bind_param("s", $cat);
+						$stmt->execute();
+						$res = $stmt->get_result();
+						$stmt->close();
+					}
+
+					if(!isSet($res)||!$res->fetch_assoc()){
+
+						$stmt = $db->prepare('insert into Category(name) values (?)');
+						$stmt->bind_param("s", $cat);
+						$stmt->execute();
+						$stmt->close();
+
+					}
+
+				}
+
+				$background = isSet($imgRes)?$imgRes['background']:null;
+				$color = isSet($imgRes)?$imgRes['color']:null;
+
+				$stmt = $db->prepare('insert into NumberInfo(number, content, link, imgSrc, imgAttrib, background, color, createdBy, createdTime) values (?, ?, ?, ?, ?, ?, ?, ?, now())');
+				$stmt->bind_param("issssssi", $number, $content, $link, $imageName, $imgAttrib, $background, $color, $_SESSION['user']['id']);
 				$stmt->execute();
 				$stmt->close();
 
+				$id = $db->insert_id;
+
+				foreach($_POST['cat'] as $cat){
+
+					$stmt = $db->prepare('insert into InfoCat(infoId, catId) values (?, (select id from Category where name=?))');
+					$stmt->bind_param("ss", $id, $cat);
+					$stmt->execute();
+					$stmt->close();
+
+				}
+
+				header('Location: edit_user_info.php?id='.$id.'&justAdded');
+
 			}
 
-			header('Location: edit_user_info.php?id='.$id.'&justAdded');
-
 		}
+
+	} else {
+
+		$_SERVER['REQUEST_METHOD'] = 'GET';
+		$error = 'Data nelze uložit! Zkuste nahrát menší obrázek.';
 
 	}
 
@@ -383,7 +411,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 							</div>
 						</div>
 
-						<div class="formrow"><input class="bigbutton" value="Přidat" type="submit"></input></div>
+						<div class="formrow"><input name="save" class="bigbutton" value="Přidat" type="submit"></input></div>
 
 					</div>
 

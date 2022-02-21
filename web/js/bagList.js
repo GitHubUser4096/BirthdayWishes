@@ -118,11 +118,7 @@ function createBagList(form, name, label, nextTooltip){
 		}
 	};
 
-	function createItem(bag){
-
-		let index = Math.floor(Math.random()*bag.length);
-		let item = bag[index];
-		bag.splice(index, 1);
+	function createItem(item, bag){
 
 		let field = document.createElement('div');
 		field.style.userSelect = 'none';
@@ -167,7 +163,10 @@ function createBagList(form, name, label, nextTooltip){
 				//list.appendChild(createItem(bag));
 				//list.insertBefore(createItem(bag), field);
 				//list.removeChild(field);
-				let newField = createItem(bag);
+				let index = Math.floor(Math.random()*bag.length);
+				let item = bag[index];
+				bag.splice(index, 1);
+				let newField = createItem(item, bag);
 				let holder = field.holder;
 				newField.holder = holder;
 				holder.removeChild(field);
@@ -184,6 +183,38 @@ function createBagList(form, name, label, nextTooltip){
 
 	}
 
+	listBox.setItems = function(bag, items){
+
+		list.innerHTML = '';
+
+		for(let i=0; i<items.length; i++){
+
+			let index = -1;
+			let item = items[i];
+			for(let i in bag){
+				if(bag[i].name==item.name){
+					index = i;
+				}
+			}
+			if(index>=0){
+				bag.splice(index, 1);
+			}
+
+			let holder = document.createElement('div');
+			holder.classList.add('moveField');
+			let itemField = createItem(item, bag);
+			itemField.holder = holder;
+			holder.appendChild(itemField);
+			holder.item = itemField;
+
+			list.appendChild(holder);
+
+		}
+
+		updateForm();
+
+	}
+
 	listBox.set = function(bag, showCount){
 
 		/*for(let child of list.children){
@@ -195,15 +226,19 @@ function createBagList(form, name, label, nextTooltip){
 
 		for(let i=0; i<count; i++){
 
+			let index = Math.floor(Math.random()*bag.length);
+			let item = bag[index];
+			bag.splice(index, 1);
+
 			let holder = document.createElement('div');
 			/*holder.style.height = '40px';
 			holder.style.overflow = 'hidden';
 			holder.style.background = 'gray';*/
 			holder.classList.add('moveField');
-			let item = createItem(bag);
-			item.holder = holder;
-			holder.appendChild(item);
-			holder.item = item;
+			let itemField = createItem(item, bag);
+			itemField.holder = holder;
+			holder.appendChild(itemField);
+			holder.item = itemField;
 
 			list.appendChild(holder);
 

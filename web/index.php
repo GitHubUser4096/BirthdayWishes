@@ -195,13 +195,17 @@ $db = DB_CONNECT();
 		<div class="content">
 			<div class="sidebar">
 				<div class="sidebarcontent">
-					<b>Web obsahuje řadu zajímavostí spojených s čísly a umožňuje z nich v několika jednoduchých krocích sestavit přání k narozeninám (například ke 20. narozeninám ze zajímavostí k číslu 20). Zajímavosti obsahují text, ke kterému je zpravidla připojen obrázek a odkaz na podrobnější informace. Do přání jsou vybrány dle zájmů oslavence. Zobrazuje se náhled, jak vznikající přání vypadá a když jste s ním spokojeni, můžete si ho stáhnout nebo určit kdy a kam má být odesláno.</b>
+					<b>Chcete svému blízkému popřát k narozeninám netradičním způsobem?</b>
+					<ul>
+						<li>Sestavte si přání z vtipných i seriózních zajímavostí souvisejících s oslavencovým věkem a také jeho zájmy.</li>
+						<li>Naplánujte odeslání přání dopředu a pusťte to z hlavy.</li>
+						<li>Tvořte obsah webu s námi – zaregistrujte se a vkládejte vlastní zajímavosti.</li>
+					</ul>
+					<b>Je to opravdu jednoduché :)</b>
 
-					<p>Pro rychlé generování přání zadejte jen dosažený věk, oslavencovo a vaše jméno a požadovaný počet zajímavostí, vše ostatní udělá web za vás.
-					Můžete ale také napsat vlastní přání a zajímavosti vybrat náhodně nebo provést vlastní výběr  ze seznamu filtrovaného dle zájmů oslavence.</p>
-
-					<p>Tvořte obsah webu s námi – zaregistrujte se a vkládejte vlastní zajímavosti.</p>
-
+				</div>
+				<div class="sidebarcontent">
+					<a class="link" href="about.php">O Webu</a>
 				</div>
 				<div class="sidebarmenu">
 					<a href="create_wish.php"><button class="bigbutton wishbtn">VYTVOŘIT PŘÁNÍ</button></a>

@@ -10,19 +10,31 @@ require_once('../php/db.php');
 $db = DB_CONNECT();
 
 if(isSet($_GET['id'])){
-	
+
 	$id = $_GET['id'];
-	
+
 	$usrId = isSet($_SESSION['user'])?$_SESSION['user']['id']:0;
-	
+
 	$stmt = $db->prepare("select id, number, content, color, background, link, imgSrc, imgAttrib, createdBy, createdTime, state from NumberInfo where id=? and (state='approved' or createdBy=?)");
 	$stmt->bind_param('ii', $id, $usrId);
 	$stmt->execute();
 	$res = $stmt->get_result();
 	$stmt->close();
-	
-} else {
-	
+
+} else if(isSet($_GET['idList'])){
+
+	$ids = $_GET['idList'];
+
+	$usrId = isSet($_SESSION['user'])?$_SESSION['user']['id']:0;
+
+	$stmt = $db->prepare("select id, number, content, color, background, link, imgSrc, imgAttrib, createdBy, createdTime, state from NumberInfo where id in (".$db->real_escape_string($ids).") and (state='approved' or createdBy=?)");
+	$stmt->bind_param('i', $usrId);
+	$stmt->execute();
+	$res = $stmt->get_result();
+	$stmt->close();
+
+} else if(isSet($_GET['bday']) && isSet($_GET['categories'])) {
+
 	$bday = $_GET['bday'];
 	$catList = $_GET['categories'];
 
@@ -42,28 +54,39 @@ if(isSet($_GET['id'])){
 	$stmt->execute();
 	$res = $stmt->get_result();
 	$stmt->close();
-	
+
+} else {
+	header('HTTP/1.1 400 Bad request');
+	return;
 }
 
-echo '[';
-$firstRow = true;
+$json = [];
+
 while($row = $res->fetch_assoc()){
-	if(!$firstRow) echo ', ';
-	else $firstRow = false;
-	echo '{';
-	$firstEntry = true;
-	foreach($row as $key=>$val){
-		if(!$firstEntry) echo ', ';
-		else $firstEntry = false;
-		$val = str_replace("\\", "\\\\", $val);
-		$val = str_replace("\n", "\\n", $val);
-		$val = str_replace("\r", "", $val);
-		// $val = str_replace(" ", "&nbsp;", $val);
-		echo '"'.$key.'":"'.$val.'"';
-	}
-	echo '}';
+	$json[] = $row;
 }
-echo ']';
+
+echo json_encode($json);
+
+// echo '[';
+// $firstRow = true;
+// while($row = $res->fetch_assoc()){
+// 	if(!$firstRow) echo ', ';
+// 	else $firstRow = false;
+// 	echo '{';
+// 	$firstEntry = true;
+// 	foreach($row as $key=>$val){
+// 		if(!$firstEntry) echo ', ';
+// 		else $firstEntry = false;
+// 		$val = str_replace("\\", "\\\\", $val);
+// 		$val = str_replace("\n", "\\n", $val);
+// 		$val = str_replace("\r", "", $val);
+// 		// $val = str_replace(" ", "&nbsp;", $val);
+// 		echo '"'.$key.'":"'.$val.'"';
+// 	}
+// 	echo '}';
+// }
+// echo ']';
 
 $db->close();
 
