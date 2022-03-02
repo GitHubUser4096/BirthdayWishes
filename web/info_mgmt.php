@@ -199,7 +199,7 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 				padding-right: 10px;
 			}
 
-			#stateFilter {
+			/* #stateFilter {
 				right: 20px;
 			}
 
@@ -213,6 +213,10 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 
 			#modifiedByFilter {
 				right: 200px;
+			} */
+
+			#categoryFilter {
+				min-width: 200px;
 			}
 
 			.stateBtn {
@@ -237,6 +241,11 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 			}
 			.state[state="unknown"] .unknown {
 				display: block;
+			}
+
+			.categoryFilterCategoryList {
+				max-height: calc(100vh - 300px);
+				overflow: auto;
 			}
 
 			@media only screen and (max-width: 600px) {
@@ -348,11 +357,19 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 			updateQuery();
 		}
 
-		function showFilter(name){
+		function showFilter(name, element){
 			for(let filter in filters){
 				hideFilter(filter);
 			}
+			let bounds = element.getBoundingClientRect();
+			filters[name].style.left = bounds.left+'px';
+			filters[name].style.right = null;
 			filters[name].style.display = 'block';
+			let filterBounds = filters[name].getBoundingClientRect();
+			if(filterBounds.right>window.visualViewport.width){
+				filters[name].style.left = null;
+				filters[name].style.right = '0px';
+			}
 		}
 
 		function hideFilter(name){
@@ -481,7 +498,7 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 							<tr>
 								<th class="col1">
 									Číslo
-									<span title="filtrovat" onclick="showFilter('number');">
+									<span title="filtrovat" onclick="showFilter('number', this);">
 										<?php if(isSet($_GET['number'])) { ?><img src="res/filter_on.png"></img>
 										<?php } else { ?><img src="res/filter.png"></img><?php } ?>
 									</span>
@@ -495,14 +512,14 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 								<th class="col col4">Barva</th>
 								<th class="col col5">
 									Kategorie
-									<span title="filtrovat" onclick="showFilter('category');">
+									<span title="filtrovat" onclick="showFilter('category', this);">
 										<?php if(isSet($_GET['category'])) { ?><img src="res/filter_on.png"></img>
 										<?php } else { ?><img src="res/filter.png"></img><?php } ?>
 									</span>
 								</th>
 								<th class="col col6">
 									Vytvořil
-									<span title="filtrovat" onclick="showFilter('createdBy');">
+									<span title="filtrovat" onclick="showFilter('createdBy', this);">
 										<?php if(isSet($_GET['createdBy'])) { ?><img src="res/filter_on.png"></img>
 										<?php } else { ?><img src="res/filter.png"></img><?php } ?>
 									</span>
@@ -516,7 +533,7 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 								</th>
 								<th class="col col8">
 									Upravil
-									<span title="filtrovat" onclick="showFilter('modifiedBy');">
+									<span title="filtrovat" onclick="showFilter('modifiedBy', this);">
 										<?php if(isSet($_GET['modifiedBy'])) { ?><img src="res/filter_on.png"></img>
 										<?php } else { ?><img src="res/filter.png"></img><?php } ?>
 									</span>
@@ -530,7 +547,7 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 								</th>
 								<th class="col col10">
 									Stav
-									<span title="filtrovat" onclick="showFilter('state');">
+									<span title="filtrovat" onclick="showFilter('state', this);">
 										<?php if(isSet($_GET['state'])) { ?><img src="res/filter_on.png"></img>
 										<?php } else { ?><img src="res/filter.png"></img><?php } ?>
 									</span>
@@ -554,7 +571,7 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 										<td class="col col4"><span style="background:<?php echo $row['background']?>;color:<?php echo $row['color']?>">Barva</span></td>
 										<td class="col col5"><?php
 
-											$stmt = $db->prepare('select name from InfoCat inner join Category on Category.id=catid where infoid=?');
+											$stmt = $db->prepare('select name from InfoCat inner join Category on Category.id=catid where infoid=? order by name');
 											$stmt->bind_param('i', $row['id']);
 											$stmt->execute();
 											$res2 = $stmt->get_result();
@@ -685,10 +702,10 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 
 		<div id="categoryFilter" class="filter">
 			<p><b>Filtrovat podle kategorie:</b><button onclick="hideFilter('category');">X</button></p>
-			<div>
+			<div class="categoryFilterCategoryList">
 				<label><input onchange="checkAll('categoryFilterItem', this.checked);" type="checkbox">Vybrat všechny</label><br>
 				<?php
-				$stmt = $db->prepare('select id, name from Category');
+				$stmt = $db->prepare('select id, name from Category order by name');
 				$stmt->execute();
 				$res = $stmt->get_result();
 				$stmt->close();

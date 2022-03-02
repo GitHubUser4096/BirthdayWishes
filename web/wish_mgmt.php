@@ -151,19 +151,31 @@ if(!$_SESSION['user']['verified']){
 
 		<?php include('php/titlebar.php'); ?>
 
+		<?php
+
+		$stmt = $db->prepare("select value from Config where name='wishAccessTime'");
+		$stmt->execute();
+		$res = $stmt->get_result();
+		$availDays = $res->fetch_assoc()['value'];
+		$stmt->close();
+
+		$stmt = $db->prepare('select uid, number, preview_text, date_created, lastEdited, mail_date, mail_sent from Wish where userId=? and ifnull(mail_sent, 0)=0 and not deleted');
+		$stmt->bind_param("i", $_SESSION['user']['id']);
+		$stmt->execute();
+		$res = $stmt->get_result();
+		$stmt->close();
+
+		$row = $res->fetch_assoc();
+
+		?>
+
 		<div class="content">
 
-			<div class="warn">
-				Neodeslané přání jsou dostupné <?php
-
-					$stmt = $db->prepare("select value from Config where name='wishAccessTime'");
-					$stmt->execute();
-					$res = $stmt->get_result();
-					echo $res->fetch_assoc()['value'];
-					$stmt->close();
-
-				?> dnů od poslední úpravy.
-			</div>
+			<?php if($row) { ?>
+				<div class="warn">
+						Přání, u kterých není nastavený den odeslání, jsou dostupné do <?php echo $availDays; ?> dnů od poslední úpravy.
+				</div>
+			<?php } ?>
 
 			<div class="subtitlebar">
 				<a class="backbtn" href="index.php"><</a><span class="subtitle">Moje přání</span>
@@ -172,14 +184,6 @@ if(!$_SESSION['user']['verified']){
 
 		<div class="tableDiv">
 			<?php
-
-			$stmt = $db->prepare('select uid, number, preview_text, date_created, lastEdited, mail_date, mail_sent from Wish where userId=? and ifnull(mail_sent, 0)=0 and not deleted');
-			$stmt->bind_param("i", $_SESSION['user']['id']);
-			$stmt->execute();
-			$res = $stmt->get_result();
-			$stmt->close();
-
-			$row = $res->fetch_assoc();
 
 			if(!$row){
 				?><div class="warn">Nenalezena žádná přání.</div><?php

@@ -165,7 +165,7 @@ if(!isSet($_SERVER['HTTPS'])){
 						<ol>
 							<p><li><ul>
 								<li>Přihlásit se / zaregistrovat se.</li>
-								<li>Kliknout na menu “Přidat zajímavost”.</li>
+								<li>Kliknout na rozbalovací menu vpravo nahoře (uživatelské jméno) a vybrat volbu “Přidat zajímavost”.</li>
 							</ul></li></p>
 							<p><li><ul>
 								<li>Vyplnit číslo, k němuž se zajímavost vztahuje (kolonka “Číslo”).</li>

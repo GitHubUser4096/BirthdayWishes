@@ -191,9 +191,11 @@ async function updateWish(){
 
 			if(img){
 
+        let imgAttrib = info.imgAttrib??'';
+
 				let imgRatio = img.width/img.height;
 				let fullWidthHeight = (page.width-40)/imgRatio;
-				let attribHeight = getTextHeight(page.ctx, info.imgAttrib, 22, 20, textPos, page.width-40);
+				let attribHeight = getTextHeight(page.ctx, imgAttrib, 22, 20, textPos, page.width-40);
 
 				page.ctx.fillStyle = color;
 
@@ -205,12 +207,12 @@ async function updateWish(){
 
 					page.ctx.drawImage(img, imgPos, textPos, imgWidth, imgHeight);
 					textPos += imgHeight+20;
-					drawWrappedText(page.ctx, info.imgAttrib, [22, 'italic'], 20, textPos, page.width-40);
+					drawWrappedText(page.ctx, imgAttrib, [22, 'italic'], 20, textPos, page.width-40);
 
 				} else {
 					page.ctx.drawImage(img, 20, textPos, page.width-40, fullWidthHeight);
 					textPos += fullWidthHeight+20;
-					drawWrappedText(page.ctx, info.imgAttrib, [22, 'italic'], 20, textPos, page.width-40);
+					drawWrappedText(page.ctx, imgAttrib, [22, 'italic'], 20, textPos, page.width-40);
 				}
 
 			}
