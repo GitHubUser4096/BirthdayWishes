@@ -35,7 +35,7 @@ if(!$row){
 	exit;
 }
 
-$stmt = $db->prepare("select mail_address, mail_hidden, mail_date, mail_sent from Wish where uid=?");
+$stmt = $db->prepare("select mail_address, mail_hidden, mail_date, mail_sent, mail_sign from Wish where uid=?");
 $stmt->bind_param("s", $uid);
 $stmt->execute();
 $res = $stmt->get_result();
@@ -43,6 +43,7 @@ $stmt->close();
 
 $row = $res->fetch_assoc();
 
-echo '{"mail_address":"'.$row['mail_address'].'", "mail_hidden":"'.$row['mail_hidden'].'", "mail_date":"'.$row['mail_date'].'", "mail_sent":"'.$row['mail_sent'].'"}';
+echo json_encode($row);
+// echo '{"mail_address":"'.$row['mail_address'].'", "mail_hidden":"'.$row['mail_hidden'].'", "mail_date":"'.$row['mail_date'].'", "mail_sent":"'.$row['mail_sent'].'"}';
 
 ?>

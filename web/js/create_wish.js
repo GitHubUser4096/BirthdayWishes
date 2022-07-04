@@ -350,13 +350,19 @@ function main(){
 
 		page.addControlF('Další >', function(){
 			if(!wish['bday']){
-				form.setMessage('Prosím vyplňte Číslo narozenin!');
+				form.setMessage('Kolonka „Pro kolikáté narozeniny“ není vyplněna!');
 			} else if(wish['bday']!=Math.floor(wish['bday'])){
 				form.setMessage('Neplatné číslo narozenin!');
 			} else if(wish['bday']<1){
 				form.setMessage('Číslo narozenin musí být větší než 0!');
-			} else if((wish['textMode']=='auto' && (!wish['for'] || !wish['from'])) || (wish['textMode']=='custom' && !wish['wishText'])){
-				form.setMessage('Prosím vyplňte Text přání!');
+			} else if(wish['textMode']=='auto' && (!wish['for'] || !wish['from'])){
+				if(!wish['for']){
+					form.setMessage('Kolonka „Oslovení“ v Oblasti „Text přání“ není vyplněna!');
+				} else {
+					form.setMessage('Kolonka „Kdo přeje“ v Oblasti „Text přání“ není vyplněna!');
+				}
+			} else if(wish['textMode']=='custom' && !wish['wishText']){
+				form.setMessage('Kolonka „Text“ v Oblasti „Text přání“ není vyplněna!');
 			} else if(!wish['categories']){
 				form.setMessage('Prosím vyberte aspoň jeden zájem!');
 			} else if((wish['textMode']=='auto' && (wish['for']+wish['from']).length>209) || (wish['textMode']=='custom' && wish['wishText'].length>255)){
@@ -460,7 +466,7 @@ function main(){
 				form.clearMessage();
 				let json = JSON.parse(res);
 				if(json.length==0){
-					form.setMessage('Nenalezeny žádné zajímavosti. <a style="color:white" class="link" href="add_info.php">Přidat zajímavost</a>', MESSAGE_WARNING);
+					form.setMessage('Pro dané číslo a vybrané zájmy zatím není žádná zajímavost k dispozici. <a style="color:white" class="link" href="add_info.php">Přidat zajímavost</a>', MESSAGE_WARNING);
 				}
 				infoCountIn.setMax(Math.max(Math.min(json.length, INFO_LIMIT), 1));
 				for(let row of json){
@@ -569,39 +575,75 @@ function main(){
 				let json = JSON.parse(res);
 
 				// dlbox.innerHTML = '<button class="formrow action"><a href="'+loc+'/get/wish_pdf.php?uid='+getSearchObj().uid+'" download="Přání.pdf" style="color:white;">Stáhnout PDF</a></button>';
-        dlbox.innerHTML = '<button class="formrow action"><a href="'+loc+'/get/wish_pdf.php?uid='+getSearch('uid')+'" download="Přání.pdf" style="color:white;">Stáhnout PDF</a></button>';
+        // dlbox.innerHTML = '<button class="formrow action"><a href="'+loc+'/get/wish_pdf.php?uid='+getSearch('uid')+'" download="Přání.pdf" style="color:white;">Stáhnout PDF</a></button>';
+				let dlDiv = document.createElement('div');
+				let dlBtn = createButton('Stáhnout PDF', function(){
+					let a = document.createElement('a');
+					a.href = loc+'/get/wish_pdf.php?uid='+getSearch('uid');
+					// a.target = '_blank';
+					a.download = 'Přání.pdf';
+					a.click();
+				});
+				dlBtn.classList.add('wide');
+				dlDiv.appendChild(dlBtn);
+				dlDiv.appendChild(createHint('Stáhnete vygenerované pdf - jeho náhled vidíte'));
+				dlbox.appendChild(dlDiv);
 
 				if(json.mail_sent=='1'){
-					dlbox.innerHTML += '<div class="formrow"><span class="formlbl">Přání bylo odesláno.</span></div>';
+					// dlbox.innerHTML += '<div class="formrow"><span class="formlbl">Přání bylo odesláno.</span></div>';
+					let div = document.createElement('div');
+					div.className = 'formrow';
+					div.innerText = 'Přání bylo odesláno.';
+					dlbox.appendChild(div);
 				} else {
 
 					sendScheduled = !!json.mail_date;
 
-					wish['mailAddress'] = decodeURIComponent(json['mail_address']);
-					wish['mailHiddenCopy'] = decodeURIComponent(json['mail_hidden']);
-					wish['mailDate'] = decodeURIComponent(json['mail_date']);
+					wish['mailAddress'] = decodeURIComponent(json['mail_address']??'');
+					wish['mailHiddenCopy'] = decodeURIComponent(json['mail_hidden']??'');
+					wish['mailDate'] = decodeURIComponent(json['mail_date']??'');
 
-					form.inputs['mailAddress'].value = decodeURIComponent(json['mail_address']);
-					form.inputs['mailHiddenCopy'].value = decodeURIComponent(json['mail_hidden']);
-					form.inputs['mailDate'].value = decodeURIComponent(json['mail_date']);
+					form.inputs['mailAddress'].value = decodeURIComponent(json['mail_address']??'');
+					form.inputs['mailHiddenCopy'].value = decodeURIComponent(json['mail_hidden']??'');
+					form.inputs['mailDate'].value = decodeURIComponent(json['mail_date']??'');
+					form.inputs['signMail'].checked = json['mail_sign'];
 
 					if(json.mail_date){
 
-						dlbox.innerHTML += '<div class="formrow"><span class="formlbl">Přání bude odesláno '+decodeURIComponent(json.mail_date)+'</span></div>';
+						// dlbox.innerHTML += '<div class="formrow"><span class="formlbl">Přání bude odesláno '+decodeURIComponent(json.mail_date)+'</span></div>';
+						let row = document.createElement('div');
+						row.className = 'formrow';
+						row.innerText = 'Přání bude odesláno '+decodeURIComponent(json.mail_date);
+						dlbox.appendChild(row);
 
-						dlbox.appendChild(createButton('Změnit odeslání', function(){
+						let sendDiv = document.createElement('div');
+						let sendBtn = createButton('Změnit odeslání', function(){
 							form.setPage('mail');
-						}));
+						});
+						sendBtn.classList.add('wide');
+						sendDiv.appendChild(sendBtn);
+						sendDiv.appendChild(createHint('Změnit nebo zrušit kdy a na jaký email pdf odeslat'));
+						dlbox.appendChild(sendDiv);
 
 					} else {
-						dlbox.appendChild(createButton('Odeslat přání', function(){
+						let sendDiv = document.createElement('div');
+						let sendBtn = createButton('Odeslat přání', function(){
 							form.setPage('mail');
-						}));
+						});
+						sendBtn.classList.add('wide');
+						sendDiv.appendChild(sendBtn);
+						sendDiv.appendChild(createHint('Nadefinujete kdy a na jaký email pdf odeslat'));
+						dlbox.appendChild(sendDiv);
 					}
 
-					dlbox.appendChild(createButton('Upravit přání', function(){
+					let editDiv = document.createElement('div');
+					let editBtn = createButton('Upravit přání', function(){
 						form.setPage(0);
-					}));
+					});
+					editBtn.classList.add('wide');
+					editDiv.appendChild(editBtn);
+					editDiv.appendChild(createHint('Vrátí vás do průvodce vytvořením přání'));
+					dlbox.appendChild(editDiv);
 
 				}
 
@@ -617,12 +659,29 @@ function main(){
 
 		page.critical = true;
 
-		let ta = createTextArea(form, 'mailAddress', 'E-mail:', 'marie@zadarmomail.cz\nkarel.novak@priklad.cz');
+		let ta = createTextArea(form, 'mailAddress', 'E-mail:', 'marie@email.cz\nkarel.novak@priklad.cz');
 		ta.setHint('E-mailové adresy, na které bude přání odesláno - budou zobrazeny jako příjemci e-mailu.\nMůžete zadat více adres, každou na vlastní řádek. Zadejte alespoň jednu adresu.');
 		page.add(ta);
 		let ta2 = createTextArea(form, 'mailHiddenCopy', 'Skrytá kopie:');
 		ta2.setHint('E-mailové adresy, na které bude přání odesláno - nebudou zobrazeny v e-mailu.\nMůžete zadat více adres, každou na vlastní řádek. Nemusí být vyplněno.');
 		page.add(ta2);
+
+		// let sign = createButton('test', function(){});
+		let signDiv = document.createElement('div');
+		signDiv.className = 'formrow';
+		let sign = document.createElement('label');
+		let signCheckbox = document.createElement('input');
+		signCheckbox.type = 'checkbox';
+		form.inputs['signMail'] = signCheckbox;
+		let signLabel = document.createElement('span');
+		signLabel.className = 'formlbl';
+		signLabel.innerText = 'Zahrnout mojí adresu do textu e-mailu:';
+		sign.appendChild(signLabel);
+		sign.appendChild(signCheckbox);
+		signDiv.appendChild(sign);
+		page.add(signDiv);
+
+		// signCheckbox.checked = wish['sign'];
 
 		let tabBox = createTabBox(form, 'mailMode', 'Kdy odeslat e-mail:', 'Má se přání odeslat hned nebo až ráno zadaného dne?');
 
@@ -649,7 +708,8 @@ function main(){
             'uid='+getSearch('uid')+
 						'&mailAddress='+encodeURIComponent(wish['mailAddress'])+
 						'&mailHiddenCopy='+encodeURIComponent(wish['mailHiddenCopy'])+
-						'&date='+encodeURIComponent(wish['mailDate']),
+						'&date='+encodeURIComponent(wish['mailDate'])+
+						'&signMail='+(form.inputs['signMail'].checked?1:0),
 						function(res){
 							form.setPage(2);
 						});
@@ -667,7 +727,7 @@ function main(){
 
 		let tab2 = createTab();
 		let filler = document.createElement('div');
-		filler.className = 'formrow formlbl';
+		filler.className = 'formrow';
 		filler.innerHTML = 'Kliknutím na tlačítko potvrdíte odeslání';
 		tab2.add(filler);
 		tab2.add(createButton('Odeslat', function(){
@@ -687,7 +747,8 @@ function main(){
 						// 'uid='+getSearchObj().uid+
             'uid='+getSearch('uid')+
 						'&mailAddress='+encodeURIComponent(wish['mailAddress'])+
-						'&mailHiddenCopy='+encodeURIComponent(wish['mailHiddenCopy']),
+						'&mailHiddenCopy='+encodeURIComponent(wish['mailHiddenCopy'])+
+						'&signMail='+(form.inputs['signMail'].checked?1:0),
 						function(res){
 							form.setPage(2);
 						});
@@ -714,6 +775,8 @@ function main(){
 					if(!json.verified){
 						form.setPage(2);
 						form.setMessage('Učet není ověřen!');
+					} else {
+						signLabel.innerText = 'Zahrnout mojí adresu ('+json.email+') do textu e-mailu:';
 					}
 				}
 			});

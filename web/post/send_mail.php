@@ -37,6 +37,7 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 	$uid = $_POST['uid'];
 	$mailAddresses = htmlspecialchars($_POST['mailAddress']);
 	$hiddenCopyAddresses = htmlspecialchars($_POST['mailHiddenCopy']);
+	$sign = intval($_POST['signMail']);
 
 	if(strlen($mailAddresses)>100||strlen($hiddenCopyAddresses)>100) {
 		die('400 - Bad request');
@@ -98,7 +99,11 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 		$mail->Subject = "Všechno nejlepší k narozeninám!";
 		//$mail->Body = htmlspecialchars($row['sent_by']).' ti přeje všechno nejlepší k narozeninám!';
 		//$mail->Body = 'Všechno nejlepší k narozeninám!';
-		$mail->Body = $row['preview_text'];
+		if($sign){
+			$mail->Body = $row['preview_text'].'<br>Přání vytvořil <a href="mailto:'.$_SESSION['user']['email'].'">'.$_SESSION['user']['email'].'</a>';
+		} else {
+			$mail->Body = $row['preview_text'];
+		}
 
 		$mail->send();
 

@@ -11,10 +11,10 @@ use PHPMailer\PHPMailer\SMTP;
 
 session_start();
 
-if(!isSet($_SERVER['HTTPS'])){
-	header("Location: https://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
-	exit;
-}
+// if(!isSet($_SERVER['HTTPS'])){
+// 	header("Location: https://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
+// 	exit;
+// }
 
 require_once('php/db.php');
 require_once('php/mail.php');
@@ -56,7 +56,13 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 					$error = "Neplatný e-mail! Kontaktujte administrátora pro obnovení hesla";
 				} else {
 
-					$token = uniqid();
+					// $token = uniqid();
+					$token = random_bytes(9); // start with 9 random bytes (aligns to 12 base64 characters) ('cryptographically secure' according to php manual)
+					$token = base64_encode($token); // encode it to base64 to make it human-readable
+					// slash and plus (possible base64 values) can mess with URLs, change them to something else
+					// since we don't need to decode it back, we can choose anything
+					$token = str_replace('/', 'A', $token);
+					$token = str_replace('+', 'B', $token);
 
 					$page = $_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
 					$page = substr($page, 0, strrpos($page, '/'));

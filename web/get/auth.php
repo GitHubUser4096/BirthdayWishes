@@ -12,6 +12,12 @@ if(!isSet($_SERVER['HTTPS'])){
 }
 
 if(!isSet($_SESSION['user'])) echo 'false';
-else echo '{"id":"'.$_SESSION['user']['id'].'", "username":"'.$_SESSION['user']['username'].'", "verified":"'.$_SESSION['user']['verified'].'"}';
+// else echo '{"id":"'.$_SESSION['user']['id'].'", "username":"'.$_SESSION['user']['username'].'", "verified":"'.$_SESSION['user']['verified'].'"}';
+else echo json_encode([
+	'id'=>$_SESSION['user']['id'],
+	'username'=>$_SESSION['user']['username'],
+	'email'=>$_SESSION['user']['email'],
+	'verified'=>$_SESSION['user']['verified']
+]);
 
 ?>

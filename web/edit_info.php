@@ -99,6 +99,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				$error = "Název obrázku nesmí být delší než 255 znaků!";
 			} else if(strlen($imgAttrib)>255) {
 				$error = "Zdroj obrázku nesmí být delší než 255 znaků!";
+			} else if(strlen(trim($_POST['number']))==0) {
+				$error = "Prosím zadejte číslo!";
 			} else if(!($_POST['number']>0)){
 				$error = "Číslo musí být větší než 0!";
 			} else if($number>999){
@@ -380,7 +382,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 
 						<div class="formrow">
 							<span class="formlbl">Číslo:</span>
-							<input class="formin" type="text" name="number" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['number']; else echo $row['number']; ?>"></input>
+							<input class="formin" type="number" name="number" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['number']; else echo $row['number']; ?>"></input>
 						</div>
 						<div class="formrow">
 							<span class="formlbl">Popis:</span>

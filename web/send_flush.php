@@ -18,7 +18,7 @@ require_once('lib/phpMailer/src/SMTP.php');
 
 $db = DB_CONNECT();
 
-$stmt = $db->prepare('select uid, mail_address, mail_hidden, preview_text from Wish where ifnull(mail_sent, 0) = 0 and mail_date=date(now())');
+$stmt = $db->prepare('select uid, mail_address, mail_hidden, mail_sign, preview_text from Wish where ifnull(mail_sent, 0) = 0 and mail_date=date(now())');
 $stmt->execute();
 $res = $stmt->get_result();
 $stmt->close();
@@ -68,7 +68,12 @@ while($row = $res->fetch_assoc()) {
 
 		$mail->isHtml(true);
 		$mail->Subject = "Všechno nejlepší k narozeninám!";
-		$mail->Body = $row['preview_text'];
+		if($row['mail_sign']){
+			$mail->Body = $row['preview_text'].'<br>Přání vytvořil <a href="mailto:'.$_SESSION['user']['email'].'">'.$_SESSION['user']['email'].'</a>';
+		} else {
+			$mail->Body = $row['preview_text'];
+		}
+		// $mail->Body = $row['preview_text'];
 
 		$mail->send();
 

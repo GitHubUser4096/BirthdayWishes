@@ -28,6 +28,7 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 	$uid = $_POST['uid'];
 	$mailAddresses = htmlspecialchars($_POST['mailAddress']);
 	$hiddenCopyAddresses = htmlspecialchars($_POST['mailHiddenCopy']);
+	$sign = $_POST['signMail'];
 	$date = htmlspecialchars($_POST['date']);
 
 	$stmt = $db->prepare("select userId from Wish where uid=?");
@@ -42,8 +43,8 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 		die('Forbidden');
 	}
 
-	$stmt = $db->prepare("update Wish set mail_address=?, mail_hidden=?, mail_date=? where uid=?");
-	$stmt->bind_param("ssss", $mailAddresses, $hiddenCopyAddresses, $date, $uid);
+	$stmt = $db->prepare("update Wish set mail_address=?, mail_hidden=?, mail_date=?, mail_sign=? where uid=?");
+	$stmt->bind_param("sssss", $mailAddresses, $hiddenCopyAddresses, $date, $sign, $uid);
 	$stmt->execute();
 	$stmt->close();
 

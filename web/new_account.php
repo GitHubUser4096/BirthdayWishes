@@ -26,7 +26,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 	} else if($mail==""){
 		$error = "Prosím zadejte e-mail!";
 	} else if(!preg_match("/^[A-Za-z0-9\-\_\.\ ]+$/", $username)){
-		$error = "Uživatelské jméno může obsahovat pouze písmena, číslice, mezery a znaky '-', '_', a '.'";
+		$error = "Uživatelské jméno může obsahovat pouze písmena (A-Z, a-z), číslice, mezery a znaky '-', '_', a '.'";
 	} else if(!preg_match("/^[A-Za-z0-9\.\_\-]+@[A-Za-z0-9\_\-]+\.[A-Za-z0-9]+$/", $mail)){
 		$error = "Neplatný e-mail!";
 	} else if(strlen($username)>30) {
@@ -113,12 +113,41 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				color: white;
 			}
 
+			.wait {
+				padding: 10px;
+				background: #485de0;
+				font-weight: bold;
+				font-size: 18px;
+				color: white;
+				display: none;
+			}
+
 			.createbtn {
 				margin-left: 25%;
 				width: 50%;
 			}
 
 		</style>
+
+		<script type="text/javascript">
+
+		let submitted = false;
+
+		window.onload = function(){
+
+			form.onsubmit = function(){
+
+				if(submitted) {
+					return false;
+				}
+				wait.style.display = 'block';
+				submitted = true;
+
+			}
+
+		}
+
+		</script>
 
 	</head>
 
@@ -132,7 +161,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				<div class="backbtn"><a href="login.php"><</a></div><div class="subtitle">Vytvořit účet</div>
 			</div>
 
-			<div class="form">
+			<div class="form" id="form">
 
 				<form method="post">
 
@@ -151,6 +180,10 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 							?></div><?php
 						}
 					?>
+
+					<div class="wait" id="wait">
+						Vytváří se účet, počkejte prosím...
+					</div>
 
 					<div class="midcol">
 

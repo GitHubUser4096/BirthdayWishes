@@ -39,7 +39,7 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 		die('Forbidden');
 	}
 
-	$stmt = $db->prepare("update Wish set mail_address=null, mail_hidden=null, mail_date=null where uid=?");
+	$stmt = $db->prepare("update Wish set mail_address=null, mail_hidden=null, mail_date=null, mail_sign=0 where uid=?");
 	$stmt->bind_param("s", $uid);
 	$stmt->execute();
 	$stmt->close();

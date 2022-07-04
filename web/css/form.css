@@ -169,6 +169,11 @@ form {
 	background: #7be96c;
 }
 
+.action.wide {
+	display: inline-block;
+	width: 200px;
+}
+
 .tabBox {
 
 }

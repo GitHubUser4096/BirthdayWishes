@@ -733,3 +733,21 @@ function createButton(label, clickHandler){
 	return button;
 
 }
+
+function createHint(text){
+	let hint = document.createElement('span');
+
+	let hintButton = document.createElement('img');
+	hintButton.src = 'res/hint.png';
+	hintButton.className = 'hintButton';
+	//hintButton.innerText = '?';
+	hintButton.onmouseenter = function(e){
+		form.showTooltip(text);
+	}
+	hintButton.onmouseleave = function(e){
+		form.hideTooltip();
+	}
+	hint.appendChild(hintButton);
+
+	return hint;
+}
