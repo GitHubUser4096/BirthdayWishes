@@ -17,7 +17,7 @@
 		<?php } ?>
 		<?php if(isSet($_SESSION['user'])) { ?>
 			<div class="vsep">|</div>
-			<div class="menuItem" id="popupMenuBtn" onclick="togglePopupMenu();"><a><span class="menuTextMode userMenuBtn" id="usernameBtn"><span id="usernameText" title="<?php echo $_SESSION['user']['username'] ?>"><?php echo $_SESSION['user']['username'] ?></span></span><img class="menuImgMode" width=24 height=24 title="Menu" alt="Menu" class="menuImg" src="res/user.png"></img><img class="userMenuIcon" title="Menu" src="res/hamburger.png"></img></a></div>
+			<div class="menuItem" id="popupMenuBtn" onclick="togglePopupMenu();"><a><span class="menuTextMode userMenuBtn" id="usernameBtn"><span id="usernameText" title="<?php echo $_SESSION['user']['username'] ?>"><?php echo $_SESSION['user']['username'] ?></span></span><img class="userMenuIcon" title="Menu" src="res/hamburger.png"></img></a></div>
 		<?php } else { ?>
 			<div class="vsep">|</div>
 			<div class="menuItem"><a href="login.php"><span class="menuTextMode">Přihlásit se</span><img width=24 height=24 alt="Přihlásit se" class="menuImgMode" src="res/user.png"></img></a></div>

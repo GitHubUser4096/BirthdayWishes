@@ -153,7 +153,7 @@ function createForm(){
 	}
 
 	window.onbeforeunload = function(e){
-		if(pages[page].critical) return "Do you really want to leave the page?";
+		if(pages[page].confirmExit) return "Do you really want to leave the page?";
 	}
 
 	window.addEventListener('resize', function(e){
@@ -198,6 +198,11 @@ function createForm(){
 		if(form.onFormUpdate) form.onFormUpdate(name, v);
 	}
 
+	form.onChange = function(){
+		if(pages[page].onChange) pages[page].onChange();
+		// console.log('form changed');
+	}
+
 	return form;
 
 }
@@ -210,6 +215,7 @@ function createFormPage(form, init){
 
 	page.onOpen = null;
 	page.onSubmit = null;
+	page.onChange = null;
 
 	let pageBody = document.createElement('div');
 	pageBody.className = 'pageBody';
@@ -235,11 +241,12 @@ function createFormPage(form, init){
 
 	}
 
-	page.addControl = function(text, pg){
+	page.addControl = function(text, pg, requireConfirm){
 		let btn = document.createElement('button');
 		btn.className = 'action';
 		btn.innerText = text;
 		btn.onclick = function(e){
+			if(requireConfirm && requireConfirm() && !confirm('Změny nebudou uloženy. Pokračovat?')) return;
 			form.setPage(pg);
 		}
 		pageControls.appendChild(btn);
@@ -469,6 +476,7 @@ function createCheckList(form, name, titleText, selectAllText='Select all', hint
 			selectAll.classList.remove('selected');
 		}
 		updateValue();
+		form.onChange();
 	}
 
 	let checkList = document.createElement('div');
@@ -508,6 +516,7 @@ function createCheckList(form, name, titleText, selectAllText='Select all', hint
 		checkBoxContainer.oninput = function(e){
 			updateSelectAll();
 			updateValue();
+			form.onChange();
 		}
 		checkBoxes[checkBoxes.length] = checkBoxContainer;
 		checkList.appendChild(checkBoxContainer);
@@ -574,6 +583,7 @@ function createNumberInput(form, name, labelText, placeholder, min, max, def, hi
 		if(+input.value<+input.min) input.value = input.min;
 		if(+input.value>+input.max) input.value = input.max;
 		form.update(name, input.value);
+		form.onChange();
 	}
 
 	label.setValue = function(value){
@@ -633,6 +643,9 @@ function createDateInput(form, name, labelText, hintText){
 	input.oninput = function(e){
 		form.update(name, input.value);
 	}
+	input.onchange = function(){
+		form.onChange();
+	}
 
 	label.appendChild(text);
 	label.appendChild(hint);
@@ -675,6 +688,9 @@ function createTextInput(form, name, labelText, placeholder){
 	input.oninput = function(e){
 		form.update(name, input.value);
 	}
+	input.onchange = function(){
+		form.onChange();
+	}
 	label.appendChild(text);
 	label.appendChild(hint);
 	label.appendChild(input);
@@ -713,6 +729,9 @@ function createTextArea(form, name, labelText, placeholder){
 	if(placeholder) input.placeholder = placeholder;
 	input.oninput = function(e){
 		form.update(name, input.value)
+	}
+	input.onchange = function(){
+		form.onChange();
 	}
 	label.appendChild(text);
 	label.appendChild(hint);

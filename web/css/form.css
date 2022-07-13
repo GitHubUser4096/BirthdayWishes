@@ -140,6 +140,15 @@ form {
 	background: #e6e2d7;
 	color: black;
 	padding: 5px;
+	outline: none;
+}
+
+.input.wide {
+	width: 50%;
+}
+
+.input.narrow {
+	width: 100px;
 }
 
 .formin:focus {

@@ -217,7 +217,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 				border: none;
 				background: #2edc15;
 				padding: 5px;
-				font-size: 18px;
+				font-size: 20px;
 				cursor: pointer;
 			}
 
@@ -259,12 +259,28 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 
 		<script>
 
+			changed = false;
+
+			<?php
+				if($_SERVER['REQUEST_METHOD']==='POST'){
+					?>
+						changed = true;
+					<?php
+				}
+			?>
+
 			window.onbeforeunload = function(e){
-				return "Změny nebudou uloženy. Opravdu chcete opustit stránku?";
+				if(changed) return "Změny nebudou uloženy. Opravdu chcete opustit stránku?";
 			}
 
 			function formSubmit(){
-				window.onbeforeunload = null;
+				// window.onbeforeunload = null;
+				changed = false;
+			}
+
+			function formChange(){
+				// console.log('changed');
+				changed = true;
 			}
 
 		</script>
@@ -283,7 +299,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 
 			<div class="form">
 
-				<form method="POST" enctype="multipart/form-data" onsubmit="formSubmit();">
+				<form onchange="formChange();" method="POST" enctype="multipart/form-data" onsubmit="formSubmit();">
 
 					<div class="fullwidcol">
 
@@ -305,15 +321,18 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 
 						<div class="formrow">
 							<span class="formlbl">Číslo:</span>
-							<input class="formin" type="number" name="number" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['number'] ?>"></input>
+							<input class="input narrow" type="number" name="number" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['number'] ?>"></input>
+							<span class="hint" tooltip="Číslo, ke kterému se vztahuje zajímavost - zajímavost se bude zobrazovat pro tyto narozeniny"><img src="res/hint.png"></img></span>
 						</div>
 						<div class="formrow">
 							<span class="formlbl">Popis:</span>
+							<span class="hint" tooltip="Text zajímavosti - v přání se zobrazí spolu s vybraným obrázkem"><img src="res/hint.png"></img></span>
 							<textarea class="textarea" name="content"><?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['content'] ?></textarea>
 						</div>
 						<div class="formrow">
 							<span class="formlbl">Odkaz:</span>
-							<input class="formin" type="text" name="link" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['link'] ?>"></input>
+							<input class="input wide" type="text" name="link" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['link'] ?>"></input>
+							<span class="hint" tooltip="Odkaz, který se otevře kliknutím na zajímavost v přání"><img src="res/hint.png"></img></span>
 						</div>
 
 						<script>
@@ -326,6 +345,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 
 							function cancelFile(){
 								imageName.value = "";
+								changed = true;
 							}
 
 						</script>
@@ -334,16 +354,327 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 							<span class="formlbl">Obrázek:</span>
 							<input class="input" style="width:400px;" id="imageName" name="imageName" value="<?php if($_SERVER['REQUEST_METHOD']==='POST') echo $imageName; ?>" readonly></input>
 							<label><input id="filein" onchange="chooseFile();" class="filein" type="file" name="imageFile" accept="image/*"></input>
-							<br><br><div class="filebtn">Vybrat soubor</div></label>
-							<div type="button" onclick="cancelFile();" class="filebtn">Zrušit</div>
+							<div class="filebtn">Vybrat soubor</div></label>
+							<div type="button" onclick="cancelFile();" class="filebtn">Zrušit výběr</div>
+							<span class="hint" tooltip="Obrázek k zajímavosti - nahrajte z vašeho zařízení"><img src="res/hint.png"></img></span>
 						</div>
 
 						<div class="formrow">
-							<span class="formlbl">Zdroj/autor obrázku</span>
+							<span class="formlbl">Zdroj/autor obrázku:</span>
+							<span class="hint" tooltip="Kdo je autor nebo odkud jste obrázek stáhli"><img src="res/hint.png"></img></span>
 							<textarea class="textarea" name="imgAttrib"><?php if($_SERVER['REQUEST_METHOD']==='POST') echo $_POST['imgAttrib'] ?></textarea>
 						</div>
 
 						<div class="formrow">
+							<span class="formlbl">Kategorie:</span>
+							<span class="hint" tooltip="K jakým zájmům se zajímavost vztahuje - usnadní hledání zajímavostí"><img src="res/hint.png"></img></span>
+							<div class="formrow">
+								<span class="formlbl">Vybrané kategorie:</span>
+								<div id="activeCats" class="catList">
+									<?php
+									$cats = [];
+									if($_SERVER['REQUEST_METHOD']==='POST' && isSet($_POST['cat'])) {
+										$cats = $_POST['cat'];
+										foreach($_POST['cat'] as $cat){
+											?>
+												<button class="catBtn active" type="button" title="Odebrat kategorii <?php echo $cat; ?>">
+													<input type="hidden" name="cat[]" value="<?php echo $cat; ?>"></input>
+													<span><?php echo $cat; ?> X</span>
+												</button>
+											<?php
+										}
+									}
+									?>
+								</div>
+							</div>
+							<div class="formrow">
+								<span class="formlbl">Nevybrané kategorie:</span>
+								<div>Filtrovat: <input id="catFilter"></input></div>
+								<div id="availCats" class="catList">
+									<?php
+									$stmt = $db->prepare('select name from Category');
+									$stmt->execute();
+									$res = $stmt->get_result();
+									$stmt->close();
+									while($row = $res->fetch_assoc()){
+										$name = $row['name'];
+										if(array_search($name, $cats)!==false) continue;
+										?>
+										<button class="catBtn avail highlight" type="button" title="Vybrat kategorii <?php echo $name; ?>">
+											<input type="hidden" value="<?php echo $name; ?>"></input>
+											<span><?php echo $name; ?> +</span>
+										</button>
+										<?php
+									}
+									?>
+								</div>
+							</div>
+							<div class="formrow">
+								<span class="formlbl">Přidat kategorii:</span>
+								<input id="addCatInput" class="input"></input>
+								<button id="addCatBtn" class="addCatBtn" type="button">Přidat</button>
+							</div>
+						</div>
+						<script>
+
+							for(let cat of document.querySelectorAll('.catBtn')){
+								if(cat.classList.contains('active')){
+									cat.onclick = function(){
+										addInactiveCat(cat.children[0].value);
+										cat.remove();
+									}
+								} else {
+									cat.onclick = function(){
+										addActiveCat(cat.children[0].value);
+										changed = true;
+										cat.remove();
+									}
+								}
+							}
+
+							function catExists(name){
+								for(let cat of document.querySelectorAll('.catBtn')){
+									if(cat.children[0].value==name){
+										return true;
+									}
+								}
+								return false;
+							}
+
+							function sortCats(parent, selector){
+								let nodeList = parent.querySelectorAll(selector);
+								let list = [];
+								for(let item of nodeList){
+									item.remove();
+									list.push(item);
+								}
+								list.sort((a, b)=>a.children[0].value.localeCompare(b.children[0].value));
+								for(let item of list){
+									parent.appendChild(item);
+								}
+							}
+
+							addCatBtn.onclick = function(){
+								let cat = addCatInput.value.trim();
+								if(cat.length==0) return;
+								cat = cat.substring(0, 1).toUpperCase()+cat.substring(1);
+								if(catExists(cat)) {
+									alert('Kategorie již existuje!');
+									return;
+								}
+								if(cat.length>20) cat = cat.substring(0, 20);
+								addActiveCat(cat);
+								addCatInput.value = '';
+							}
+
+							catFilter.oninput = function(){
+								for(let cat of document.querySelectorAll('.catBtn.avail')){
+									if(cat.children[0].value.toLowerCase().startsWith(catFilter.value.trim().toLowerCase())){
+										cat.classList.remove('hidden');
+										cat.classList.add('highlight');
+									} else {
+										cat.classList.add('hidden');
+										cat.classList.remove('highlight');
+										cat.remove();
+										availCats.appendChild(cat);
+									}
+								}
+								sortCats(availCats, '.catBtn.avail.highlight');
+								sortCats(availCats, '.catBtn.avail.hidden');
+							}
+
+							function addInactiveCat(name){
+								for(let cat of document.querySelectorAll('.catBtn.avail')){
+									cat.classList.remove('hidden');
+									cat.classList.add('highlight');
+								}
+								catFilter.value = '';
+								let catBtn = document.createElement('button');
+								catBtn.type = 'button';
+								catBtn.className = 'catBtn avail highlight';
+								catBtn.title = 'Vybrat kategorii '+name;
+								let input = document.createElement('input');
+								input.type = 'hidden';
+								input.value = name;
+								catBtn.appendChild(input);
+								let span = document.createElement('span');
+								span.innerText = name+' +';
+								catBtn.appendChild(span);
+								catBtn.onclick = function(){
+									addActiveCat(name);
+									catBtn.remove();
+								}
+								availCats.appendChild(catBtn);
+								sortCats(availCats, '.catBtn.avail');
+							}
+
+							function addActiveCat(name){
+								for(let cat of document.querySelectorAll('.catBtn.avail')){
+									cat.classList.remove('hidden');
+									cat.classList.add('highlight');
+								}
+								catFilter.value = '';
+								sortCats(availCats, '.catBtn.avail');
+								let catBtn = document.createElement('button');
+								catBtn.type = 'button';
+								catBtn.className = 'catBtn active';
+								catBtn.title = 'Odebrat kategorii '+name;
+								let input = document.createElement('input');
+								input.type = 'hidden';
+								input.name = 'cat[]';
+								input.value = name;
+								catBtn.appendChild(input);
+								let span = document.createElement('span');
+								span.innerText = name+' X';
+								catBtn.appendChild(span);
+								catBtn.onclick = function(){
+									addInactiveCat(name);
+									catBtn.remove();
+								}
+								activeCats.appendChild(catBtn);
+								sortCats(activeCats, '.catBtn.active');
+							}
+
+						</script>
+						<style>
+							.addCatBtn {
+								text-align: center;
+								display: inline;
+								color: white;
+								border: none;
+								background: #2edc15;
+								padding: 5px;
+								font-size: 20px;
+								cursor: pointer;
+							}
+							.catList {
+								background: #e6e2d7;
+								min-height: 20px;
+							}
+							.catBtn {
+								border: none;
+								background: white;
+								color: black;
+								padding: 5px 10px 5px 10px;
+								margin: 5px;
+								border-radius: 12px;
+								cursor: pointer;
+							}
+							.catBtn.active {
+								background: #2edc15;
+							}
+							.catBtn.hidden {
+								background: lightgray;
+							}
+						</style>
+
+						<!-- <div class="formrow">
+							<span class="formlbl">Kategorie:</span>
+							<div id="activeCats">
+								<--?php
+
+									if($_SERVER['REQUEST_METHOD']==='POST' && isSet($_POST['cat'])) {
+										foreach($_POST['cat'] as $cat){
+											?>
+												<button class="catBtn" type="button">
+													<--?php echo $cat; ?> X
+													<input class="catInput" type="hidden" name="cat[]" value="<--?php echo $cat; ?>"></input>
+												</button>
+											<--?php
+										}
+									}
+
+								?>
+							</div>
+							<input class="input" id="newCat" list="catList" placeholder="Nová kategorie..."></input>
+							<script>test
+
+								for(let btn of document.querySelectorAll('.catBtn')){
+									btn.onclick = function(e){
+										e.target.remove();
+									}
+								}
+
+								function hasCat(name){
+									let catInputs = document.querySelectorAll('.catInput');
+									for(let input of catInputs){
+										if(input.value==name) return true;
+									}
+									return false;
+								}
+								
+								newCat.onchange = function(e){
+									let catName = newCat.value.trim().substring(0, 1).toUpperCase()+newCat.value.trim().substring(1);
+									if(catName.length==0) return;
+									if(hasCat(catName)) return;
+									if(catName.length>20) catName = catName.substring(0, 20);
+									let catBtn = document.createElement('button');
+									catBtn.innerText = catName+' X';
+									catBtn.className = 'catBtn';
+									catBtn.type = 'button';
+									catBtn.onclick = function(){
+										catBtn.remove();
+									}
+									let input = document.createElement('input');
+									input.className = 'catInput';
+									input.type = 'hidden';
+									input.name = 'cat[]';
+									input.value = catName;
+									catBtn.appendChild(input);
+									activeCats.appendChild(catBtn);
+									newCat.value = '';
+								}
+
+								newCat.onkeypress = function(e){
+									if(e.key=='Enter') {
+										e.preventDefault();
+										newCat.onchange();
+									}
+								}
+
+							</script>
+							<style>
+
+								#activeCats {
+									background: #e6e2d7;
+								}
+
+								#newCat {
+									width: 100%;
+									box-sizing: border-box;
+								}
+
+								.catBtn {
+									border: none;
+									background: #2edc15;
+									color: black;
+									padding: 5px 10px 5px 10px;
+									margin: 5px;
+									border-radius: 12px;
+									cursor: pointer;
+								}
+
+							</style>
+							<datalist id="catList">
+								<--?php
+									$stmt = $db->prepare('select name from Category');
+									if($stmt) {
+										$stmt->execute();
+										$res = $stmt->get_result();
+										$stmt->close();
+										$cats = [];
+
+										while($row = $res->fetch_assoc()){
+											$name = $row['name'];
+											echo '<option value="'.$name.'"></option>';
+											$cats[count($cats)] = '"'.$name.'"';
+										}
+									}
+								?>
+							</datalist>
+						</div> -->
+
+						<!-- <div class="formrow">
 							<span class="formlbl">Kategorie:</span>
 							<script>
 
@@ -371,6 +702,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 										catField.appendChild(div);
 										newCatName.value = "";
 										cats[cats.length] = name;
+										changed = true;
 									}
 								}
 
@@ -379,7 +711,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 							<span style="color:red;" id="catmsgbox"></span>
 							<br>
 							<br><div class="catfield" id="catField">
-								<?php
+								<--?php
 
 									$stmt = $db->prepare('select name from Category');
 									if($stmt) {
@@ -391,19 +723,19 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 										while($row = $res->fetch_assoc()){
 											$name = $row['name'];
 											$cats[count($cats)] = '"'.$name.'"';
-											?><div><label><input type="checkbox" name="cat[]" value="<?php echo $name ?>"
-												<?php if($_SERVER['REQUEST_METHOD']==='POST'&&isSet($_POST['cat'])) if(in_array($name, $_POST['cat'])) echo 'checked' ?>></input><?php echo $name ?></label></div><?php
+											?><div><label><input type="checkbox" name="cat[]" value="<--?php echo $name ?>"
+												<--?php if($_SERVER['REQUEST_METHOD']==='POST'&&isSet($_POST['cat'])) if(in_array($name, $_POST['cat'])) echo 'checked' ?>></input><--?php echo $name ?></label></div><--?php
 										}
 									}
 
 								?>
 								<script>
 
-									<?php
+									<--?php
 										$catnames = '['.implode(",", $cats).']';
 									?>
 
-									cats = <?php echo $catnames; ?>;
+									cats = <--?php echo $catnames; ?>;
 
 									for(let i in cats){
 										cats[i] = cats[i].charAt(0).toUpperCase()+cats[i].substr(1).toLowerCase();
@@ -411,9 +743,51 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 
 								</script>
 							</div>
-						</div>
+						</div> -->
 
-						<div class="formrow"><input name="save" class="bigbutton" value="Přidat" type="submit"></input></div>
+						<script>
+
+							let tooltip;
+
+							for(let hint of document.querySelectorAll('.hint')){
+								hint.onmouseover = function(e){
+									createTooltip(e.clientX, e.clientY, hint.getAttribute('tooltip'));
+								}
+								hint.onmousemove = function(e){
+									if(tooltip){
+										tooltip.style.left = (e.clientX+10)+'px';
+										tooltip.style.top = e.clientY+'px';
+									}
+								}
+								hint.onmouseout = function(){
+									if(tooltip){
+										tooltip.remove();
+										tooltip = null;
+									}
+								}
+							}
+
+							function createTooltip(x, y, text){
+								tooltip = document.createElement('div');
+								tooltip.className = 'tooltip';
+								tooltip.innerText = text;
+								tooltip.style.left = (x+10)+'px';
+								tooltip.style.top = y+'px';
+								document.body.appendChild(tooltip);
+							}
+
+						</script>
+						<style>
+
+							.tooltip {
+								position: absolute;
+								z-index: 99;
+								display: block;
+							}
+
+						</style>
+
+						<div class="formrow"><input name="save" class="bigbutton" value="Uložit zajímavost" type="submit"></input></div>
 
 					</div>
 

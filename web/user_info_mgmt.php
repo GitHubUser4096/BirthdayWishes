@@ -251,7 +251,7 @@ if(!$_SESSION['user']['verified']){
 										?></td>
 										<td class="col6" style="text-align:center;">
 											<?php
-												if($row['state']=='pending') echo '<img title="Před schválením" src="res/pending.png"></img>';
+												if($row['state']=='pending') echo '<img title="Čeká na schválení" src="res/pending.png"></img>';
 												else if($row['state']=='approved') echo '<img title="Schváleno" src="res/approved.png"></img>';
 												else if($row['state']=='dismissed') echo '<img title="Zamítnuto" src="res/dismissed.png"></img>';
 											?>

@@ -299,6 +299,7 @@ $db = DB_CONNECT();
 
 				.wishbtn {
 					width: 100%;
+					margin: 10px 0 10px 0;
 				}
 
 				.phoneBtn {
@@ -405,6 +406,9 @@ $db = DB_CONNECT();
 			</div>
 			<div class="phoneBtn">
 				<a href="create_wish.php"><button class="bigbutton wishbtn">VYTVOŘIT PŘÁNÍ</button></a>
+				<?php if(isSet($_SESSION['user']) && $_SESSION['user']['verified']) {?>
+						<a href="add_info.php"><button class="bigbutton wishbtn">PŘIDAT ZAJÍMAVOST</button></a>
+					<?php } ?>
 			</div>
 		</div>
 		<div class="cookiePopup" id="cookiePopup">

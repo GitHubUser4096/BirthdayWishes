@@ -314,7 +314,7 @@ function main(){
 
 	form.addPage(0, createFormPage(form, function(page){
 
-		page.critical = true;
+		// page.critical = true;
 
 		page.add(createNumberInput(form, 'bday', 'Pro kolikáté narozeniny:', '42', 1, 199, null, 'Ke kolikátým narozeninám přejete, k takovému číslu se budou nabízet zajímavosti do přání.'));
 
@@ -337,13 +337,19 @@ function main(){
 		page.add(catList);
 
 		let cancelEditBtn = createButton('Zrušit úpravy ×', function(){
-			window.onbeforeunload = null;
+			// window.onbeforeunload = null;
 			location.reload();
 		});
+
+		page.confirmExit = false;
 
 		page.onOpen = function(){
 			// cancelEditBtn.style.display = (getSearchObj().uid!=null)?'inline-block':'none';
       cancelEditBtn.style.display = (getSearch('uid')!=null)?'inline-block':'none';
+		}
+
+		page.onChange = function(){
+			page.confirmExit = true;
 		}
 
 		page.addControlB(cancelEditBtn);
@@ -413,7 +419,8 @@ function main(){
 
 	form.addPage(1, createFormPage(form, function(page){
 
-		page.critical = true;
+		// page.critical = true;
+		page.confirmExit = true;
 
 		let infosTabBox = createTabBox(form, 'infoMode', 'Zajímavosti:', 'Zajímavosti (dle čísla narozenin a zájmů) se vyberou náhodně nebo je vyberete ze seznamu.');
 
@@ -657,7 +664,7 @@ function main(){
 
 	form.addPage('mail', createFormPage(form, function(page){
 
-		page.critical = true;
+		// page.critical = true;
 
 		let ta = createTextArea(form, 'mailAddress', 'E-mail:', 'marie@email.cz\nkarel.novak@priklad.cz');
 		ta.setHint('E-mailové adresy, na které bude přání odesláno - budou zobrazeny jako příjemci e-mailu.\nMůžete zadat více adres, každou na vlastní řádek. Zadejte alespoň jednu adresu.');
@@ -762,13 +769,14 @@ function main(){
 
 		page.add(tabBox);
 
-		page.addControl('< Zpět', 2);
+		page.addControl('Zrušit ×', 2, ()=>page.confirmExit);
 
 		page.onOpen = function(){
+			page.confirmExit = false;
 			cancelSendBtn.style.display = sendScheduled?'inline-block':'none';
 			get(loc+'/get/auth.php', function(res){
 				if(res=='false') {
-					window.onbeforeunload = null;
+					// window.onbeforeunload = null;
 					location.href = loc+"/login.php?page="+encodeURIComponent(location.href);
 				} else {
 					let json = JSON.parse(res);
@@ -780,6 +788,10 @@ function main(){
 					}
 				}
 			});
+		}
+
+		page.onChange = function(){
+			page.confirmExit = true;
 		}
 
 	}));

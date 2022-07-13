@@ -620,12 +620,12 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 										?></td>
 										<td class="col col10">
 											<?php
-												// if($row['state']=='pending') echo '<img title="Před schválením" src="res/pending.png"></img>';
+												// if($row['state']=='pending') echo '<img title="Čeká na schválení" src="res/pending.png"></img>';
 												// else if($row['state']=='approved') echo '<img title="Schváleno" src="res/approved.png"></img>';
 												// else if($row['state']=='dismissed') echo '<img title="Zamítnuto" src="res/dismissed.png"></img>';
 											?>
 											<span id="state<?php echo $row['id']; ?>" class="state" state="<?php echo $row['state']; ?>">
-												<img class="stateImg pending" title="Před schválením" src="res/pending.png"></img>
+												<img class="stateImg pending" title="Čeká na schválení" src="res/pending.png"></img>
 												<img class="stateImg approved" title="Schváleno" src="res/approved.png"></img>
 												<img class="stateImg dismissed" title="Zamítnuto" src="res/dismissed.png"></img>
 												<img class="stateImg unknown" title="Neznámý" src="res/wait.gif"></img>
@@ -689,7 +689,7 @@ if($_SERVER['REQUEST_METHOD']==='POST') {
 			<p>
 				Stav:
 				<select id="stateFilterState">
-					<option <?php if(isSet($_GET['state']) && $_GET['state']=='pending') echo 'selected'; ?> value="pending">Před schválením</option>
+					<option <?php if(isSet($_GET['state']) && $_GET['state']=='pending') echo 'selected'; ?> value="pending">Čeká na schválení</option>
 					<option <?php if(isSet($_GET['state']) && $_GET['state']=='approved') echo 'selected'; ?> value="approved">Schváleno</option>
 					<option <?php if(isSet($_GET['state']) && $_GET['state']=='dismissed') echo 'selected'; ?> value="dismissed">Zamítnuto</option>
 				</select>
